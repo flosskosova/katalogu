@@ -14,12 +14,38 @@ import { Users } from "./payload/collections/Users";
 
 const root = process.cwd();
 
-/** Local dev uses `file:…`; Vercel/serverless needs remote libSQL (e.g. Turso). */
+/** Strip accidental quotes / newlines from Vercel env UI paste mistakes. */
+function sanitizeEnvValue(v: string | undefined): string | undefined {
+  if (v == null) return undefined;
+  let s = v.trim().replace(/\r\n/g, "").replace(/\n/g, "");
+  if (
+    (s.startsWith('"') && s.endsWith('"')) ||
+    (s.startsWith("'") && s.endsWith("'"))
+  ) {
+    s = s.slice(1, -1).trim();
+  }
+  return s || undefined;
+}
+
+/**
+ * Local dev: `file:…` (default).
+ * Vercel/Turso: Turso docs use `TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`; this project also accepts
+ * `DATABASE_URL` + `DATABASE_AUTH_TOKEN` for compatibility.
+ */
 function sqliteClientOptions() {
   const url =
-    process.env.DATABASE_URL?.trim() ||
+    sanitizeEnvValue(process.env.TURSO_DATABASE_URL) ||
+    sanitizeEnvValue(process.env.DATABASE_URL) ||
     `file:${path.join(root, "data", "payload.sqlite")}`;
-  const token = process.env.DATABASE_AUTH_TOKEN?.trim();
+  const token =
+    sanitizeEnvValue(process.env.TURSO_AUTH_TOKEN) ||
+    sanitizeEnvValue(process.env.LIBSQL_AUTH_TOKEN) ||
+    sanitizeEnvValue(process.env.DATABASE_AUTH_TOKEN);
+  if (url.startsWith("libsql:") && !token) {
+    throw new Error(
+      "Turso requires an auth token. Set TURSO_AUTH_TOKEN (recommended) or DATABASE_AUTH_TOKEN for libsql:// URLs — Vercel → Settings → Environment Variables → Production, then redeploy.",
+    );
+  }
   return {
     url,
     ...(token ? { authToken: token } : {}),

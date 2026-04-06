@@ -23,15 +23,15 @@ Copy `.env.example` to `.env.local`.
 | `NEXT_PUBLIC_SERVER_URL` | Same origin as the running app; used for Payload APIs and absolute media URLs. |
 | `PAYLOAD_SECRET` | **Required in production.** Long random string for sessions and crypto. |
 | `PREVIEW_SECRET` | Shared secret for draft preview (`/api/draft?secret=…`). |
-| `DATABASE_URL` | SQLite URL: local `file:…` (default under `site/data/`) or remote **`libsql://…`** (e.g. [Turso](https://turso.tech)) — **required for Payload on Vercel** (local file DB does not work on serverless). |
-| `DATABASE_AUTH_TOKEN` | Auth token for remote libSQL (Turso). Omit for local `file:` databases. |
+| `TURSO_DATABASE_URL` / `DATABASE_URL` | SQLite URL: local `file:…` (default) or remote **`libsql://…`** ([Turso](https://turso.tech)). **`TURSO_*` names match Turso’s Vercel docs**; `DATABASE_*` works too. **Required for Payload on Vercel.** |
+| `TURSO_AUTH_TOKEN` / `DATABASE_AUTH_TOKEN` | Turso/libSQL auth token. Omit for local `file:` databases. Prefer **`TURSO_AUTH_TOKEN`** on Vercel if you use the Turso integration. |
 | `USE_STATIC_CATALOG` | If `true`, public pages use only `data/*.ts` (no CMS reads). |
 | `CMS_FALLBACK_STATIC` | If CMS has zero tools, fall back to static data (default on). Set `false` to show empty. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Used by `seed:catalog` when creating the first admin user. |
 
 ### Vercel / serverless
 
-Payload **cannot** use a on-disk `file:…` SQLite path on Vercel (ephemeral filesystem). Create a **Turso** (or compatible libSQL) database, set `DATABASE_URL` and `DATABASE_AUTH_TOKEN` in the Vercel project env, redeploy, then apply the schema once (e.g. run Payload migrations from your machine against the same Turso URL, or follow [Payload + Turso on Vercel](https://payloadcms.com/posts/guides/how-to-set-up-payload-with-sqlite-and-turso-for-deployment-on-vercel)). Alternatively, set **`USE_STATIC_CATALOG=true`** for a **public catalog only** (no durable CMS), but `/admin` still expects a working DB.
+Payload **cannot** use a on-disk `file:…` SQLite path on Vercel (ephemeral filesystem). Create a **Turso** database and set **`TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`** (or the `DATABASE_*` pair) for **Production**, without extra quotes around values—HTTP **401** from Turso almost always means a missing/wrong token or a var not enabled for that environment. Redeploy after changing env. Apply the schema once (e.g. `npm run payload:migrate` locally, or [Payload + Turso on Vercel](https://payloadcms.com/posts/guides/how-to-set-up-payload-with-sqlite-and-turso-for-deployment-on-vercel)). Alternatively, set **`USE_STATIC_CATALOG=true`** for a **public catalog only** (no durable CMS), but `/admin` still expects a working DB.
 
 ## CMS workflow
 

@@ -4,6 +4,7 @@
   "private": true,
   "license": "GPL-2.0",
   "scripts": {
+    "postinstall": "node ./scripts/ensure-libsql-web-driver.mjs",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
