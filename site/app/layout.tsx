@@ -1,0 +1,95 @@
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import {
+  SITE,
+  SITE_LOGO_PATH,
+  absoluteUrl,
+  getGoogleSiteVerification,
+  getSiteUrl,
+  getTwitterCreator,
+  getTwitterSite,
+} from "@/lib/seo/site";
+
+const coAuthors = [
+  { name: "FLOSSK" },
+  { name: "CyberFuzz" },
+  { name: "AI" },
+] as const;
+
+/**
+ * Minimal root: no <html>/<body> here so Payload admin can render its own document
+ * via `app/(payload)/layout.tsx` without nesting <html> inside <body>.
+ * Public pages get `<html>` from `app/(site)/layout.tsx`.
+ */
+const verification = getGoogleSiteVerification()
+  ? { google: getGoogleSiteVerification()! }
+  : undefined;
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
+  applicationName: SITE.name,
+  title: {
+    default: `${SITE.name} — ${SITE.tagline}`,
+    template: `%s · ${SITE.name}`,
+  },
+  description: SITE.description,
+  keywords: [...SITE.keywords],
+  authors: [...coAuthors],
+  creator: "FLOSSK, CyberFuzz & AI",
+  publisher: SITE.name,
+  category: "technology",
+  referrer: "strict-origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: SITE.locale,
+    url: absoluteUrl("/"),
+    siteName: SITE.name,
+    title: `${SITE.name} — ${SITE.tagline}`,
+    description: SITE.description,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: SITE.name,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: getTwitterSite(),
+    creator: getTwitterCreator(),
+    title: `${SITE.name} — ${SITE.tagline}`,
+    description: SITE.description,
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  ...(verification ? { verification } : {}),
+  icons: {
+    icon: [{ url: SITE_LOGO_PATH, type: "image/png" }],
+    apple: [{ url: SITE_LOGO_PATH, type: "image/png" }],
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: ReactNode;
+}>) {
+  return children;
+}
