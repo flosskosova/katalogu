@@ -36,7 +36,7 @@ export function Button({
   const cls = cn(base, variants[variant], className);
   if (href) {
     return (
-      <Link href={href} className={cls} target={target} rel={rel}>
+      <Link href={href} className={cls} target={target} rel={rel} {...rest}>
         {children}
       </Link>
     );
