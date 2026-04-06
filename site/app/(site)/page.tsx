@@ -67,13 +67,13 @@ export default async function HomePage() {
           Editorial catalog
         </p>
         <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
-          The best mainstream open source software—curated with care.
+          Open Source Catalog of Apps and Tools - curated with love and care
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--foreground-muted)]">
-          {SITE.name} is a work of co-authorship by FLOSSK, CyberFuzz, and AI.
-          It highlights genuinely open, actively maintained tools with clear
-          documentation and real-world adoption. Search, filter, compare, and
-          read why each entry belongs here—not an exhaustive directory.
+          {SITE.name} is curated by FLOSSK. It highlights genuinely open, actively
+          maintained tools with clear documentation and real-world adoption.
+          Search, filter, compare, and read why each entry belongs here—not an
+          exhaustive directory.
         </p>
         <p className="mt-5 text-base">
           <Link
