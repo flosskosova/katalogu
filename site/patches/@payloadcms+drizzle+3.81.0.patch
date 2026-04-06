@@ -1,0 +1,36 @@
+diff --git a/node_modules/@payloadcms/drizzle/dist/migrate.js b/node_modules/@payloadcms/drizzle/dist/migrate.js
+index 2dbae1f..cdcb1b6 100644
+--- a/node_modules/@payloadcms/drizzle/dist/migrate.js
++++ b/node_modules/@payloadcms/drizzle/dist/migrate.js
+@@ -28,18 +28,21 @@ export const migrate = async function migrate(args) {
+             sort: '-name'
+         }));
+         if (migrationsInDB.find((m)=>m.batch === -1)) {
+-            const { confirm: runMigrations } = await prompts({
+-                name: 'confirm',
+-                type: 'confirm',
+-                initial: false,
+-                message: "It looks like you've run Payload in dev mode, meaning you've dynamically pushed changes to your database.\n\n" + "If you'd like to run migrations, data loss will occur. Would you like to proceed?"
+-            }, {
+-                onCancel: ()=>{
++            const nonInteractive = process.env.CI === 'true' || process.env.VERCEL === '1' || process.env.PAYLOAD_SKIP_MIGRATION_PROMPT === 'true';
++            if (!nonInteractive) {
++                const { confirm: runMigrations } = await prompts({
++                    name: 'confirm',
++                    type: 'confirm',
++                    initial: false,
++                    message: "It looks like you've run Payload in dev mode, meaning you've dynamically pushed changes to your database.\n\n" + "If you'd like to run migrations, data loss will occur. Would you like to proceed?"
++                }, {
++                    onCancel: ()=>{
++                        process.exit(0);
++                    }
++                });
++                if (!runMigrations) {
+                     process.exit(0);
+                 }
+-            });
+-            if (!runMigrations) {
+-                process.exit(0);
+             }
+             // ignore the dev migration so that the latest batch number increments correctly
+             migrationsInDB = migrationsInDB.filter((m)=>m.batch !== -1);
