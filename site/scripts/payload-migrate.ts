@@ -5,9 +5,53 @@
  * - `create <name>` — generate migration from current schema (migrate:create)
  * - `run` — apply pending migrations to DATABASE_URL (passes `migrations` from `migrations/index.ts`)
  * - `status` — compare repo migrations vs DB
+ *
+ * Uses `jiti` with `@/*` → project root so `payload.config.ts` resolves like Next.js.
  */
+import path from "node:path";
 import process from "process";
-import { getMigrations } from "payload";
+import { createJiti } from "jiti";
+import { getMigrations, getPayload } from "payload";
+
+type PayloadConfig = Parameters<typeof getPayload>[0]["config"];
+
+/** Matches `payload`’s `Migration` shape for `db.migrate` (repo migrations use typed `MigrateUpArgs`). */
+type PayloadMigration = {
+  up: (args: unknown) => Promise<void>;
+  down: (args: unknown) => Promise<void>;
+  name: string;
+};
+
+function createSiteJiti() {
+  return createJiti(import.meta.url, {
+    alias: { "@": process.cwd() },
+  });
+}
+
+async function loadPayloadConfig(): Promise<PayloadConfig> {
+  const mod = (await createSiteJiti().import(
+    path.resolve(process.cwd(), "payload.config.ts"),
+  )) as unknown as { default: PayloadConfig };
+  return mod.default;
+}
+
+function isLibsqlUnauthorized(e: unknown): boolean {
+  const parts: string[] = [];
+  let cur: unknown = e;
+  let depth = 0;
+  while (cur && depth < 8) {
+    if (cur instanceof Error) {
+      parts.push(cur.message);
+      cur = cur.cause;
+    } else {
+      parts.push(String(cur));
+      break;
+    }
+    depth++;
+  }
+  const s = parts.join(" ");
+  return /\b401\b/.test(s) || s.includes("Unauthorized");
+}
 
 async function main() {
   const [cmd, ...rest] = process.argv.slice(2);
@@ -22,7 +66,7 @@ async function main() {
   process.env.PAYLOAD_MIGRATING = "true";
   process.env.DISABLE_PAYLOAD_HMR = "true";
 
-  const { default: config } = await import("../payload.config.ts");
+  const config = await loadPayloadConfig();
 
   if (cmd === "create") {
     const { migrate: migrateBin } = await import(
@@ -36,8 +80,7 @@ async function main() {
     return;
   }
 
-  const { getPayload } = await import("payload");
-  const { migrations } = await import("../migrations/index.ts");
+  const { migrations } = await import("../migrations/index");
   const payload = await getPayload({ config });
 
   if (cmd === "run") {
@@ -47,7 +90,9 @@ async function main() {
       process.exit(1);
     }
     console.log(`Applying ${migrations.length} migration(s) to DATABASE_URL…`);
-    await payload.db.migrate.call(payload.db, { migrations });
+    await payload.db.migrate.call(payload.db, {
+      migrations: migrations as PayloadMigration[],
+    });
     console.log("Migrations finished.");
     await payload.destroy();
     return;
@@ -64,6 +109,13 @@ async function main() {
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+      if (isLibsqlUnauthorized(e)) {
+        console.error(
+          "Turso / libSQL: HTTP 401 — DATABASE_AUTH_TOKEN (or TURSO_AUTH_TOKEN) is missing, invalid, or expired. Create a new token in the Turso dashboard and update .env (and Vercel).",
+        );
+        await payload.destroy();
+        process.exit(1);
+      }
       if (msg.includes("no such table")) {
         console.log(
           "No migration metadata table yet — run: npm run payload:migrate",
@@ -82,6 +134,12 @@ async function main() {
 }
 
 main().catch((e: unknown) => {
-  console.error(e);
+  if (isLibsqlUnauthorized(e)) {
+    console.error(
+      "\nTurso / libSQL: HTTP 401 — DATABASE_AUTH_TOKEN (or TURSO_AUTH_TOKEN) is missing, invalid, or expired.\nCreate a new token in the Turso dashboard and update .env (and Vercel environment variables).\n",
+    );
+  } else {
+    console.error(e);
+  }
   process.exit(1);
 });
