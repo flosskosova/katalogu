@@ -4,6 +4,7 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
 import { buildConfig } from "payload";
 
+import { migrations } from "./migrations";
 import { CatalogCategories } from "./payload/collections/CatalogCategories";
 import { CatalogTags } from "./payload/collections/CatalogTags";
 import { CatalogTools } from "./payload/collections/CatalogTools";
@@ -12,6 +13,18 @@ import { Media } from "./payload/collections/Media";
 import { Users } from "./payload/collections/Users";
 
 const root = process.cwd();
+
+/** Local dev uses `file:…`; Vercel/serverless needs remote libSQL (e.g. Turso). */
+function sqliteClientOptions() {
+  const url =
+    process.env.DATABASE_URL?.trim() ||
+    `file:${path.join(root, "data", "payload.sqlite")}`;
+  const token = process.env.DATABASE_AUTH_TOKEN?.trim();
+  return {
+    url,
+    ...(token ? { authToken: token } : {}),
+  };
+}
 
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
@@ -37,11 +50,8 @@ export default buildConfig({
     CuratedCollections,
   ],
   db: sqliteAdapter({
-    client: {
-      url:
-        process.env.DATABASE_URL ||
-        `file:${path.join(root, "data", "payload.sqlite")}`,
-    },
+    client: sqliteClientOptions(),
+    prodMigrations: migrations,
   }),
   sharp,
   graphQL: {

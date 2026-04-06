@@ -14,9 +14,13 @@
     "catalog:sync": "npm run validate:tool-slugs && npm run seed:catalog && npm run verify:catalog-sync",
     "backfill:seo": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-tool-seo.ts",
     "backfill:seo:categories": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-category-seo.ts",
-    "backfill:why-included": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-why-included-official-sites.ts"
+    "backfill:why-included": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-why-included-official-sites.ts",
+    "payload:migrate:create": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts create",
+    "payload:migrate": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts run",
+    "payload:migrate:status": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts status"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@payloadcms/db-sqlite": "^3.81.0",
     "@payloadcms/next": "^3.81.0",
     "@payloadcms/richtext-lexical": "^3.81.0",
