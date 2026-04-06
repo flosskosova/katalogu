@@ -4,6 +4,7 @@ import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
 import { buildConfig } from "payload";
 
+import { SITE } from "@/lib/seo/site";
 import { migrations } from "./migrations";
 import { CatalogCategories } from "./payload/collections/CatalogCategories";
 import { CatalogTags } from "./payload/collections/CatalogTags";
@@ -80,6 +81,21 @@ export default buildConfig({
     prodMigrations: migrations,
   }),
   sharp,
+  /** Explicit adapter: same behavior as Payload’s default, but avoids startup WARN in logs. */
+  email: ({ payload }) => ({
+    name: "console",
+    defaultFromAddress:
+      process.env.SMTP_FROM_EMAIL?.trim() || "noreply@example.invalid",
+    defaultFromName:
+      process.env.SMTP_FROM_NAME?.trim() || SITE.name,
+    sendEmail: async (message) => {
+      payload.logger.info({
+        msg: "[email] Console adapter — not sent (configure SMTP / Resend for real mail)",
+        to: message.to,
+        subject: message.subject,
+      });
+    },
+  }),
   graphQL: {
     disable: true,
   },
