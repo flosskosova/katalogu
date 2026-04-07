@@ -3,19 +3,14 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { ToolCard } from "@/components/catalog/ToolCard";
-import {
-  getCuratedCollectionBySlug,
-  getPublishedCollectionSlugs,
-} from "@/lib/catalog";
+import { getCuratedCollectionBySlug } from "@/lib/catalog";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 import { buildCuratedCollectionJsonLd } from "@/lib/seo/structured-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const slugs = await getPublishedCollectionSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+/** On-demand + ISR — avoids pre-rendering every collection at build. */
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
