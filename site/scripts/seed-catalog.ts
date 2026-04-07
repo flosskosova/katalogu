@@ -11,7 +11,7 @@
  */
 import { existsSync, mkdirSync } from "fs";
 import path from "path";
-import type { Payload } from "payload";
+import type { Payload, SanitizedConfig } from "payload";
 import { createJiti } from "jiti";
 import { isCatalogToolSlugValid } from "../lib/catalog-tool-slug";
 import {
@@ -19,13 +19,13 @@ import {
   toolSeoPatchFromStatic,
 } from "../payload/seo-defaults";
 
-async function loadPayloadConfig() {
+async function loadPayloadConfig(): Promise<SanitizedConfig> {
   const siteRoot = process.cwd();
   const jiti = createJiti(import.meta.url, {
     alias: { "@": siteRoot },
   });
   const mod = (await jiti.import(path.join(siteRoot, "payload.config.ts"))) as {
-    default: unknown;
+    default: SanitizedConfig;
   };
   return mod.default;
 }

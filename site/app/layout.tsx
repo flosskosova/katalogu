@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import {
   SITE,
-  SITE_LOGO_PATH,
   absoluteUrl,
   getGoogleSiteVerification,
   getSiteUrl,
@@ -80,10 +79,10 @@ export const metadata: Metadata = {
     },
   },
   ...(verification ? { verification } : {}),
-  icons: {
-    icon: [{ url: SITE_LOGO_PATH, type: "image/png" }],
-    apple: [{ url: SITE_LOGO_PATH, type: "image/png" }],
-  },
+  /**
+   * Favicon + Apple touch: `app/icon.png` and `app/apple-icon.png` (same asset as
+   * `public/brand-logo.png`). Next injects `<link rel="icon">` / apple-touch automatically.
+   */
 };
 
 export default function RootLayout({
