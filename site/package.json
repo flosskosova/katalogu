@@ -25,6 +25,7 @@
     "@payloadcms/db-sqlite": "^3.81.0",
     "@payloadcms/next": "^3.81.0",
     "@payloadcms/richtext-lexical": "^3.81.0",
+    "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "graphql": "^16.13.2",
     "next": "15.4.11",
