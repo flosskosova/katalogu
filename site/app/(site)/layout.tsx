@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import { DM_Sans, Newsreader } from "next/font/google";
 import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
@@ -62,6 +63,7 @@ export default function SiteLayout({
           <SiteFooter />
           <CompareBar />
         </CompareProvider>
+        <Analytics />
       </body>
     </html>
   );
