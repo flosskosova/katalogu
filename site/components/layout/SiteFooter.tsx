@@ -9,7 +9,7 @@ import {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-[var(--border)] bg-[var(--muted)]/40">
+    <footer className="border-t border-[var(--border)] bg-[var(--muted)]/40 font-[family-name:var(--font-brand)]">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-8">
           <div className="w-full text-sm">
@@ -41,7 +41,7 @@ export function SiteFooter() {
           <div className="flex gap-3">
             <BrandLogo className="h-10 w-10 shrink-0" />
             <div>
-              <p className="font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
+              <p className="text-lg font-semibold text-[var(--foreground)]">
                 {SITE.name}
               </p>
               <p className="mt-1 text-xs font-medium leading-snug text-[var(--foreground-muted)]">
