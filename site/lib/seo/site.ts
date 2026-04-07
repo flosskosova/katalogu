@@ -20,7 +20,7 @@ export const SITE_LOGO_PATH = "/brand-logo.png" as const;
 /** Public credit under the site name (header, footer). */
 export const SITE_ATTRIBUTION_LINE =
   process.env.NEXT_PUBLIC_SITE_ATTRIBUTION?.trim() ||
-  "A work of co-authorship by CyberFuzz & AI";
+  "A work of co-authorship by CyberFuzz & AI, powered by FLOSSK";
 
 /** SPDX id for this repository’s source (see root `LICENSE`). */
 export const SITE_SOURCE_LICENSE_SPDX = "GPL-2.0" as const;
