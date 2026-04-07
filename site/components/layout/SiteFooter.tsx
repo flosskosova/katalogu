@@ -11,7 +11,33 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-[var(--border)] bg-[var(--muted)]/40">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-8">
+          <div className="w-full text-sm">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 sm:grid sm:grid-cols-4 sm:items-baseline sm:gap-x-8 sm:gap-y-0">
+              <p className="shrink-0 font-medium text-[var(--foreground)]">
+                Explore
+              </p>
+              <Link
+                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                href="/browse"
+              >
+                Browse &amp; filter
+              </Link>
+              <Link
+                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                href="/categories"
+              >
+                Categories
+              </Link>
+              <Link
+                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                href="/compare"
+              >
+                Compare tools
+              </Link>
+            </div>
+          </div>
+
           <div className="flex gap-3">
             <BrandLogo className="h-10 w-10 shrink-0" />
             <div>
@@ -25,28 +51,6 @@ export function SiteFooter() {
                 A curated, editorial catalog of trustworthy Free and Open Source
                 Software—maintained for clarity, not completeness.
               </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-8 text-sm">
-            <div>
-              <p className="font-medium text-[var(--foreground)]">Explore</p>
-              <ul className="mt-2 space-y-2 text-[var(--foreground-muted)]">
-                <li>
-                  <Link className="hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]" href="/browse">
-                    Browse &amp; filter
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]" href="/categories">
-                    Categories
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]" href="/compare">
-                    Compare tools
-                  </Link>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
