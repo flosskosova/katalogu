@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { ToolCard } from "@/components/catalog/ToolCard";
 import {
-  getCategories,
   getCategoryBySlug,
   getToolsByCategory,
 } from "@/lib/catalog";
@@ -13,10 +12,8 @@ import { buildCollectionPageJsonLd } from "@/lib/seo/structured-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const cats = await getCategories();
-  return cats.map((c) => ({ slug: c.slug }));
-}
+/** On-demand + ISR — avoids pre-rendering every category at build. */
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

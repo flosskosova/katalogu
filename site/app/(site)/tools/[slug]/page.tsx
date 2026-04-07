@@ -7,7 +7,6 @@ import { ToolCompareToggle } from "@/components/catalog/ToolCompareToggle";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
-  getAllTools,
   getRelatedTools,
   getToolBySlug,
   withCategory,
@@ -18,10 +17,11 @@ import { buildSoftwareApplicationJsonLd } from "@/lib/seo/structured-data";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  const tools = await getAllTools();
-  return tools.map((t) => ({ slug: t.slug }));
-}
+/**
+ * Do not enumerate all tool slugs at build time — that forces thousands of static
+ * pages and very slow Vercel builds. Pages are generated on first request, then cached (ISR).
+ */
+export const revalidate = 3600;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
