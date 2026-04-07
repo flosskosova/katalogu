@@ -121,7 +121,7 @@ export default async function ComparePage({ searchParams }: Props) {
                 >
                   <Link
                     href={`/tools/${t.slug}`}
-                    className="text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+                    className="font-[family-name:var(--font-brand)] text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
                   >
                     {t.name}
                   </Link>

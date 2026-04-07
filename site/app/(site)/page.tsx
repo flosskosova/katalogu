@@ -66,7 +66,7 @@ export default async function HomePage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
           Editorial catalog
         </p>
-        <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
+        <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-brand)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
           Open Source Catalog of Apps and Tools - curated with love and care
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[var(--foreground-muted)]">
@@ -101,7 +101,7 @@ export default async function HomePage() {
       <section className="py-14">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="font-[family-name:var(--font-brand)] text-2xl font-semibold text-[var(--foreground)]">
               Top picks
             </h2>
             <p className="mt-1 text-sm text-[var(--foreground-muted)]">
@@ -127,7 +127,7 @@ export default async function HomePage() {
         <section className="border-t border-[var(--border)] py-14">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+              <h2 className="font-[family-name:var(--font-brand)] text-2xl font-semibold text-[var(--foreground)]">
                 Featured lists
               </h2>
               <p className="mt-1 text-sm text-[var(--foreground-muted)]">
@@ -146,7 +146,7 @@ export default async function HomePage() {
                   <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
                     Collection
                   </p>
-                  <p className="mt-2 font-[family-name:var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
+                  <p className="mt-2 font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)]">
                     {list.name}
                   </p>
                   {list.description ? (
@@ -165,7 +165,7 @@ export default async function HomePage() {
       ) : null}
 
       <section className="border-t border-[var(--border)] py-14">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+        <h2 className="font-[family-name:var(--font-brand)] text-2xl font-semibold text-[var(--foreground)]">
           Browse by category
         </h2>
         <p className="mt-2 max-w-2xl text-sm text-[var(--foreground-muted)]">

@@ -13,7 +13,7 @@ export async function CategoryCard({ category }: { category: Category }) {
       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
         {count} tools
       </p>
-      <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">
+      <h2 className="mt-2 font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">
         {category.name}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-[var(--foreground-muted)]">

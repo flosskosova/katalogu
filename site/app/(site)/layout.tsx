@@ -1,4 +1,5 @@
 import { DM_Sans, Newsreader } from "next/font/google";
+import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
 import { CompareProvider } from "@/components/catalog/CompareProvider";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -19,13 +20,34 @@ const display = Newsreader({
   display: "swap",
 });
 
+/** Local Alfabeti Demi (`site/font`) — header brand + homepage hero headline. */
+const alfabetiBrand = localFont({
+  src: [
+    {
+      path: "../../font/5320Alfabeti-Demi.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../font/5320Alfabeti-Demi.woff",
+      weight: "600",
+      style: "normal",
+    },
+  ],
+  variable: "--font-brand",
+  display: "swap",
+});
+
 export default function SiteLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${display.variable}`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${display.variable} ${alfabetiBrand.variable}`}
+    >
       <body>
         <SiteJsonLd />
         <CompareProvider>
