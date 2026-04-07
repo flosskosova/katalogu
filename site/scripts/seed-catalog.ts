@@ -12,11 +12,23 @@
 import { existsSync, mkdirSync } from "fs";
 import path from "path";
 import type { Payload } from "payload";
+import { createJiti } from "jiti";
 import { isCatalogToolSlugValid } from "../lib/catalog-tool-slug";
 import {
   categorySeoPatchFromStatic,
   toolSeoPatchFromStatic,
 } from "../payload/seo-defaults";
+
+async function loadPayloadConfig() {
+  const siteRoot = process.cwd();
+  const jiti = createJiti(import.meta.url, {
+    alias: { "@": siteRoot },
+  });
+  const mod = (await jiti.import(path.join(siteRoot, "payload.config.ts"))) as {
+    default: unknown;
+  };
+  return mod.default;
+}
 
 function relationIdPresent(v: unknown): boolean {
   if (v == null || v === "") return false;
@@ -65,7 +77,7 @@ async function ensureAdminUser(payload: Payload) {
 
 async function main() {
   const { getPayload } = await import("payload");
-  const { default: config } = await import("../payload.config");
+  const config = await loadPayloadConfig();
   const { categories: staticCategories } = await import("../data/categories");
   const { withProprietaryAlternativeNote } = await import(
     "../data/proprietary-alternatives"
@@ -260,61 +272,81 @@ async function main() {
       .map((name) => tagIdByName.get(name))
       .filter(Boolean) as (string | number)[];
 
-    const created = await payload.create({
-      collection: "catalog-tools",
-      data: {
-        name: t.name,
-        slug: t.slug,
-        ...toolSeoPatchFromStatic({
+    try {
+      const created = await payload.create({
+        collection: "catalog-tools",
+        data: {
           name: t.name,
           slug: t.slug,
+          ...toolSeoPatchFromStatic({
+            name: t.name,
+            slug: t.slug,
+            summary: t.summary,
+            whyIncluded: t.whyIncluded,
+            license: t.license,
+          }),
+          status: "published",
+          category: catId,
+          rank: t.rank,
+          editorialWeight: t.editorialWeight ?? 0,
+          featured: false,
           summary: t.summary,
           whyIncluded: t.whyIncluded,
+          bestFor: t.bestFor,
+          targetUsers:
+            "Developers, teams, and individuals evaluating open tools in this category — refine in CMS for specificity.",
+          platforms: t.platforms.map((platform) => ({ platform })),
           license: t.license,
-        }),
-        status: "published",
-        category: catId,
-        rank: t.rank,
-        editorialWeight: t.editorialWeight ?? 0,
-        featured: false,
-        summary: t.summary,
-        whyIncluded: t.whyIncluded,
-        bestFor: t.bestFor,
-        targetUsers:
-          "Developers, teams, and individuals evaluating open tools in this category — refine in CMS for specificity.",
-        platforms: t.platforms.map((platform) => ({ platform })),
-        license: t.license,
-        openSourceStatus: "osi-approved",
-        maintenanceStatus: t.maintenanceStatus,
-        maturity: t.maturity,
-        officialSite: t.officialSite,
-        sourceRepo: t.sourceRepo,
-        strengths: t.strengths.map((line) => ({ line })),
-        limitations: t.limitations.map((line) => ({ line })),
-        alternatives: t.alternatives.map((line) => ({ line })),
-        ...(t.replacesProprietary?.trim()
-          ? { replacesProprietary: t.replacesProprietary.trim() }
-          : {}),
-        privacyFocused: Boolean(t.privacyFocused),
-        selfHosted: Boolean(t.selfHosted),
-        beginnerFriendly: Boolean(t.beginnerFriendly),
-        developerFocused: t.tags.some(
-          (x) => x.toLowerCase() === "developer" || x.toLowerCase() === "dev",
-        ),
-        endUserFocused: t.tags.some(
-          (x) =>
-            x.toLowerCase() === "end-user" ||
-            x.toLowerCase() === "end user" ||
-            x.toLowerCase().includes("beginner"),
-        ),
-        tagList,
-        publishedAt: new Date().toISOString(),
-      },
-      user: adminUser,
-      overrideAccess: true,
-    });
-    toolIdBySlug.set(t.slug, created.id);
-    console.log("Tool:", t.slug);
+          openSourceStatus: "osi-approved",
+          maintenanceStatus: t.maintenanceStatus,
+          maturity: t.maturity,
+          officialSite: t.officialSite,
+          sourceRepo: t.sourceRepo,
+          strengths: t.strengths.map((line) => ({ line })),
+          limitations: t.limitations.map((line) => ({ line })),
+          alternatives: t.alternatives.map((line) => ({ line })),
+          ...(t.replacesProprietary?.trim()
+            ? { replacesProprietary: t.replacesProprietary.trim() }
+            : {}),
+          privacyFocused: Boolean(t.privacyFocused),
+          selfHosted: Boolean(t.selfHosted),
+          beginnerFriendly: Boolean(t.beginnerFriendly),
+          developerFocused: t.tags.some(
+            (x) => x.toLowerCase() === "developer" || x.toLowerCase() === "dev",
+          ),
+          endUserFocused: t.tags.some(
+            (x) =>
+              x.toLowerCase() === "end-user" ||
+              x.toLowerCase() === "end user" ||
+              x.toLowerCase().includes("beginner"),
+          ),
+          tagList,
+          publishedAt: new Date().toISOString(),
+        },
+        user: adminUser,
+        overrideAccess: true,
+      });
+      toolIdBySlug.set(t.slug, created.id);
+      console.log("Tool:", t.slug);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Turso/libSQL can surface concurrent seed attempts as UNIQUE constraint failures.
+      if (msg.includes("UNIQUE constraint failed") && msg.includes("slug")) {
+        const refetch = await payload.find({
+          collection: "catalog-tools",
+          where: { slug: { equals: t.slug } },
+          limit: 1,
+          overrideAccess: true,
+        });
+        const doc = refetch.docs[0] as Record<string, unknown> | undefined;
+        if (doc?.id != null) {
+          toolIdBySlug.set(t.slug, doc.id as string | number);
+          console.log("Skip existing tool (constraint):", t.slug);
+          continue;
+        }
+      }
+      throw e;
+    }
   }
 
   for (const t of staticTools) {

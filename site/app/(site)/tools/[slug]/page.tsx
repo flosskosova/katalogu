@@ -164,7 +164,7 @@ export default async function ToolPage({ params }: Props) {
             <section aria-labelledby="long-heading">
               <h2
                 id="long-heading"
-                className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+                className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
               >
                 Overview
               </h2>
@@ -178,7 +178,7 @@ export default async function ToolPage({ params }: Props) {
             <section aria-labelledby="gallery-heading">
               <h2
                 id="gallery-heading"
-                className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+                className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
               >
                 Screenshots
               </h2>
@@ -202,7 +202,7 @@ export default async function ToolPage({ params }: Props) {
           <section aria-labelledby="why-heading">
             <h2
               id="why-heading"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+              className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
             >
               Why it is included
             </h2>
@@ -214,7 +214,7 @@ export default async function ToolPage({ params }: Props) {
           <section aria-labelledby="best-heading">
             <h2
               id="best-heading"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+              className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
             >
               Best for
             </h2>
@@ -227,7 +227,7 @@ export default async function ToolPage({ params }: Props) {
             <section aria-labelledby="proprietary-heading">
               <h2
                 id="proprietary-heading"
-                className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+                className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
               >
                 If you use Windows, Mac, or paid tools
               </h2>
@@ -241,7 +241,7 @@ export default async function ToolPage({ params }: Props) {
             <section aria-labelledby="tu-heading">
               <h2
                 id="tu-heading"
-                className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+                className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
               >
                 Target users
               </h2>
@@ -254,7 +254,7 @@ export default async function ToolPage({ params }: Props) {
           <section aria-labelledby="str-heading">
             <h2
               id="str-heading"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+              className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
             >
               Strengths
             </h2>
@@ -268,7 +268,7 @@ export default async function ToolPage({ params }: Props) {
           <section aria-labelledby="lim-heading">
             <h2
               id="lim-heading"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+              className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
             >
               Limitations
             </h2>
@@ -282,7 +282,7 @@ export default async function ToolPage({ params }: Props) {
           <section aria-labelledby="alt-heading">
             <h2
               id="alt-heading"
-              className="font-[family-name:var(--font-display)] text-xl font-semibold text-[var(--foreground)]"
+              className="font-[family-name:var(--font-brand)] text-xl font-semibold text-[var(--foreground)]"
             >
               Good alternatives
             </h2>
@@ -294,7 +294,7 @@ export default async function ToolPage({ params }: Props) {
 
         <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+            <h2 className="font-[family-name:var(--font-brand)] text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
               At a glance
             </h2>
             <dl className="mt-4 space-y-3 text-sm">
@@ -318,7 +318,7 @@ export default async function ToolPage({ params }: Props) {
           </div>
 
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+            <h2 className="font-[family-name:var(--font-brand)] text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
               Platforms
             </h2>
             <ul className="mt-3 flex flex-wrap gap-2">
@@ -333,7 +333,7 @@ export default async function ToolPage({ params }: Props) {
           </div>
 
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+            <h2 className="font-[family-name:var(--font-brand)] text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
               Tags
             </h2>
             <ul className="mt-3 flex flex-wrap gap-2">
@@ -355,7 +355,7 @@ export default async function ToolPage({ params }: Props) {
       <section className="border-t border-[var(--border)] py-12" aria-labelledby="rel-heading">
         <h2
           id="rel-heading"
-          className="font-[family-name:var(--font-display)] text-2xl font-semibold text-[var(--foreground)]"
+          className="font-[family-name:var(--font-brand)] text-2xl font-semibold text-[var(--foreground)]"
         >
           Related tools
         </h2>
@@ -369,7 +369,9 @@ export default async function ToolPage({ params }: Props) {
                 <p className="text-xs font-medium text-[var(--accent)]">
                   {r.category.name}
                 </p>
-                <p className="mt-1 font-medium text-[var(--foreground)]">{r.name}</p>
+                <p className="mt-1 font-[family-name:var(--font-brand)] font-medium text-[var(--foreground)]">
+                  {r.name}
+                </p>
                 <p className="mt-2 line-clamp-2 text-sm text-[var(--foreground-muted)]">
                   {r.summary}
                 </p>

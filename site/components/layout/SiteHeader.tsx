@@ -49,10 +49,10 @@ export function SiteHeader() {
             priority
           />
           <span className="flex min-w-0 flex-col leading-tight">
-            <span className="truncate font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight sm:text-xl">
+            <span className="truncate font-[family-name:var(--font-brand)] text-lg font-semibold tracking-tight sm:text-xl">
               {SITE.name}
             </span>
-            <span className="mt-0.5 font-sans text-[0.625rem] font-medium tracking-wide text-[var(--foreground-muted)] sm:text-[0.6875rem]">
+            <span className="mt-0.5 inline-block w-fit rounded-sm bg-[#fff176]/95 px-0.5 py-px font-[family-name:var(--font-brand)] text-[0.625rem] font-medium tracking-wide text-[var(--foreground)] [box-decoration-break:clone] dark:bg-[#fdd835]/35 dark:text-[var(--foreground-muted)] sm:text-[0.6875rem]">
               curated by FLOSSK
             </span>
           </span>

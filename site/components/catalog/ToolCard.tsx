@@ -39,7 +39,7 @@ export function ToolCard({
           >
             {tool.category.name}
           </Badge>
-          <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
+          <h3 className="font-[family-name:var(--font-brand)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
             <Link
               href={`/tools/${tool.slug}`}
               className="rounded transition-colors hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
