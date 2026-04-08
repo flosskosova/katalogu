@@ -36,11 +36,11 @@ export const SITE = {
   /** Short positioning line (title suffix, OG). */
   tagline:
     process.env.NEXT_PUBLIC_SITE_TAGLINE ??
-    "Curated FOSS & open source software catalog",
+    "Curated FOSS catalog",
   /** Primary meta description (~155–165 chars ideal; longer OK for OG). */
   description:
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ??
-    "Editorial catalog of trustworthy free and open source software—co-authored by FLOSSK, CyberFuzz, and AI. Browse by category, filter by platform and license, compare tools, and read evidence-based inclusion notes—not an exhaustive directory.",
+    "Editorial catalog of trustworthy free and open source software—co-authored by CyberFuzz and AI, powered by FLOSSK. Browse by category, filter by platform and license, compare tools, and read evidence-based inclusion notes—not an exhaustive directory.",
   /** Default keywords for homepage / brand discovery (search + AI retrieval). */
   keywords: [
     "open source software",
