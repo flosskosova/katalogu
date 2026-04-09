@@ -61,9 +61,6 @@ export const Users: CollectionConfig = {
       type: "email",
       label: "Email (login)",
       required: true,
-      access: {
-        update: ({ req: { user } }) => Boolean(user),
-      },
       admin: {
         description:
           "Address used to sign in. After changing it, log in with the new email.",
