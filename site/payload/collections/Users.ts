@@ -28,14 +28,80 @@ export const Users: CollectionConfig = {
     },
     delete: adminOnlyAccess,
   },
+  hooks: {
+    beforeValidate: [
+      ({ data, operation }) => {
+        const pwd =
+          typeof data?.password === "string" ? data.password.trim() : "";
+        const confirm =
+          typeof data?.confirmPassword === "string"
+            ? data.confirmPassword.trim()
+            : "";
+        if (operation === "create" && !pwd) {
+          throw new Error("Password is required when creating a user.");
+        }
+        if (pwd) {
+          if (pwd.length < 8) {
+            throw new Error("Password must be at least 8 characters.");
+          }
+          if (!confirm) {
+            throw new Error("Type the same password again in “Confirm new password”.");
+          }
+          if (pwd !== confirm) {
+            throw new Error("Passwords do not match.");
+          }
+        }
+      },
+    ],
+    beforeChange: [
+      ({ data }) => {
+        if (data && typeof data === "object" && "confirmPassword" in data) {
+          delete (data as Record<string, unknown>).confirmPassword;
+        }
+      },
+    ],
+  },
   admin: {
     useAsTitle: "email",
     defaultColumns: ["email", "role", "createdAt"],
     group: "Settings",
     description:
-      "Admins: use Create to add staff and set Admin vs Editor. Editors may only create/edit catalog Categories and Tools (drafts). To change your password while signed in, open your user below and set a new password. If you are locked out, use Forgot password on the login page (requires email to be configured on the server).",
+      "Use **New password** / **Confirm new password** below to set or change a password. Leave both empty when editing if you do not want to change it. Admins can create users with Create. Forgot password on the login page requires SMTP in General Settings.",
   },
   fields: [
+    {
+      type: "row",
+      admin: {
+        description:
+          "Set a new login password here (for yourself or, if you are an admin, for another user). Leave blank to keep the current password when saving an existing user.",
+      },
+      fields: [
+        {
+          name: "password",
+          // @ts-expect-error — `password` field type exists at runtime for auth collections (see @payloadcms/ui PasswordField).
+          type: "password",
+          required: false,
+          minLength: 8,
+          admin: {
+            width: "50%",
+            placeholder: "New password (min 8 characters)",
+            description:
+              "Leave empty to keep the current password. When setting a new one, repeat it in the field beside this.",
+          },
+        },
+        {
+          name: "confirmPassword",
+          // @ts-expect-error — `confirmPassword` pairs with `password` for auth collections.
+          type: "confirmPassword",
+          required: false,
+          admin: {
+            width: "50%",
+            placeholder: "Confirm new password",
+            description: "Must match **New password** when you enter one.",
+          },
+        },
+      ],
+    },
     {
       name: "role",
       type: "select",
