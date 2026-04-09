@@ -1,5 +1,5 @@
 import type { CollectionConfig } from "payload";
-import { editorAndAdminAccess } from "../access";
+import { adminOnlyAccess, editorAndAdminAccess } from "../access";
 
 export const CatalogTags: CollectionConfig = {
   slug: "catalog-tags",
@@ -11,8 +11,9 @@ export const CatalogTags: CollectionConfig = {
   },
   access: {
     read: editorAndAdminAccess,
-    create: editorAndAdminAccess,
-    update: editorAndAdminAccess,
+    /** Tag vocabulary is admin-managed; editors still read tags when editing tools. */
+    create: adminOnlyAccess,
+    update: adminOnlyAccess,
     delete: () => false,
   },
   fields: [

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from "payload";
-import { editorAndAdminAccess, isAdmin } from "../access";
+import { adminOnlyAccess, editorAndAdminAccess, isAdmin } from "../access";
 
 export const CuratedCollections: CollectionConfig = {
   slug: "curated-collections",
@@ -23,8 +23,9 @@ export const CuratedCollections: CollectionConfig = {
   },
   access: {
     read: editorAndAdminAccess,
-    create: editorAndAdminAccess,
-    update: editorAndAdminAccess,
+    /** Curated lists are admin-managed; editors focus on categories & tools. */
+    create: adminOnlyAccess,
+    update: adminOnlyAccess,
     delete: () => false,
   },
   hooks: {
