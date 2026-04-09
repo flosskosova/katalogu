@@ -60,6 +60,25 @@ function isPostgresUrl(url: string): boolean {
   return /^postgres(ql)?:\/\//i.test(url);
 }
 
+/**
+ * Payload uses this for cookies / CSRF. Must match the browser origin in production.
+ * Prefer explicit `NEXT_PUBLIC_SERVER_URL`; fall back to public site URL or Vercel’s hostname.
+ */
+function resolvePayloadServerURL(): string {
+  const explicit =
+    sanitizeEnvValue(process.env.NEXT_PUBLIC_SERVER_URL) ||
+    sanitizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL);
+  if (explicit) {
+    return explicit.replace(/\/+$/, "");
+  }
+  const vercel = process.env.VERCEL_URL?.trim();
+  if (vercel) {
+    const host = vercel.replace(/^https?:\/\//i, "");
+    return `https://${host}`;
+  }
+  return "http://localhost:3000";
+}
+
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
@@ -80,7 +99,7 @@ function dbAdapter() {
 }
 
 export default buildConfig({
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
+  serverURL: resolvePayloadServerURL(),
   secret: process.env.PAYLOAD_SECRET || "CHANGE_ME_DEV_ONLY",
   admin: {
     user: Users.slug,
