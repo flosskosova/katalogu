@@ -1,4 +1,5 @@
 import path from "path";
+import { postgresAdapter } from "@payloadcms/db-postgres";
 import { sqliteAdapter } from "@payloadcms/db-sqlite";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
@@ -53,6 +54,29 @@ function sqliteClientOptions() {
   };
 }
 
+function isPostgresUrl(url: string): boolean {
+  return /^postgres(ql)?:\/\//i.test(url);
+}
+
+function dbAdapter() {
+  const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
+  if (databaseUrl && isPostgresUrl(databaseUrl)) {
+    return postgresAdapter({
+      pool: { connectionString: databaseUrl },
+      /**
+       * For a fresh Supabase Postgres DB, we prefer pushing schema automatically instead of
+       * reusing sqlite-generated migrations (they are not compatible: db.run vs db.execute).
+       */
+      push: true,
+    });
+  }
+
+  return sqliteAdapter({
+    client: sqliteClientOptions(),
+    prodMigrations: migrations as unknown as never,
+  });
+}
+
 export default buildConfig({
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
   secret: process.env.PAYLOAD_SECRET || "CHANGE_ME_DEV_ONLY",
@@ -76,10 +100,7 @@ export default buildConfig({
     CatalogTools,
     CuratedCollections,
   ],
-  db: sqliteAdapter({
-    client: sqliteClientOptions(),
-    prodMigrations: migrations,
-  }),
+  db: dbAdapter(),
   sharp,
   /** Explicit adapter: same behavior as Payload’s default, but avoids startup WARN in logs. */
   email: ({ payload }) => ({
