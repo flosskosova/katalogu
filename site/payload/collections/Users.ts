@@ -1,17 +1,17 @@
 import type { CollectionConfig } from "payload";
 import { Forbidden } from "payload";
-import { getStaffRole } from "../access";
 import {
   assertRequestUserIsAdmin,
+  isRequestUserAdmin,
   sameActorAndDocId,
 } from "../usersAccessHooks";
 
 /**
  * Users / auth: `read` / `update` / `delete` stay permissive for any signed-in staff.
- * **`create` access is true for all signed-in staff** so the admin create form and API receive
- * permission; **only admins may actually create** when users already exist (`beforeChange` hook).
- * The Users list uses a custom view that hides the default Create button and shows **Add staff user**
- * for admins (role from `GET /api/users/me`, DB-backed).
+ * **`create`** is allowed when the DB has no users (first-account bootstrap) or when the actor is
+ * admin (`isRequestUserAdmin` — JWT or DB role, same as staff invite intent). This keeps
+ * `docPermissions.create` / save permission aligned with `beforeChange`.
+ * The list view hides the default Create control; admins use **Add staff user** (`/api/users/me`).
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -21,7 +21,16 @@ export const Users: CollectionConfig = {
     },
   },
   access: {
-    create: ({ req: { user } }) => Boolean(user),
+    create: async ({ req }) => {
+      const slug = req.payload.config.admin.user;
+      const { totalDocs } = await req.payload.count({
+        collection: slug,
+        req,
+        overrideAccess: true,
+      });
+      if (totalDocs === 0) return true;
+      return isRequestUserAdmin(req);
+    },
     read: ({ req: { user } }) => Boolean(user),
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
@@ -61,7 +70,7 @@ export const Users: CollectionConfig = {
 
         if (operation === "update" && originalDoc && data) {
           if (!actor?.id) throw new Forbidden(req.t);
-          const isAdmin = (await getStaffRole(req)) === "admin";
+          const isAdmin = await isRequestUserAdmin(req);
           const targetId = (originalDoc as { id?: string | number }).id;
 
           if (!isAdmin && !sameActorAndDocId(actor.id, targetId)) {

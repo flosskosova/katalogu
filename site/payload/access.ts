@@ -1,5 +1,10 @@
 import type { Access, FieldAccess, PayloadRequest, Where } from "payload";
 
+import {
+  isRequestUserAdmin,
+  isRequestUserEditorOrAdmin,
+} from "./usersAccessHooks";
+
 type UserLike = { id?: string | number; role?: string; collection?: string } | null | undefined;
 
 const CTX_STAFF_ROLE = "__payloadHydratedStaffRole";
@@ -82,7 +87,7 @@ export async function getStaffRole(
 }
 
 export async function isStaffAdmin(req: PayloadRequest): Promise<boolean> {
-  return (await getStaffRole(req)) === "admin";
+  return isRequestUserAdmin(req);
 }
 
 /** Sync check when `req.user.role` is known to be populated (e.g. after hydration elsewhere). */
@@ -94,12 +99,10 @@ export const isEditor = (user: UserLike) =>
 export const staffAccess: Access = ({ req: { user } }) => Boolean(user);
 
 export const adminOnlyAccess: Access = async ({ req }) =>
-  (await getStaffRole(req)) === "admin";
+  isRequestUserAdmin(req);
 
-export const editorAndAdminAccess: Access = async ({ req }) => {
-  const r = await getStaffRole(req);
-  return r === "editor" || r === "admin";
-};
+export const editorAndAdminAccess: Access = async ({ req }) =>
+  isRequestUserEditorOrAdmin(req);
 
 export const adminOnlyField: FieldAccess = async ({ req }) =>
-  (await getStaffRole(req)) === "admin";
+  isRequestUserAdmin(req);
