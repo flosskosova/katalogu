@@ -1,0 +1,15 @@
+diff --git a/node_modules/@payloadcms/next/package.json b/node_modules/@payloadcms/next/package.json
+--- a/node_modules/@payloadcms/next/package.json
++++ b/node_modules/@payloadcms/next/package.json
+@@ -16,10 +16,7 @@
+       "url": "https://payloadcms.com"
+     }
+   ],
+-  "sideEffects": [
+-    "*.scss",
+-    "*.css"
+-  ],
++  "sideEffects": true,
+   "type": "module",
+   "exports": {
+     "./css": {
