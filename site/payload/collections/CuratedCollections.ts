@@ -1,5 +1,5 @@
 import type { CollectionConfig } from "payload";
-import { adminOnlyAccess, editorAndAdminAccess, isAdmin } from "../access";
+import { adminOnlyAccess, editorAndAdminAccess, isStaffAdmin } from "../access";
 
 export const CuratedCollections: CollectionConfig = {
   slug: "curated-collections",
@@ -31,11 +31,10 @@ export const CuratedCollections: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, originalDoc, req }) => {
-        const user = req.user as { role?: string } | undefined;
         const next = data?.status as string | undefined;
         const prev = originalDoc?.status as string | undefined;
         if (next === "published" && prev !== "published") {
-          if (!isAdmin(user)) {
+          if (!(await isStaffAdmin(req))) {
             throw new Error(
               "Only administrators can publish collections. Editors can draft or mark In review.",
             );
@@ -56,7 +55,7 @@ export const CuratedCollections: CollectionConfig = {
           next &&
           next !== "published"
         ) {
-          if (!isAdmin(user)) {
+          if (!(await isStaffAdmin(req))) {
             throw new Error(
               "Only administrators can unpublish or archive collections.",
             );

@@ -3,7 +3,7 @@ import { CATALOG_TOOL_SLUG_RE } from "../../lib/catalog-tool-slug";
 import {
   adminOnlyAccess,
   editorAndAdminAccess,
-  isAdmin,
+  isStaffAdmin,
 } from "../access";
 import { applyToolSeoDefaults } from "../seo-defaults";
 
@@ -127,7 +127,7 @@ export const CatalogTools: CollectionConfig = {
         const prevStatus = originalDoc?.status as string | undefined;
 
         if (nextStatus === "published" && prevStatus !== "published") {
-          if (!isAdmin(user)) {
+          if (!(await isStaffAdmin(req))) {
             throw new Error(
               "Only administrators can publish. Editors can save drafts or mark In review.",
             );
@@ -168,7 +168,7 @@ export const CatalogTools: CollectionConfig = {
           nextStatus &&
           nextStatus !== "published"
         ) {
-          if (!isAdmin(user)) {
+          if (!(await isStaffAdmin(req))) {
             throw new Error("Only administrators can unpublish or archive.");
           }
         }
