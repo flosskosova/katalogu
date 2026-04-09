@@ -1,17 +1,34 @@
 "use client";
 
+import { useAuth, useConfig } from "@payloadcms/ui";
+import { formatAdminURL } from "payload/shared";
 import { useCallback, useState } from "react";
 
-/** Must match `Users.slug` in `payload/collections/Users.ts` (avoid importing server config in client). */
-const USERS_COLLECTION_SLUG = "users";
-
 /**
- * Calls Payload’s REST logout so `Set-Cookie` clears the httpOnly token, then hard-navigates.
- * Client `Link` / soft navigation to `/admin/logout` can show “logged out” without reliably clearing cookies.
+ * Clears client auth, POSTs logout (always, using admin user slug) so Set-Cookie expires the token,
+ * then hard-navigates to login. Payload’s built-in `logOut()` skips the request when `user` is missing
+ * even if the cookie is still present.
  */
-export async function performAdminLogout(): Promise<void> {
+export async function performAdminLogout(args: {
+  apiRoute: string;
+  adminRoute: string;
+  userSlug: string;
+  loginRoute: string;
+  setUser: (user: null) => void;
+}): Promise<void> {
+  const { apiRoute, adminRoute, userSlug, loginRoute, setUser } = args;
   try {
-    await fetch(`/api/${USERS_COLLECTION_SLUG}/logout`, {
+    setUser(null);
+  } catch {
+    /* continue */
+  }
+
+  const logoutURL = formatAdminURL({
+    apiRoute,
+    path: `/${userSlug}/logout` as `/${string}`,
+  });
+  try {
+    await fetch(logoutURL, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -20,19 +37,44 @@ export async function performAdminLogout(): Promise<void> {
   } catch {
     /* still redirect */
   }
-  window.location.replace("/admin/login");
+
+  const path = (
+    loginRoute.startsWith("/") ? loginRoute : `/${loginRoute}`
+  ) as `/${string}`;
+  const loginURL = formatAdminURL({ adminRoute, path });
+  window.location.replace(loginURL);
 }
 
 /**
  * Header action slot (`admin.components.actions`).
  */
 export function AdminLogoutHeaderAction() {
+  const { logOut, setUser } = useAuth();
+  const { config } = useConfig();
   const [busy, setBusy] = useState(false);
   const onClick = useCallback(() => {
     if (busy) return;
     setBusy(true);
-    void performAdminLogout();
-  }, [busy]);
+    const apiRoute = config.routes.api;
+    const adminRoute = config.routes.admin;
+    const userSlug = config.admin.user;
+    const loginRoute = config.admin.routes.login;
+
+    void (async () => {
+      try {
+        await logOut();
+      } catch {
+        /* performAdminLogout still clears cookie */
+      }
+      await performAdminLogout({
+        apiRoute,
+        adminRoute,
+        userSlug,
+        loginRoute,
+        setUser,
+      });
+    })();
+  }, [busy, config, logOut, setUser]);
 
   return (
     <button
@@ -62,12 +104,32 @@ export function AdminLogoutHeaderAction() {
  * Sidebar logout (`admin.components.logout.Button`).
  */
 export function AdminLogoutButton() {
+  const { logOut, setUser } = useAuth();
+  const { config } = useConfig();
   const [busy, setBusy] = useState(false);
   const onClick = useCallback(() => {
     if (busy) return;
     setBusy(true);
-    void performAdminLogout();
-  }, [busy]);
+    const apiRoute = config.routes.api;
+    const adminRoute = config.routes.admin;
+    const userSlug = config.admin.user;
+    const loginRoute = config.admin.routes.login;
+
+    void (async () => {
+      try {
+        await logOut();
+      } catch {
+        /* performAdminLogout still clears cookie */
+      }
+      await performAdminLogout({
+        apiRoute,
+        adminRoute,
+        userSlug,
+        loginRoute,
+        setUser,
+      });
+    })();
+  }, [busy, config, logOut, setUser]);
 
   return (
     <button
