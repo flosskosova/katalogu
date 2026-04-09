@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { Forbidden } from "payload";
+import { getStaffRole } from "../access";
 import {
   assertRequestUserIsAdmin,
   loadUserRoleFromDb,
@@ -8,8 +9,9 @@ import {
 
 /**
  * Users / auth collection: use **sync** `access` (`Boolean(user)`) so Payload’s permission layer
- * always grants read/update/create/delete for logged-in staff and the Save button stays enabled.
- * **Authorization** is enforced in hooks with a DB role lookup (JWT alone is unreliable).
+ * `read` / `update` stay permissive for any logged-in staff so profile saves and list UIs work.
+ * **Creating** another user is admin-only (plus empty DB for first-account bootstrap).
+ * **Authorization** for mutations is also enforced in hooks (`getStaffRole` / DB).
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -19,7 +21,17 @@ export const Users: CollectionConfig = {
     },
   },
   access: {
-    create: ({ req: { user } }) => Boolean(user),
+    create: async ({ req }) => {
+      const slug = req.payload.config.admin.user;
+      const { totalDocs } = await req.payload.count({
+        collection: slug,
+        req,
+        overrideAccess: true,
+      });
+      if (totalDocs === 0) return true;
+      if (!req.user) return false;
+      return (await getStaffRole(req)) === "admin";
+    },
     read: ({ req: { user } }) => Boolean(user),
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
@@ -125,6 +137,8 @@ export const Users: CollectionConfig = {
         { label: "Editor", value: "editor" },
       ],
       access: {
+        create: ({ req: { user } }) => Boolean(user),
+        read: ({ req: { user } }) => Boolean(user),
         update: () => true,
       },
       admin: {
