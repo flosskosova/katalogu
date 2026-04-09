@@ -6,14 +6,29 @@ export async function loadUserRoleFromDb(
   userId: string | number,
 ): Promise<string | undefined> {
   const slug = req.payload.config.admin.user;
-  const doc = await req.payload.findByID({
-    collection: slug,
-    id: userId,
-    depth: 0,
-    overrideAccess: true,
-    req,
-  });
-  return (doc as { role?: string } | null)?.role;
+  const idVariants: (string | number)[] = [userId];
+  if (typeof userId === "number" && Number.isFinite(userId)) {
+    idVariants.push(String(userId));
+  } else if (typeof userId === "string" && /^\d+$/.test(userId)) {
+    const n = Number(userId);
+    if (Number.isFinite(n)) idVariants.push(n);
+  }
+
+  for (const id of idVariants) {
+    try {
+      const doc = await req.payload.findByID({
+        collection: slug,
+        id,
+        depth: 0,
+        overrideAccess: true,
+        req,
+      });
+      return (doc as { role?: string } | null)?.role;
+    } catch {
+      /* try next id shape */
+    }
+  }
+  return undefined;
 }
 
 /**

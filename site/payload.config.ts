@@ -96,6 +96,56 @@ function resolvePayloadServerURL(): string {
   return "http://localhost:3000";
 }
 
+/**
+ * `payload/dist/auth/extractJWT.js` only reads the auth cookie when `Origin` is absent or is listed in
+ * `config.csrf`. `serverURL` is pushed onto `csrf` during sanitize, but the browser `Origin` must match
+ * exactly — e.g. `http://127.0.0.1:3000` ≠ `http://localhost:3000`. Listing both avoids 403 saves and
+ * logout that never clears the cookie.
+ */
+function originFromUrlish(urlish: string | undefined): string | undefined {
+  const raw = sanitizeEnvValue(urlish);
+  if (!raw) return undefined;
+  let s = raw.replace(/\/+$/, "");
+  if (!s) return undefined;
+  try {
+    if (!/^https?:\/\//i.test(s)) {
+      s = `https://${s}`;
+    }
+    return new URL(s).origin;
+  } catch {
+    return undefined;
+  }
+}
+
+function resolvePayloadExtraCsrfOrigins(): string[] {
+  const out = new Set<string>();
+  const add = (o: string | undefined) => {
+    if (o) out.add(o);
+  };
+
+  const port = sanitizeEnvValue(process.env.PORT) || "3000";
+
+  if (process.env.NODE_ENV !== "production") {
+    add(`http://localhost:${port}`);
+    add(`http://127.0.0.1:${port}`);
+    add(originFromUrlish(process.env.PAYLOAD_SERVER_URL));
+    add(originFromUrlish(process.env.PAYLOAD_DEV_SERVER_URL));
+    add(originFromUrlish(process.env.NEXT_PUBLIC_SERVER_URL));
+    add(originFromUrlish(process.env.NEXT_PUBLIC_SITE_URL));
+  } else {
+    add(originFromUrlish(process.env.NEXT_PUBLIC_SERVER_URL));
+    add(originFromUrlish(process.env.NEXT_PUBLIC_SITE_URL));
+    add(originFromUrlish(process.env.PAYLOAD_SERVER_URL));
+    const vercel = process.env.VERCEL_URL?.trim();
+    if (vercel) {
+      const host = vercel.replace(/^https?:\/\//i, "");
+      add(`https://${host}`);
+    }
+  }
+
+  return [...out];
+}
+
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
@@ -117,6 +167,7 @@ function dbAdapter() {
 
 export default buildConfig({
   serverURL: resolvePayloadServerURL(),
+  csrf: resolvePayloadExtraCsrfOrigins(),
   secret: process.env.PAYLOAD_SECRET || "CHANGE_ME_DEV_ONLY",
   admin: {
     user: Users.slug,
