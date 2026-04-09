@@ -3,7 +3,6 @@ import { Forbidden } from "payload";
 import { getStaffRole } from "../access";
 import {
   assertRequestUserIsAdmin,
-  loadUserRoleFromDb,
   sameActorAndDocId,
 } from "../usersAccessHooks";
 
@@ -71,8 +70,7 @@ export const Users: CollectionConfig = {
 
         if (operation === "update" && originalDoc && data) {
           if (!actor?.id) throw new Forbidden(req.t);
-          const actorRole = await loadUserRoleFromDb(req, actor.id);
-          const isAdmin = actorRole === "admin";
+          const isAdmin = (await getStaffRole(req)) === "admin";
           const targetId = (originalDoc as { id?: string | number }).id;
 
           if (!isAdmin && !sameActorAndDocId(actor.id, targetId)) {

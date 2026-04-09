@@ -1,15 +1,44 @@
 "use client";
 
-import Link from "next/link";
+import { useCallback, useState } from "react";
+
+/** Must match `Users.slug` in `payload/collections/Users.ts` (avoid importing server config in client). */
+const USERS_COLLECTION_SLUG = "users";
 
 /**
- * Header action slot (`admin.components.actions`) — always visible next to the main admin chrome.
+ * Calls Payload’s REST logout so `Set-Cookie` clears the httpOnly token, then hard-navigates.
+ * Client `Link` / soft navigation to `/admin/logout` can show “logged out” without reliably clearing cookies.
+ */
+export async function performAdminLogout(): Promise<void> {
+  try {
+    await fetch(`/api/${USERS_COLLECTION_SLUG}/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+    });
+  } catch {
+    /* still redirect */
+  }
+  window.location.replace("/admin/login");
+}
+
+/**
+ * Header action slot (`admin.components.actions`).
  */
 export function AdminLogoutHeaderAction() {
+  const [busy, setBusy] = useState(false);
+  const onClick = useCallback(() => {
+    if (busy) return;
+    setBusy(true);
+    void performAdminLogout();
+  }, [busy]);
+
   return (
-    <Link
-      href="/admin/logout"
-      prefetch={false}
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onClick}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -19,24 +48,32 @@ export function AdminLogoutHeaderAction() {
         borderRadius: "4px",
         border: "1px solid var(--theme-elevation-150, #e5e5e5)",
         color: "var(--theme-text, #333)",
-        textDecoration: "none",
+        background: "var(--theme-bg, #fff)",
+        cursor: busy ? "wait" : "pointer",
         whiteSpace: "nowrap",
       }}
     >
-      Log out
-    </Link>
+      {busy ? "Logging out…" : "Log out"}
+    </button>
   );
 }
 
 /**
- * Replaces Payload’s sidebar logout control (`admin.components.logout.Button`).
- * Uses the built-in `/admin/logout` route so cookies/session clear reliably.
+ * Sidebar logout (`admin.components.logout.Button`).
  */
 export function AdminLogoutButton() {
+  const [busy, setBusy] = useState(false);
+  const onClick = useCallback(() => {
+    if (busy) return;
+    setBusy(true);
+    void performAdminLogout();
+  }, [busy]);
+
   return (
-    <Link
-      href="/admin/logout"
-      prefetch={false}
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onClick}
       style={{
         display: "flex",
         alignItems: "center",
@@ -51,9 +88,10 @@ export function AdminLogoutButton() {
         borderRadius: "4px",
         border: "1px solid var(--theme-elevation-150, #e5e5e5)",
         background: "var(--theme-elevation-50, #fafafa)",
+        cursor: busy ? "wait" : "pointer",
       }}
     >
-      Log out
-    </Link>
+      {busy ? "Logging out…" : "Log out"}
+    </button>
   );
 }

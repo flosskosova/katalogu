@@ -24,9 +24,19 @@ export function whereIdEqualsUser(userId: string | number): Where {
   return { id: { equals: userId } } as Where;
 }
 
+function mergeJwtAndDbStaffRole(
+  jwtRole: string | undefined,
+  dbRole: string | undefined,
+): string | undefined {
+  if (jwtRole === "admin" || dbRole === "admin") return "admin";
+  if (jwtRole === "editor" || dbRole === "editor") return "editor";
+  return dbRole ?? jwtRole;
+}
+
 /**
- * Resolves `role` from `req.user` or loads it from the users collection when missing on the token
- * (common after token refresh, older sessions, or when `saveToJWT` was added later).
+ * Effective staff role for permission checks: merges JWT (`saveToJWT`) with the users row.
+ * Always loads the DB when the actor is a users-collection member so a DB role of `admin`
+ * still applies if the token still says `editor` (until the user signs in again).
  * Cached per request on `req.context`.
  */
 export async function getStaffRole(
@@ -34,18 +44,25 @@ export async function getStaffRole(
 ): Promise<string | undefined> {
   const user = req.user as UserLike;
   if (!user?.id) return undefined;
-  if (user.role === "admin" || user.role === "editor") return user.role;
-  if (typeof user.role === "string" && user.role.trim()) return user.role;
+
+  const jwtRole =
+    typeof user.role === "string" && user.role.trim() ? user.role : undefined;
 
   const usersSlug = req.payload?.config?.admin?.user;
   const coll = user.collection ?? usersSlug;
-  if (coll !== usersSlug || !req.payload) return user.role;
+  if (!req.payload || !usersSlug || coll !== usersSlug) {
+    return jwtRole;
+  }
 
   const ctx = req.context as Record<string, unknown> | undefined;
   if (ctx && CTX_STAFF_ROLE in ctx) {
-    return ctx[CTX_STAFF_ROLE] as string | undefined;
+    return mergeJwtAndDbStaffRole(
+      jwtRole,
+      ctx[CTX_STAFF_ROLE] as string | undefined,
+    );
   }
 
+  let dbRole: string | undefined;
   try {
     const doc = await req.payload.findByID({
       collection: usersSlug,
@@ -54,14 +71,14 @@ export async function getStaffRole(
       overrideAccess: true,
       req,
     });
-    const role = (doc as { role?: string } | null)?.role;
-    if (req.context) {
-      (req.context as Record<string, unknown>)[CTX_STAFF_ROLE] = role;
-    }
-    return role;
+    dbRole = (doc as { role?: string } | null)?.role;
   } catch {
-    return user.role;
+    dbRole = undefined;
   }
+  if (req.context) {
+    (req.context as Record<string, unknown>)[CTX_STAFF_ROLE] = dbRole;
+  }
+  return mergeJwtAndDbStaffRole(jwtRole, dbRole);
 }
 
 export async function isStaffAdmin(req: PayloadRequest): Promise<boolean> {
