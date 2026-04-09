@@ -1,15 +1,22 @@
-diff --git a/node_modules/@payloadcms/ui/package.json b/node_modules/@payloadcms/ui/package.json
---- a/node_modules/@payloadcms/ui/package.json
-+++ b/node_modules/@payloadcms/ui/package.json
-@@ -16,10 +16,7 @@
-       "url": "https://payloadcms.com"
-     }
-   ],
--  "sideEffects": [
--    "*.scss",
--    "*.css"
--  ],
-+  "sideEffects": true,
-   "type": "module",
-   "exports": {
-     ".": {
+diff --git a/node_modules/@payloadcms/ui/dist/providers/Config/index.js b/node_modules/@payloadcms/ui/dist/providers/Config/index.js
+index b3d5e60..362bdb7 100644
+--- a/node_modules/@payloadcms/ui/dist/providers/Config/index.js
++++ b/node_modules/@payloadcms/ui/dist/providers/Config/index.js
+@@ -3,7 +3,7 @@
+ 
+ import { c as _c } from "react/compiler-runtime";
+ import { jsx as _jsx } from "react/jsx-runtime";
+-import React, { createContext, use, useCallback, useEffect, useMemo } from 'react';
++import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
+ import { useControllableState } from '../../hooks/useControllableState.js';
+ const RootConfigContext = /*#__PURE__*/createContext(undefined);
+ export const ConfigProvider = ({
+@@ -51,7 +51,7 @@ export const ConfigProvider = ({
+     children: children
+   });
+ };
+-export const useConfig = () => use(RootConfigContext);
++export const useConfig = () => useContext(RootConfigContext);
+ /**
+  * This provider shadows the `ConfigProvider` on the _page_ level, allowing us to
+  * update the config when needed, e.g. after authentication.
