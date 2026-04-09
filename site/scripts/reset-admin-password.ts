@@ -66,11 +66,10 @@ async function main() {
       depth: 0,
       overrideAccess: true,
     });
-    const emails = any.docs.map((u) =>
-      typeof (u as { email?: string }).email === "string"
-        ? (u as { email: string }).email
-        : "?",
-    );
+    const emails = any.docs.map((u) => {
+      const e = (u as unknown as { email?: unknown }).email;
+      return typeof e === "string" ? e : "?";
+    });
     if (emails.length) {
       console.error(
         `Existing user emails in this database (${emails.length}): ${emails.join(", ")}`,
@@ -90,7 +89,6 @@ async function main() {
     id,
     data: {
       password: newPassword,
-      confirmPassword: newPassword,
       /** Ensure you can open /admin after reset (optional safety). */
       role: "admin",
     },
