@@ -7,6 +7,8 @@ import { buildConfig } from "payload";
 
 import { SITE } from "@/lib/seo/site";
 import { migrations } from "./migrations";
+import { resolveSmtpSettings } from "./payload/email/resolveSmtpSettings";
+import { GeneralSettings } from "./payload/globals/GeneralSettings";
 import { CatalogCategories } from "./payload/collections/CatalogCategories";
 import { CatalogTags } from "./payload/collections/CatalogTags";
 import { CatalogTools } from "./payload/collections/CatalogTools";
@@ -100,20 +102,37 @@ export default buildConfig({
     CatalogTools,
     CuratedCollections,
   ],
+  globals: [GeneralSettings],
   db: dbAdapter(),
   sharp,
-  /** Explicit adapter: same behavior as Payload’s default, but avoids startup WARN in logs. */
+  /** General Settings (SMTP) or `SMTP_*` env vars; otherwise logs only. */
   email: ({ payload }) => ({
-    name: "console",
+    name: "smtp",
     defaultFromAddress:
       process.env.SMTP_FROM_EMAIL?.trim() || "noreply@example.invalid",
-    defaultFromName:
-      process.env.SMTP_FROM_NAME?.trim() || SITE.name,
+    defaultFromName: process.env.SMTP_FROM_NAME?.trim() || SITE.name,
     sendEmail: async (message) => {
-      payload.logger.info({
-        msg: "[email] Console adapter — not sent (configure SMTP / Resend for real mail)",
-        to: message.to,
-        subject: message.subject,
+      const cfg = await resolveSmtpSettings(payload);
+      if (!cfg) {
+        payload.logger.info({
+          msg: "[email] SMTP disabled — enable in Settings → General Settings or set SMTP_HOST/SMTP_USER/SMTP_PASS",
+          to: message.to,
+          subject: message.subject,
+        });
+        return;
+      }
+      const { default: nodemailer } = await import("nodemailer");
+      const transport = nodemailer.createTransport({
+        host: cfg.host,
+        port: cfg.port,
+        secure: cfg.secure,
+        auth: { user: cfg.user, pass: cfg.password },
+      });
+      await transport.sendMail({
+        ...message,
+        from:
+          message.from ??
+          `"${cfg.fromName}" <${cfg.fromEmail}>`,
       });
     },
   }),
