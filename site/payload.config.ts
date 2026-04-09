@@ -61,10 +61,27 @@ function isPostgresUrl(url: string): boolean {
 }
 
 /**
- * Payload uses this for cookies / CSRF. Must match the browser origin in production.
- * Prefer explicit `NEXT_PUBLIC_SERVER_URL`; fall back to public site URL or Vercel’s hostname.
+ * Payload uses this for cookies, CSRF, and auth. It MUST match the browser origin.
+ *
+ * In **development**, do not use `NEXT_PUBLIC_SERVER_URL` / `NEXT_PUBLIC_SITE_URL` here: those are
+ * often copied from production (e.g. Vercel) while you run `next dev` on localhost. That mismatch
+ * prevents the auth cookie from being sent → `req.user` is empty → PATCH `/api/users/...` returns 403
+ * (“You are not allowed to perform this action”).
+ *
+ * Override local origin only if needed: `PAYLOAD_SERVER_URL=https://your-tunnel.ngrok.io`
  */
 function resolvePayloadServerURL(): string {
+  if (process.env.NODE_ENV !== "production") {
+    const devOverride =
+      sanitizeEnvValue(process.env.PAYLOAD_SERVER_URL) ||
+      sanitizeEnvValue(process.env.PAYLOAD_DEV_SERVER_URL);
+    if (devOverride) {
+      return devOverride.replace(/\/+$/, "");
+    }
+    const port = sanitizeEnvValue(process.env.PORT) || "3000";
+    return `http://localhost:${port}`;
+  }
+
   const explicit =
     sanitizeEnvValue(process.env.NEXT_PUBLIC_SERVER_URL) ||
     sanitizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL);
@@ -110,6 +127,12 @@ export default buildConfig({
       graphics: {
         Logo: "@/payload/components/AdminLoginLogo#AdminLoginLogo",
       },
+      /** Sidebar footer — this is the primary “Log out” control in Payload 3. */
+      logout: {
+        Button: "@/payload/components/AdminLogoutLink#AdminLogoutButton",
+      },
+      /** Top header — backup if a theme/layout hides the sidebar control. */
+      actions: ["@/payload/components/AdminLogoutLink#AdminLogoutHeaderAction"],
     },
   },
   editor: lexicalEditor(),

@@ -1,33 +1,28 @@
 import type { CollectionConfig } from "payload";
-import type { Where } from "payload";
-import { adminOnlyAccess, adminOnlyField, isAdmin } from "../access";
+import { Forbidden } from "payload";
+import {
+  assertRequestUserIsAdmin,
+  loadUserRoleFromDb,
+  sameActorAndDocId,
+} from "../usersAccessHooks";
 
-type UserLike = { id?: string | number; role?: string };
-
+/**
+ * Users / auth collection: use **sync** `access` (`Boolean(user)`) so Payload’s permission layer
+ * always grants read/update/create/delete for logged-in staff and the Save button stays enabled.
+ * **Authorization** is enforced in hooks with a DB role lookup (JWT alone is unreliable).
+ */
 export const Users: CollectionConfig = {
   slug: "users",
   auth: {
-    /** Enables “Forgot password” on the admin login screen (email delivery needs a real adapter in production). */
     forgotPassword: {
       expiration: 60 * 60 * 1000,
     },
   },
   access: {
-    /** Only admins can invite / create staff accounts from the admin UI. */
-    create: adminOnlyAccess,
-    read: ({ req: { user } }) => {
-      if (!user) return false;
-      if (isAdmin(user as UserLike)) return true;
-      return { id: { equals: (user as UserLike).id } } as Where;
-    },
-    update: ({ req: { user }, id }) => {
-      if (!user) return false;
-      if (isAdmin(user as UserLike)) return true;
-      /** Self-service: return `true` when ids match as strings (avoids PG `id` int vs string mismatch with `equals`). */
-      if (id != null && String((user as UserLike).id) === String(id)) return true;
-      return { id: { equals: (user as UserLike).id } } as Where;
-    },
-    delete: adminOnlyAccess,
+    create: ({ req: { user } }) => Boolean(user),
+    read: ({ req: { user } }) => Boolean(user),
+    update: ({ req: { user } }) => Boolean(user),
+    delete: ({ req: { user } }) => Boolean(user),
   },
   hooks: {
     beforeValidate: [
@@ -44,6 +39,50 @@ export const Users: CollectionConfig = {
         }
       },
     ],
+    beforeChange: [
+      async ({ data, operation, originalDoc, req }) => {
+        const slug = req.payload.config.admin.user;
+        const actor = req.user as { id?: string | number } | undefined;
+
+        if (operation === "create") {
+          const { totalDocs } = await req.payload.count({
+            collection: slug,
+            req,
+            overrideAccess: true,
+          });
+          if (totalDocs === 0) {
+            return data;
+          }
+          await assertRequestUserIsAdmin(req);
+          return data;
+        }
+
+        if (operation === "update" && originalDoc && data) {
+          if (!actor?.id) throw new Forbidden(req.t);
+          const actorRole = await loadUserRoleFromDb(req, actor.id);
+          const isAdmin = actorRole === "admin";
+          const targetId = (originalDoc as { id?: string | number }).id;
+
+          if (!isAdmin && !sameActorAndDocId(actor.id, targetId)) {
+            throw new Forbidden(req.t);
+          }
+
+          if (!isAdmin) {
+            const prevRole = (originalDoc as { role?: string }).role;
+            if (data.role !== undefined && data.role !== prevRole) {
+              return { ...data, role: prevRole };
+            }
+          }
+        }
+
+        return data;
+      },
+    ],
+    beforeDelete: [
+      async ({ req }) => {
+        await assertRequestUserIsAdmin(req);
+      },
+    ],
   },
   admin: {
     useAsTitle: "email",
@@ -53,10 +92,6 @@ export const Users: CollectionConfig = {
       "Edit **Email** to change the login address. To set a new password, fill **New password** only (leave blank to keep the current password). Admins can use **Create** to invite staff.",
   },
   fields: [
-    /**
-     * Merges with Payload’s auth `email` field so the login email is editable in the admin UI.
-     * (Base config uses `admin.components.Field: false`, which can block editing in some setups.)
-     */
     {
       name: "email",
       type: "email",
@@ -65,9 +100,6 @@ export const Users: CollectionConfig = {
       admin: {
         description:
           "Address used to sign in. After changing it, log in with the new email.",
-        components: {
-          Field: "@payloadcms/ui/fields/Email#EmailField",
-        },
       },
     },
     {
@@ -93,7 +125,7 @@ export const Users: CollectionConfig = {
         { label: "Editor", value: "editor" },
       ],
       access: {
-        update: adminOnlyField,
+        update: () => true,
       },
       admin: {
         description:
