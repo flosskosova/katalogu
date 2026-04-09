@@ -20,10 +20,11 @@ export const Users: CollectionConfig = {
       if (isAdmin(user as UserLike)) return true;
       return { id: { equals: (user as UserLike).id } } as Where;
     },
-    update: ({ req: { user } }) => {
+    update: ({ req: { user }, id }) => {
       if (!user) return false;
       if (isAdmin(user as UserLike)) return true;
-      /** Non-admins may only update their own row (e.g. change password in the admin UI). */
+      /** Self-service: return `true` when ids match as strings (avoids PG `id` int vs string mismatch with `equals`). */
+      if (id != null && String((user as UserLike).id) === String(id)) return true;
       return { id: { equals: (user as UserLike).id } } as Where;
     },
     delete: adminOnlyAccess,
@@ -64,6 +65,9 @@ export const Users: CollectionConfig = {
       admin: {
         description:
           "Address used to sign in. After changing it, log in with the new email.",
+        components: {
+          Field: "@payloadcms/ui/fields/Email#EmailField",
+        },
       },
     },
     {
@@ -83,6 +87,7 @@ export const Users: CollectionConfig = {
       type: "select",
       required: true,
       defaultValue: "editor",
+      saveToJWT: true,
       options: [
         { label: "Admin", value: "admin" },
         { label: "Editor", value: "editor" },
