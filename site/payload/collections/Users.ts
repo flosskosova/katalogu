@@ -7,10 +7,11 @@ import {
 } from "../usersAccessHooks";
 
 /**
- * Users / auth collection: use **sync** `access` (`Boolean(user)`) so Payload’s permission layer
- * `read` / `update` stay permissive for any logged-in staff so profile saves and list UIs work.
- * **Creating** another user is admin-only (plus empty DB for first-account bootstrap).
- * **Authorization** for mutations is also enforced in hooks (`getStaffRole` / DB).
+ * Users / auth: `read` / `update` / `delete` stay permissive for any signed-in staff.
+ * **`create` access is true for all signed-in staff** so the admin create form and API receive
+ * permission; **only admins may actually create** when users already exist (`beforeChange` hook).
+ * The Users list uses a custom view that hides the default Create button and shows **Add staff user**
+ * for admins (role from `GET /api/users/me`, DB-backed).
  */
 export const Users: CollectionConfig = {
   slug: "users",
@@ -20,17 +21,7 @@ export const Users: CollectionConfig = {
     },
   },
   access: {
-    create: async ({ req }) => {
-      const slug = req.payload.config.admin.user;
-      const { totalDocs } = await req.payload.count({
-        collection: slug,
-        req,
-        overrideAccess: true,
-      });
-      if (totalDocs === 0) return true;
-      if (!req.user) return false;
-      return (await getStaffRole(req)) === "admin";
-    },
+    create: ({ req: { user } }) => Boolean(user),
     read: ({ req: { user } }) => Boolean(user),
     update: ({ req: { user } }) => Boolean(user),
     delete: ({ req: { user } }) => Boolean(user),
@@ -99,7 +90,15 @@ export const Users: CollectionConfig = {
     defaultColumns: ["email", "role", "createdAt"],
     group: "Settings",
     description:
-      "Edit **Email** to change the login address. To set a new password, fill **New password** only (leave blank to keep the current password). Admins can use **Create** to invite staff.",
+      "Edit **Email** to change the login address. To set a new password, fill **New password** only (leave blank to keep the current password). Admins use **Add staff user** above the list to invite editors.",
+    components: {
+      beforeList: ["@/payload/components/UsersAdminList#UsersAddStaffButton"],
+      views: {
+        list: {
+          Component: "@/payload/components/UsersAdminList#UsersListView",
+        },
+      },
+    },
   },
   fields: [
     {
