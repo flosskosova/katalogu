@@ -60,6 +60,25 @@ async function main() {
   const doc = found.docs[0];
   if (!doc) {
     console.error(`No user found with email: ${email}`);
+    const any = await payload.find({
+      collection: "users",
+      limit: 20,
+      depth: 0,
+      overrideAccess: true,
+    });
+    const emails = any.docs.map((u) =>
+      typeof (u as { email?: string }).email === "string"
+        ? (u as { email: string }).email
+        : "?",
+    );
+    if (emails.length) {
+      console.error(
+        `Existing user emails in this database (${emails.length}): ${emails.join(", ")}`,
+      );
+      console.error("Set ADMIN_EMAIL to one of these, or create a user in /admin first.");
+    } else {
+      console.error("No users in this database — run: npm run seed:catalog");
+    }
     await payload.destroy();
     process.exit(1);
   }
