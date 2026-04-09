@@ -38,6 +38,15 @@ export async function performAdminLogout(args: {
     /* still redirect */
   }
 
+  try {
+    await fetch("/api/clear-payload-auth", {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    /* still redirect */
+  }
+
   const path = (
     loginRoute.startsWith("/") ? loginRoute : `/${loginRoute}`
   ) as `/${string}`;
