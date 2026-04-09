@@ -1,5 +1,7 @@
 import { Forbidden, type PayloadRequest } from "payload";
 
+import { getStaffRole } from "./access";
+
 /** Load `role` from DB (JWT/`req.user` is not reliable for permissions UI). */
 export async function loadUserRoleFromDb(
   req: PayloadRequest,
@@ -19,7 +21,8 @@ export async function loadUserRoleFromDb(
 export async function assertRequestUserIsAdmin(req: PayloadRequest): Promise<void> {
   const u = req.user as { id?: string | number } | undefined;
   if (!u?.id) throw new Forbidden(req.t);
-  const role = await loadUserRoleFromDb(req, u.id);
+  /** Prefer JWT (`saveToJWT`) when present; fall back to DB like `getStaffRole`. */
+  const role = await getStaffRole(req);
   if (role !== "admin") throw new Forbidden(req.t);
 }
 
