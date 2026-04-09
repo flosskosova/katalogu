@@ -1,7 +1,5 @@
 import { Forbidden, type PayloadRequest } from "payload";
 
-import { getStaffRole } from "./access";
-
 /** Load `role` from DB (JWT/`req.user` is not reliable for permissions UI). */
 export async function loadUserRoleFromDb(
   req: PayloadRequest,
@@ -18,12 +16,38 @@ export async function loadUserRoleFromDb(
   return (doc as { role?: string } | null)?.role;
 }
 
+/**
+ * Admin check for user-management actions. Matches the idea of `GET /api/users/me`:
+ * JWT `role` **or** DB row (no `req.context` cache — avoids stale `getStaffRole` during creates).
+ */
+export async function isRequestUserAdmin(req: PayloadRequest): Promise<boolean> {
+  const u = req.user as { id?: string | number; role?: string } | undefined;
+  if (!u?.id) return false;
+  if (u.role === "admin") return true;
+  try {
+    return (await loadUserRoleFromDb(req, u.id)) === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export async function assertRequestUserIsAdmin(req: PayloadRequest): Promise<void> {
-  const u = req.user as { id?: string | number } | undefined;
-  if (!u?.id) throw new Forbidden(req.t);
-  /** Prefer JWT (`saveToJWT`) when present; fall back to DB like `getStaffRole`. */
-  const role = await getStaffRole(req);
-  if (role !== "admin") throw new Forbidden(req.t);
+  if (!(await isRequestUserAdmin(req))) throw new Forbidden(req.t);
+}
+
+/** Admin or editor — JWT or DB, no `getStaffRole` context cache. */
+export async function isRequestUserEditorOrAdmin(
+  req: PayloadRequest,
+): Promise<boolean> {
+  const u = req.user as { id?: string | number; role?: string } | undefined;
+  if (!u?.id) return false;
+  if (u.role === "admin" || u.role === "editor") return true;
+  try {
+    const r = await loadUserRoleFromDb(req, u.id);
+    return r === "admin" || r === "editor";
+  } catch {
+    return false;
+  }
 }
 
 export function sameActorAndDocId(
