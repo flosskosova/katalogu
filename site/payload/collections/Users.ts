@@ -33,10 +33,6 @@ export const Users: CollectionConfig = {
       ({ data, operation }) => {
         const pwd =
           typeof data?.password === "string" ? data.password.trim() : "";
-        const confirm =
-          typeof data?.confirmPassword === "string"
-            ? data.confirmPassword.trim()
-            : "";
         if (operation === "create" && !pwd) {
           throw new Error("Password is required when creating a user.");
         }
@@ -44,19 +40,6 @@ export const Users: CollectionConfig = {
           if (pwd.length < 8) {
             throw new Error("Password must be at least 8 characters.");
           }
-          if (!confirm) {
-            throw new Error("Type the same password again in “Confirm new password”.");
-          }
-          if (pwd !== confirm) {
-            throw new Error("Passwords do not match.");
-          }
-        }
-      },
-    ],
-    beforeChange: [
-      ({ data }) => {
-        if (data && typeof data === "object" && "confirmPassword" in data) {
-          delete (data as Record<string, unknown>).confirmPassword;
         }
       },
     ],
@@ -66,41 +49,37 @@ export const Users: CollectionConfig = {
     defaultColumns: ["email", "role", "createdAt"],
     group: "Settings",
     description:
-      "Use **New password** / **Confirm new password** below to set or change a password. Leave both empty when editing if you do not want to change it. Admins can create users with Create. Forgot password on the login page requires SMTP in General Settings.",
+      "Edit **Email** to change the login address. To set a new password, fill **New password** only (leave blank to keep the current password). Admins can use **Create** to invite staff.",
   },
   fields: [
+    /**
+     * Merges with Payload’s auth `email` field so the login email is editable in the admin UI.
+     * (Base config uses `admin.components.Field: false`, which can block editing in some setups.)
+     */
     {
-      type: "row",
+      name: "email",
+      type: "email",
+      label: "Email (login)",
+      required: true,
+      access: {
+        update: ({ req: { user } }) => Boolean(user),
+      },
       admin: {
         description:
-          "Set a new login password here (for yourself or, if you are an admin, for another user). Leave blank to keep the current password when saving an existing user.",
+          "Address used to sign in. After changing it, log in with the new email.",
       },
-      fields: [
-        {
-          name: "password",
-          // @ts-expect-error — `password` field type exists at runtime for auth collections (see @payloadcms/ui PasswordField).
-          type: "password",
-          required: false,
-          minLength: 8,
-          admin: {
-            width: "50%",
-            placeholder: "New password (min 8 characters)",
-            description:
-              "Leave empty to keep the current password. When setting a new one, repeat it in the field beside this.",
-          },
-        },
-        {
-          name: "confirmPassword",
-          // @ts-expect-error — `confirmPassword` pairs with `password` for auth collections.
-          type: "confirmPassword",
-          required: false,
-          admin: {
-            width: "50%",
-            placeholder: "Confirm new password",
-            description: "Must match **New password** when you enter one.",
-          },
-        },
-      ],
+    },
+    {
+      name: "password",
+      // @ts-expect-error — `password` field type exists at runtime for auth collections.
+      type: "password",
+      required: false,
+      minLength: 8,
+      admin: {
+        description:
+          "Leave empty to keep the current password. When creating a user, set a password here (min 8 characters).",
+        placeholder: "New password (min 8 characters)",
+      },
     },
     {
       name: "role",
