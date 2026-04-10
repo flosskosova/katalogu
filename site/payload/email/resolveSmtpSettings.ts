@@ -61,6 +61,7 @@ export async function resolveSmtpSettings(
   const secure =
     typeof doc?.smtpSecure === "boolean" ? doc.smtpSecure : envSecure;
 
+  /** “From email” / “From name” in Settings → General Settings, else SMTP_* env, else login user. */
   const fromEmail = trim(doc?.smtpFromEmail) || envFromEmail || user;
   const fromName = trim(doc?.smtpFromName) || envFromName || "OpenCatalog";
 
@@ -74,4 +75,9 @@ export async function resolveSmtpSettings(
     fromEmail,
     fromName,
   };
+}
+
+/** RFC5322 From header for nodemailer — always use resolved SMTP identity (not a bare env default). */
+export function formatSmtpFromAddress(cfg: ResolvedSmtp): string {
+  return `"${cfg.fromName}" <${cfg.fromEmail}>`;
 }

@@ -13,7 +13,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
         <div className="flex flex-col gap-8">
           <div className="w-full text-sm">
-            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2 sm:grid sm:grid-cols-4 sm:items-baseline sm:gap-x-8 sm:gap-y-0">
+            <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
               <p className="shrink-0 font-medium text-[var(--foreground)]">
                 Explore
               </p>
@@ -34,6 +34,12 @@ export function SiteFooter() {
                 href="/compare"
               >
                 Compare tools
+              </Link>
+              <Link
+                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                href="/suggest"
+              >
+                Suggest a FOSS app
               </Link>
             </div>
           </div>
