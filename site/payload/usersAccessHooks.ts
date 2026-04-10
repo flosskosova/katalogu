@@ -1,4 +1,4 @@
-import { Forbidden, type PayloadRequest } from "payload";
+import { Forbidden, type PayloadRequest, type Where } from "payload";
 
 const CTX_DB_ROLE_PREFIX = "__payloadDbStaffRole:";
 
@@ -23,6 +23,18 @@ function idVariantsForAccess(userId: string | number): (string | number)[] {
     }
   }
   return [...new Set(out)];
+}
+
+/**
+ * `Where` for collection `read` access: non-admins may only match their own users row
+ * (handles string/number/UUID shape mismatches across JWT and DB).
+ */
+export function whereSelfUserRow(actorId: string | number): Where {
+  const variants = idVariantsForAccess(actorId);
+  if (variants.length === 1) {
+    return { id: { equals: variants[0] } } as Where;
+  }
+  return { or: variants.map((id) => ({ id: { equals: id } })) } as Where;
 }
 
 /**

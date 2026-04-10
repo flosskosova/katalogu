@@ -4,13 +4,13 @@ import {
   assertRequestUserIsAdmin,
   isRequestUserAdmin,
   sameActorAndDocId,
+  whereSelfUserRow,
 } from "../usersAccessHooks";
 
 /**
- * Users / auth: `read` / `update` / `delete` stay permissive for any signed-in staff.
- * **`create`** is allowed when the DB has no users (first-account bootstrap) or when the actor is
- * admin (`isRequestUserAdmin` — JWT or DB role, same as staff invite intent). This keeps
- * `docPermissions.create` / save permission aligned with `beforeChange`.
+ * Users / auth: **`create`** when the DB has no users (bootstrap) or when the actor is admin;
+ * **`read`** / **`update`**: admins see any user, editors only their own row; **`delete`**: admin only.
+ * This keeps `docPermissions` aligned with `beforeChange` / `beforeDelete`.
  * The list view hides the default Create control; admins use **Add staff user** (`/api/users/me`).
  */
 export const Users: CollectionConfig = {
@@ -31,9 +31,20 @@ export const Users: CollectionConfig = {
       if (totalDocs === 0) return true;
       return isRequestUserAdmin(req);
     },
-    read: ({ req: { user } }) => Boolean(user),
-    update: ({ req: { user } }) => Boolean(user),
-    delete: ({ req: { user } }) => Boolean(user),
+    read: async ({ req }) => {
+      const u = req.user as { id?: string | number } | undefined;
+      if (!u?.id) return false;
+      if (await isRequestUserAdmin(req)) return true;
+      return whereSelfUserRow(u.id);
+    },
+    update: async ({ req, id }) => {
+      const u = req.user as { id?: string | number } | undefined;
+      if (!u?.id) return false;
+      if (await isRequestUserAdmin(req)) return true;
+      if (id == null) return false;
+      return sameActorAndDocId(u.id, id);
+    },
+    delete: async ({ req }) => isRequestUserAdmin(req),
   },
   hooks: {
     beforeValidate: [
