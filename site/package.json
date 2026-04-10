@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
+    "@marsidev/react-turnstile": "^1.5.0",
     "@payloadcms/db-postgres": "^3.81.0",
     "@payloadcms/db-sqlite": "^3.81.0",
     "@payloadcms/next": "^3.81.0",

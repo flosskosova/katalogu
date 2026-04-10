@@ -7,7 +7,10 @@ import { buildConfig } from "payload";
 
 import { SITE } from "@/lib/seo/site";
 import { migrations } from "./migrations";
-import { resolveSmtpSettings } from "./payload/email/resolveSmtpSettings";
+import {
+  formatSmtpFromAddress,
+  resolveSmtpSettings,
+} from "./payload/email/resolveSmtpSettings";
 import { GeneralSettings } from "./payload/globals/GeneralSettings";
 import { CatalogCategories } from "./payload/collections/CatalogCategories";
 import { CatalogTags } from "./payload/collections/CatalogTags";
@@ -15,6 +18,7 @@ import { CatalogTools } from "./payload/collections/CatalogTools";
 import { CuratedCollections } from "./payload/collections/CuratedCollections";
 import { Media } from "./payload/collections/Media";
 import { Users } from "./payload/collections/Users";
+import { ToolSuggestions } from "./payload/collections/ToolSuggestions";
 
 const root = process.cwd();
 
@@ -201,6 +205,7 @@ export default buildConfig({
     CatalogTags,
     CatalogTools,
     CuratedCollections,
+    ToolSuggestions,
   ],
   globals: [GeneralSettings],
   db: dbAdapter(),
@@ -230,9 +235,7 @@ export default buildConfig({
       });
       await transport.sendMail({
         ...message,
-        from:
-          message.from ??
-          `"${cfg.fromName}" <${cfg.fromEmail}>`,
+        from: message.from ?? formatSmtpFromAddress(cfg),
       });
     },
   }),
