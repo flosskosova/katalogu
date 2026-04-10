@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, toast, useDocumentInfo, useFormFields } from "@payloadcms/ui";
+import { Button, toast, useDocumentInfo } from "@payloadcms/ui";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -16,23 +16,18 @@ function relationshipId(val: unknown): string | number | null {
   return null;
 }
 
+/**
+ * Toolbar for Accept / Decline / Delete. Does **not** use `useFormFields` — that hook only works
+ * inside Payload’s document `<Form>` tree, while `beforeDocumentControls` renders outside it and
+ * would throw, blanking the admin UI.
+ */
 export function ToolSuggestionDocumentControls() {
   const router = useRouter();
   const info = useDocumentInfo();
   const id = info.id;
-  const slug = info.collectionSlug;
+  const slug = info.collectionSlug ?? info.docConfig?.slug;
   const data = info.data;
   const hasDelete = info.hasDeletePermission === true;
-
-  const formCategoryId = useFormFields(([formState]) => {
-    const row = formState?.reviewedCategory as { value?: unknown } | undefined;
-    return relationshipId(row?.value);
-  });
-  const formReviewNote = useFormFields(([formState]) => {
-    const row = formState?.reviewNote as { value?: unknown } | undefined;
-    const v = row?.value;
-    return typeof v === "string" ? v : "";
-  });
 
   const [categoryId, setCategoryId] = useState<string>("");
   const [reviewNote, setReviewNote] = useState("");
@@ -76,13 +71,15 @@ export function ToolSuggestionDocumentControls() {
 
   const onAccept = useCallback(async () => {
     if (id == null) return;
+    const fromSelect = categoryId.trim() ? Number(categoryId) : null;
+    const fromDoc = relationshipId(data?.reviewedCategory);
     const cat =
-      formCategoryId ?? (categoryId.trim() ? Number(categoryId) : null);
+      fromSelect != null && !Number.isNaN(fromSelect) ? fromSelect : fromDoc != null ? Number(fromDoc) : null;
     if (cat == null || Number.isNaN(Number(cat))) {
-      toast.error("Choose a suggested catalog category before accepting.");
+      toast.error("Choose a suggested catalog category (toolbar or sidebar) before accepting.");
       return;
     }
-    const noteMerged = (formReviewNote || reviewNote).trim();
+    const noteMerged = reviewNote.trim();
     setBusy("accept");
     try {
       await patch({
@@ -97,11 +94,11 @@ export function ToolSuggestionDocumentControls() {
     } finally {
       setBusy(null);
     }
-  }, [categoryId, formCategoryId, formReviewNote, id, patch, reviewNote, router]);
+  }, [categoryId, data?.reviewedCategory, id, patch, reviewNote, router]);
 
   const onDecline = useCallback(async () => {
     if (id == null) return;
-    const noteMerged = (formReviewNote || reviewNote).trim();
+    const noteMerged = reviewNote.trim();
     setBusy("decline");
     try {
       await patch({
@@ -115,7 +112,7 @@ export function ToolSuggestionDocumentControls() {
     } finally {
       setBusy(null);
     }
-  }, [formReviewNote, id, patch, reviewNote, router]);
+  }, [id, patch, reviewNote, router]);
 
   const onDelete = useCallback(async () => {
     if (id == null) return;
@@ -200,15 +197,15 @@ export function ToolSuggestionDocumentControls() {
           {busy === "decline" ? "Declining…" : "Decline"}
         </Button>
         {hasDelete ? (
-        <Button
-          type="button"
-          buttonStyle="error"
-          size="small"
-          disabled={Boolean(busy)}
-          onClick={onDelete}
-        >
-          {busy === "delete" ? "Deleting…" : "Delete"}
-        </Button>
+          <Button
+            type="button"
+            buttonStyle="error"
+            size="small"
+            disabled={Boolean(busy)}
+            onClick={onDelete}
+          >
+            {busy === "delete" ? "Deleting…" : "Delete"}
+          </Button>
         ) : null}
       </div>
     </div>

@@ -31,7 +31,6 @@ export const ToolSuggestions: CollectionConfig = {
       "appName",
       "submitterEmail",
       "status",
-      "reviewedCategory",
       "repoUrl",
       "createdAt",
     ],
