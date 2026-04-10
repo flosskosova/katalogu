@@ -12,6 +12,23 @@ const inputClass =
 
 const labelClass = "block text-sm font-medium text-[var(--foreground)]";
 
+function describeSubmitFailure(err: unknown): string {
+  if (err instanceof TypeError) {
+    return "Could not reach the server. Check your connection and try again.";
+  }
+  if (err instanceof Error && err.message.trim()) {
+    return err.message;
+  }
+  if (typeof err === "string" && err.trim()) {
+    return err;
+  }
+  const o = err as { message?: unknown };
+  if (o && typeof o === "object" && typeof o.message === "string" && o.message.trim()) {
+    return o.message;
+  }
+  return "Something went wrong while sending your suggestion. Please try again.";
+}
+
 export function SuggestToolForm() {
   const formId = useId();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -25,13 +42,16 @@ export function SuggestToolForm() {
       e.preventDefault();
       setMessage(null);
 
+      /** Capture before any `await` — async handlers must not rely on `e.currentTarget` later. */
+      const form = e.currentTarget;
+
       if (siteKey && !turnstileToken) {
         setStatus("error");
         setMessage("Please complete the verification below.");
         return;
       }
 
-      const fd = new FormData(e.currentTarget);
+      const fd = new FormData(form);
       const company = String(fd.get("company") ?? "");
       if (company.trim() !== "") {
         setStatus("success");
@@ -92,7 +112,7 @@ export function SuggestToolForm() {
 
         if (data.ok) {
           setStatus("success");
-          e.currentTarget.reset();
+          form.reset();
           setTurnstileToken(null);
         } else {
           setStatus("error");
@@ -100,12 +120,8 @@ export function SuggestToolForm() {
         }
       } catch (err) {
         setStatus("error");
-        const msg =
-          err instanceof TypeError
-            ? "Could not reach the server. Check your connection and try again."
-            : err instanceof Error
-              ? err.message
-              : "Request failed. Please try again.";
+        console.error("[SuggestToolForm] submit error", err);
+        const msg = describeSubmitFailure(err);
         setMessage(msg);
       }
     },
