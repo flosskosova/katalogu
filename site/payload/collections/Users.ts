@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { Forbidden } from "payload";
+import { adminOnlyField } from "../access";
 import {
   assertRequestUserIsAdmin,
   isRequestUserAdmin,
@@ -8,7 +9,7 @@ import {
 } from "../usersAccessHooks";
 
 /**
- * Users / auth: **`create`** when the DB has no users (bootstrap) or when the actor is admin;
+ * Users / auth: **`create`** when there are no users yet and no session (first-account bootstrap), or when the actor is admin;
  * **`read`** / **`update`**: admins see any user, editors only their own row; **`delete`**: admin only.
  * This keeps `docPermissions` aligned with `beforeChange` / `beforeDelete`.
  * The list view hides the default Create control; admins use **Add staff user** (`/api/users/me`).
@@ -28,7 +29,9 @@ export const Users: CollectionConfig = {
         req,
         overrideAccess: true,
       });
-      if (totalDocs === 0) return true;
+      // Never treat "zero users" as bootstrap while someone is logged in: mis-counts (e.g. Postgres
+      // RLS hiding rows even with overrideAccess) would otherwise grant create to any staff user.
+      if (totalDocs === 0 && !req.user) return true;
       return isRequestUserAdmin(req);
     },
     read: async ({ req }) => {
@@ -72,7 +75,7 @@ export const Users: CollectionConfig = {
             req,
             overrideAccess: true,
           });
-          if (totalDocs === 0) {
+          if (totalDocs === 0 && !actor) {
             return data;
           }
           await assertRequestUserIsAdmin(req);
@@ -154,9 +157,20 @@ export const Users: CollectionConfig = {
         { label: "Editor", value: "editor" },
       ],
       access: {
-        create: ({ req: { user } }) => Boolean(user),
+        create: async ({ req }) => {
+          if (!req.user) {
+            const slug = req.payload.config.admin.user;
+            const { totalDocs } = await req.payload.count({
+              collection: slug,
+              req,
+              overrideAccess: true,
+            });
+            return totalDocs === 0;
+          }
+          return isRequestUserAdmin(req);
+        },
         read: ({ req: { user } }) => Boolean(user),
-        update: () => true,
+        update: adminOnlyField,
       },
       admin: {
         description:
