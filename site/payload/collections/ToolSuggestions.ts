@@ -4,6 +4,17 @@ import {
   editorAndAdminAccess,
 } from "../access";
 
+function relationshipHasId(val: unknown): boolean {
+  if (val == null) return false;
+  if (typeof val === "number" && !Number.isNaN(val)) return true;
+  if (typeof val === "string" && val.trim() !== "") return true;
+  if (typeof val === "object" && val !== null && "id" in val) {
+    const id = (val as { id: unknown }).id;
+    return id != null && id !== "";
+  }
+  return false;
+}
+
 /**
  * Visitor-submitted FOSS app/tool ideas (created only via POST /api/suggest-tool with spam checks).
  */
@@ -20,11 +31,20 @@ export const ToolSuggestions: CollectionConfig = {
       "appName",
       "submitterEmail",
       "status",
+      "reviewedCategory",
       "repoUrl",
       "createdAt",
     ],
     description:
       "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate.",
+    components: {
+      beforeList: ["@/payload/components/ToolSuggestionsListHint#ToolSuggestionsListHint"],
+      edit: {
+        beforeDocumentControls: [
+          "@/payload/components/ToolSuggestionDocumentControls#ToolSuggestionDocumentControls",
+        ],
+      },
+    },
   },
   access: {
     /** Only the secured API route creates rows (overrideAccess). */
@@ -32,6 +52,22 @@ export const ToolSuggestions: CollectionConfig = {
     read: editorAndAdminAccess,
     update: editorAndAdminAccess,
     delete: adminOnlyAccess,
+  },
+  hooks: {
+    beforeChange: [
+      async ({ data, originalDoc }) => {
+        const next = data?.status as string | undefined;
+        const prev = originalDoc?.status as string | undefined;
+        if (next === "accepted" && prev !== "accepted") {
+          if (!relationshipHasId(data?.reviewedCategory)) {
+            throw new Error(
+              "Select a suggested catalog category before accepting this suggestion (or use Decline).",
+            );
+          }
+        }
+        return data;
+      },
+    ],
   },
   fields: [
     {
@@ -43,10 +79,12 @@ export const ToolSuggestions: CollectionConfig = {
         { label: "New", value: "new" },
         { label: "Reviewed", value: "reviewed" },
         { label: "Accepted", value: "accepted" },
-        { label: "Rejected", value: "rejected" },
+        { label: "Declined", value: "rejected" },
       ],
       admin: {
         position: "sidebar",
+        description:
+          "Use Accept / Decline on the toolbar, or bulk edit when multiple rows are selected.",
       },
     },
     {
@@ -95,6 +133,27 @@ export const ToolSuggestions: CollectionConfig = {
       label: "Category or domain",
       admin: {
         description: "e.g. DevOps, Graphics, Security — editorial hint only.",
+      },
+    },
+    {
+      name: "reviewedCategory",
+      type: "relationship",
+      relationTo: "catalog-categories",
+      label: "Suggested catalog category",
+      admin: {
+        description:
+          "When the submitter’s category hint is wrong or missing, pick the catalog category that fits this tool. Required before Accept.",
+        position: "sidebar",
+      },
+    },
+    {
+      name: "reviewNote",
+      type: "textarea",
+      label: "Review note",
+      admin: {
+        description: "Internal note for your team (why accepted / declined).",
+        position: "sidebar",
+        rows: 4,
       },
     },
     {
