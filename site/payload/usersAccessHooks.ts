@@ -95,18 +95,21 @@ export async function loadUserRoleFromDb(
 }
 
 /**
- * Admin check for user-management actions. Matches the idea of `GET /api/users/me`:
- * JWT `role` **or** DB row (`loadUserRoleFromDb` caches per request on `req.context`).
+ * Admin check for user-management actions. Matches the idea of `GET /api/users/me`.
+ * When the DB row is readable, it wins over JWT so a demoted user cannot keep admin via a stale token.
+ * If the role cannot be loaded (e.g. rare adapter issues), JWT `admin` is used as a fallback.
  */
 export async function isRequestUserAdmin(req: PayloadRequest): Promise<boolean> {
   const u = req.user as { id?: string | number; role?: string } | undefined;
   if (!u?.id) return false;
-  if (u.role === "admin") return true;
   try {
-    return (await loadUserRoleFromDb(req, u.id)) === "admin";
+    const dbRole = await loadUserRoleFromDb(req, u.id);
+    if (dbRole === "admin") return true;
+    if (dbRole === "editor") return false;
   } catch {
-    return false;
+    /* fall through to JWT */
   }
+  return u.role === "admin";
 }
 
 export async function assertRequestUserIsAdmin(req: PayloadRequest): Promise<void> {
