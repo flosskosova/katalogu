@@ -41,6 +41,16 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
+function errorMessageForDbFailure(err: unknown): string {
+  if (
+    err instanceof Error &&
+    /no such table|relation .* does not exist|SQLITE_ERROR/i.test(err.message)
+  ) {
+    return "Database is not migrated yet. Run Payload migrations on the server, then try again.";
+  }
+  return "Could not save your suggestion. Please try again later.";
+}
+
 export async function POST(req: Request) {
   let body: Body;
   try {
@@ -113,15 +123,24 @@ export async function POST(req: Request) {
     return jsonError("A valid email address is required.", 400);
   }
 
-  const payload = await getPayload({ config });
+  let payload;
+  try {
+    payload = await getPayload({ config });
+  } catch (err) {
+    console.error("[suggest-tool] getPayload failed", err);
+    return jsonError(errorMessageForDbFailure(err), 503);
+  }
+
   const ip = getClientIpFromHeaders(req.headers);
   const ipHash = hashIpForRateLimit(ip, secret || "dev");
 
-  const rate = await assertSuggestionRateLimit(
-    payload,
-    ipHash,
-    submitterEmail,
-  );
+  let rate;
+  try {
+    rate = await assertSuggestionRateLimit(payload, ipHash, submitterEmail);
+  } catch (err) {
+    payload.logger.error({ err, msg: "[suggest-tool] rate limit query failed" });
+    return jsonError(errorMessageForDbFailure(err), 500);
+  }
   if (!rate.ok) {
     return jsonError(rate.reason, 429);
   }
@@ -148,13 +167,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     payload.logger.error({ err, msg: "[suggest-tool] payload.create failed" });
-    const message =
-      err instanceof Error && /no such table|relation .* does not exist/i.test(
-        err.message,
-      )
-        ? "Database is not migrated yet. Run Payload migrations on the server, then try again."
-        : "Could not save your suggestion. Please try again later.";
-    return jsonError(message, 500);
+    return jsonError(errorMessageForDbFailure(err), 500);
   }
 
   const base =

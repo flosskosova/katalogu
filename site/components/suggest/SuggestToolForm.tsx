@@ -54,10 +54,15 @@ export function SuggestToolForm() {
 
       setStatus("submitting");
       try {
-        const res = await fetch("/api/suggest-tool", {
+        const apiUrl =
+          typeof window !== "undefined"
+            ? `${window.location.origin}/api/suggest-tool`
+            : "/api/suggest-tool";
+        const res = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
+          cache: "no-store",
         });
 
         const raw = await res.text();
@@ -96,9 +101,11 @@ export function SuggestToolForm() {
       } catch (err) {
         setStatus("error");
         const msg =
-          err instanceof TypeError && err.message.includes("fetch")
+          err instanceof TypeError
             ? "Could not reach the server. Check your connection and try again."
-            : "Request failed. Please try again.";
+            : err instanceof Error
+              ? err.message
+              : "Request failed. Please try again.";
         setMessage(msg);
       }
     },
