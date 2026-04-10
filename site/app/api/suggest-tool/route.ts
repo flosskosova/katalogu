@@ -126,24 +126,36 @@ export async function POST(req: Request) {
     return jsonError(rate.reason, 429);
   }
 
-  const doc = await payload.create({
-    collection: "tool-suggestions",
-    data: {
-      appName: appName.trim(),
-      repoUrl: repoUrl.trim(),
-      homepageUrl: homepageUrl.trim() || undefined,
-      description: description.trim(),
-      license: license.trim() || undefined,
-      categoryHint: categoryHint.trim() || undefined,
-      additionalNotes: additionalNotes.trim() || undefined,
-      submitterName: submitterName.trim() || undefined,
-      submitterEmail: submitterEmail.trim().toLowerCase(),
-      submissionIpHash: ipHash,
-      userAgent: req.headers.get("user-agent")?.slice(0, 512) || undefined,
-      status: "new",
-    },
-    overrideAccess: true,
-  });
+  let doc: { id: string | number };
+  try {
+    doc = await payload.create({
+      collection: "tool-suggestions",
+      data: {
+        appName: appName.trim(),
+        repoUrl: repoUrl.trim(),
+        homepageUrl: homepageUrl.trim() || undefined,
+        description: description.trim(),
+        license: license.trim() || undefined,
+        categoryHint: categoryHint.trim() || undefined,
+        additionalNotes: additionalNotes.trim() || undefined,
+        submitterName: submitterName.trim() || undefined,
+        submitterEmail: submitterEmail.trim().toLowerCase(),
+        submissionIpHash: ipHash,
+        userAgent: req.headers.get("user-agent")?.slice(0, 512) || undefined,
+        status: "new",
+      },
+      overrideAccess: true,
+    });
+  } catch (err) {
+    payload.logger.error({ err, msg: "[suggest-tool] payload.create failed" });
+    const message =
+      err instanceof Error && /no such table|relation .* does not exist/i.test(
+        err.message,
+      )
+        ? "Database is not migrated yet. Run Payload migrations on the server, then try again."
+        : "Could not save your suggestion. Please try again later.";
+    return jsonError(message, 500);
+  }
 
   const base =
     payload.config.serverURL?.replace(/\/$/, "") ||

@@ -59,7 +59,20 @@ export function SuggestToolForm() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        const data = (await res.json()) as { ok?: boolean; error?: string };
+
+        const raw = await res.text();
+        let data: { ok?: boolean; error?: string } = {};
+        try {
+          data = raw ? (JSON.parse(raw) as { ok?: boolean; error?: string }) : {};
+        } catch {
+          setStatus("error");
+          setMessage(
+            res.ok
+              ? "Unexpected server response. Please try again."
+              : `Server error (${res.status}). If the problem continues, contact the site admin.`,
+          );
+          return;
+        }
 
         if (!res.ok) {
           setStatus("error");
@@ -78,11 +91,15 @@ export function SuggestToolForm() {
           setTurnstileToken(null);
         } else {
           setStatus("error");
-          setMessage("Something went wrong.");
+          setMessage(data.error ?? "Something went wrong.");
         }
-      } catch {
+      } catch (err) {
         setStatus("error");
-        setMessage("Network error. Please try again.");
+        const msg =
+          err instanceof TypeError && err.message.includes("fetch")
+            ? "Could not reach the server. Check your connection and try again."
+            : "Request failed. Please try again.";
+        setMessage(msg);
       }
     },
     [turnstileToken],
