@@ -20,7 +20,8 @@
     "payload:migrate:create": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts create",
     "payload:migrate": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts run",
     "payload:migrate:status": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts status",
-    "admin:reset-password": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/reset-admin-password.ts"
+    "admin:reset-password": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/reset-admin-password.ts",
+    "check:pg-rls": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
