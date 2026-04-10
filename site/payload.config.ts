@@ -136,6 +136,8 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
     add(originFromUrlish(process.env.NEXT_PUBLIC_SERVER_URL));
     add(originFromUrlish(process.env.NEXT_PUBLIC_SITE_URL));
     add(originFromUrlish(process.env.PAYLOAD_SERVER_URL));
+    add(originFromUrlish(process.env.VERCEL_PROJECT_PRODUCTION_URL));
+    add(originFromUrlish(process.env.VERCEL_BRANCH_URL));
     const vercel = process.env.VERCEL_URL?.trim();
     if (vercel) {
       const host = vercel.replace(/^https?:\/\//i, "");
@@ -154,6 +156,11 @@ function dbAdapter() {
       /**
        * For a fresh Supabase Postgres DB, we prefer pushing schema automatically instead of
        * reusing sqlite-generated migrations (they are not compatible: db.run vs db.execute).
+       *
+       * Supabase: if admin saves return 403 (“not allowed”), Row Level Security on `public` tables
+       * can block reads of `users` used for permission checks (Payload `overrideAccess` does not
+       * bypass Postgres RLS). Disable RLS on Payload tables or use a DB role with BYPASSRLS.
+       * Run `npm run check:pg-rls` to list tables with RLS enabled.
        */
       push: true,
     });

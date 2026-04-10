@@ -3,6 +3,7 @@ import type { Access, FieldAccess, PayloadRequest, Where } from "payload";
 import {
   isRequestUserAdmin,
   isRequestUserEditorOrAdmin,
+  loadUserRoleFromDb,
 } from "./usersAccessHooks";
 
 type UserLike = { id?: string | number; role?: string; collection?: string } | null | undefined;
@@ -69,14 +70,7 @@ export async function getStaffRole(
 
   let dbRole: string | undefined;
   try {
-    const doc = await req.payload.findByID({
-      collection: usersSlug,
-      id: user.id,
-      depth: 0,
-      overrideAccess: true,
-      req,
-    });
-    dbRole = (doc as { role?: string } | null)?.role;
+    dbRole = await loadUserRoleFromDb(req, user.id);
   } catch {
     dbRole = undefined;
   }
