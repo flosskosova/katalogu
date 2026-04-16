@@ -90,7 +90,10 @@ export async function POST(req: Request) {
   if (!token) {
     return jsonError("Verification required. Please complete the CAPTCHA.", 400);
   }
-  const captchaOk = await verifyTurnstileToken(token, turnstileSecret);
+  const clientIp = getClientIpFromHeaders(req.headers);
+  const captchaOk = await verifyTurnstileToken(token, turnstileSecret, {
+    remoteIp: clientIp,
+  });
   if (!captchaOk) {
     return jsonError("CAPTCHA verification failed. Please try again.", 400);
   }
@@ -145,8 +148,7 @@ export async function POST(req: Request) {
     return jsonError(errorMessageForDbFailure(err), 503);
   }
 
-  const ip = getClientIpFromHeaders(req.headers);
-  const ipHash = hashIpForRateLimit(ip, payloadSecret || "dev");
+  const ipHash = hashIpForRateLimit(clientIp, payloadSecret || "dev");
 
   let rate;
   try {
