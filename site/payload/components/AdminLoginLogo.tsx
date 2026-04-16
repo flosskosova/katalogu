@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import React from "react";
 
 /**
@@ -8,7 +9,7 @@ import React from "react";
  */
 export function AdminLoginLogo() {
   return (
-    <img
+    <Image
       src="/admin-brand-logo.png"
       alt=""
       width={193}

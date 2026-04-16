@@ -61,18 +61,11 @@ function readStored(): CompareEntry[] {
 }
 
 export function CompareProvider({ children }: { children: React.ReactNode }) {
-  const [entries, setEntries] = useState<CompareEntry[]>([]);
-  const [ready, setReady] = useState(false);
+  const [entries, setEntries] = useState<CompareEntry[]>(readStored);
 
   useEffect(() => {
-    setEntries(readStored());
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  }, [entries, ready]);
+  }, [entries]);
 
   const add = useCallback((entry: CompareEntry) => {
     let added = false;

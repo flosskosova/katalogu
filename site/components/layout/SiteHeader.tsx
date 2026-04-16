@@ -18,15 +18,11 @@ const linkClass =
   "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
 
 export function SiteHeader() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpenPath, setMenuOpenPath] = useState<string | null>(null);
   const panelId = useId();
   const pathname = usePathname();
-
-  const closeMenu = useCallback(() => setMenuOpen(false), []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
+  const menuOpen = menuOpenPath === pathname;
+  const closeMenu = useCallback(() => setMenuOpenPath(null), []);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -93,7 +89,11 @@ export function SiteHeader() {
             aria-expanded={menuOpen}
             aria-controls={panelId}
             aria-label={menuOpen ? "Close menu" : "Open menu"}
-            onClick={() => setMenuOpen((o) => !o)}
+            onClick={() =>
+              setMenuOpenPath((current) =>
+                current === pathname ? null : pathname,
+              )
+            }
           >
             {menuOpen ? (
               <svg

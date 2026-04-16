@@ -1,11 +1,9 @@
 "use client";
 
-import type { BeforeListClientProps } from "payload";
-
 /**
  * Explains bulk workflow: Payload’s built-in row selection + Edit / Delete.
  */
-export function ToolSuggestionsListHint(_props: BeforeListClientProps) {
+export function ToolSuggestionsListHint() {
   return (
     <div
       className="tool-suggestions-list-hint"
