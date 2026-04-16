@@ -66,11 +66,12 @@ function isPostgresUrl(url: string): boolean {
 
 /**
  * Supabase Postgres: enforce TLS with explicit `sslmode=verify-full`.
+ * Applies to `*.supabase.co` (direct) and `*.pooler.supabase.com` (Supavisor — IPv4, required on Vercel).
  * pg-connection-string currently treats `require`/`prefer`/`verify-ca` as aliases for `verify-full`
  * and warns; use `verify-full` so behavior stays strict after pg v9 / libpq semantics.
  */
 function withSupabasePostgresSslMode(url: string): string {
-  if (!/supabase\.co/i.test(url)) return url;
+  if (!/supabase\.co|pooler\.supabase\.com/i.test(url)) return url;
   if (/[?&]sslmode=/i.test(url)) {
     return url.replace(
       /([?&]sslmode=)(prefer|require|verify-ca)(?=(&|$))/i,
@@ -116,6 +117,9 @@ function resolvePayloadSecret(): string {
  * (“You are not allowed to perform this action”).
  *
  * Override local origin only if needed: `PAYLOAD_SERVER_URL=https://your-tunnel.ngrok.io`
+ *
+ * In **production**, `PAYLOAD_SERVER_URL` wins over `NEXT_PUBLIC_*` so Payload `serverURL` (cookies,
+ * CSRF) matches the real host even if an older build inlined stale public env values.
  */
 function resolvePayloadServerURL(): string {
   if (process.env.NODE_ENV !== "production") {
@@ -130,6 +134,7 @@ function resolvePayloadServerURL(): string {
   }
 
   const explicit =
+    sanitizeEnvValue(process.env.PAYLOAD_SERVER_URL) ||
     sanitizeEnvValue(process.env.NEXT_PUBLIC_SERVER_URL) ||
     sanitizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL);
   if (explicit) {
