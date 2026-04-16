@@ -7,14 +7,21 @@ export const TURNSTILE_TEST_SECRET_KEY =
 
 /**
  * Secret for `/api/suggest-tool` verification.
- * - **Production builds**: `TURNSTILE_SECRET_KEY_PRODUCTION`, then `TURNSTILE_SECRET_KEY`, then test secret.
+ * - **Production builds**: `TURNSTILE_SECRET_KEY_PRODUCTION`, then `TURNSTILE_SECRET_KEY`.
+ *   Missing production keys are treated as a hard configuration error (fail closed).
  * - **Development**: `TURNSTILE_SECRET_KEY`, then test secret.
  */
 export function resolveTurnstileSecret(): string {
   const production = process.env.TURNSTILE_SECRET_KEY_PRODUCTION?.trim();
   const general = process.env.TURNSTILE_SECRET_KEY?.trim();
   if (process.env.NODE_ENV === "production") {
-    return production || general || TURNSTILE_TEST_SECRET_KEY;
+    const value = production || general;
+    if (!value) {
+      throw new Error(
+        "Turnstile secret is missing in production. Set TURNSTILE_SECRET_KEY_PRODUCTION (preferred) or TURNSTILE_SECRET_KEY.",
+      );
+    }
+    return value;
   }
   return general || TURNSTILE_TEST_SECRET_KEY;
 }

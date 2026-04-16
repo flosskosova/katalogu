@@ -64,6 +64,23 @@ function isPostgresUrl(url: string): boolean {
   return /^postgres(ql)?:\/\//i.test(url);
 }
 
+function resolvePayloadSecret(): string {
+  const secret = sanitizeEnvValue(process.env.PAYLOAD_SECRET);
+  if (process.env.NODE_ENV === "production") {
+    if (!secret || secret === "CHANGE_ME_DEV_ONLY") {
+      throw new Error(
+        "PAYLOAD_SECRET is required in production and cannot use the development fallback.",
+      );
+    }
+    if (secret.length < 32) {
+      throw new Error(
+        "PAYLOAD_SECRET is too short for production. Use a strong random value (>= 32 chars).",
+      );
+    }
+  }
+  return secret || "CHANGE_ME_DEV_ONLY";
+}
+
 /**
  * Payload uses this for cookies, CSRF, and auth. It MUST match the browser origin.
  *
@@ -179,7 +196,7 @@ function dbAdapter() {
 export default buildConfig({
   serverURL: resolvePayloadServerURL(),
   csrf: resolvePayloadExtraCsrfOrigins(),
-  secret: process.env.PAYLOAD_SECRET || "CHANGE_ME_DEV_ONLY",
+  secret: resolvePayloadSecret(),
   admin: {
     user: Users.slug,
     meta: {

@@ -45,7 +45,15 @@ export function SuggestToolForm() {
       /** Capture before any `await` — async handlers must not rely on `e.currentTarget` later. */
       const form = e.currentTarget;
 
-      if (siteKey && !turnstileToken) {
+      if (!siteKey) {
+        setStatus("error");
+        setMessage(
+          "Submission is temporarily unavailable because CAPTCHA is not configured.",
+        );
+        return;
+      }
+
+      if (!turnstileToken) {
         setStatus("error");
         setMessage("Please complete the verification below.");
         return;
@@ -314,13 +322,19 @@ export function SuggestToolForm() {
 
       <div className="flex flex-col gap-2">
         <span className={labelClass}>Verification</span>
-        <Turnstile
-          siteKey={siteKey}
-          onSuccess={(token) => setTurnstileToken(token)}
-          onExpire={() => setTurnstileToken(null)}
-          onError={() => setTurnstileToken(null)}
-          options={{ theme: "auto" }}
-        />
+        {siteKey ? (
+          <Turnstile
+            siteKey={siteKey}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+            options={{ theme: "auto" }}
+          />
+        ) : (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            CAPTCHA is not configured for this environment, so suggestions are disabled.
+          </p>
+        )}
         {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION?.trim() &&
         !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() &&
         process.env.NODE_ENV === "development" ? (
@@ -348,7 +362,7 @@ export function SuggestToolForm() {
       <Button
         type="submit"
         variant="primary"
-        disabled={status === "submitting" || (Boolean(siteKey) && !turnstileToken)}
+        disabled={status === "submitting" || !siteKey || !turnstileToken}
       >
         {status === "submitting" ? "Submitting…" : "Submit suggestion"}
       </Button>
