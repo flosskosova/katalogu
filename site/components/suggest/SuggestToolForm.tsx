@@ -48,7 +48,7 @@ export function SuggestToolForm() {
       if (!siteKey) {
         setStatus("error");
         setMessage(
-          "Submission is temporarily unavailable because CAPTCHA is not configured.",
+          "Suggestions are temporarily unavailable. Please try again later.",
         );
         return;
       }
@@ -331,9 +331,24 @@ export function SuggestToolForm() {
             options={{ theme: "auto" }}
           />
         ) : (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-            CAPTCHA is not configured for this environment, so suggestions are disabled.
-          </p>
+          <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2">
+            <p className="text-sm text-[var(--foreground-muted)]" role="status">
+              Suggestions are temporarily unavailable.
+            </p>
+            {process.env.NODE_ENV !== "production" ? (
+              <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                Admin hint: set{" "}
+                <code className="rounded bg-[var(--muted)] px-1">
+                  NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION
+                </code>{" "}
+                and{" "}
+                <code className="rounded bg-[var(--muted)] px-1">
+                  TURNSTILE_SECRET_KEY_PRODUCTION
+                </code>{" "}
+                (or the non-production key pair).
+              </p>
+            ) : null}
+          </div>
         )}
         {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION?.trim() &&
         !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() &&
