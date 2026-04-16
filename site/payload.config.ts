@@ -64,11 +64,20 @@ function isPostgresUrl(url: string): boolean {
   return /^postgres(ql)?:\/\//i.test(url);
 }
 
-/** Supabase Postgres URLs should enforce TLS; missing sslmode can cause opaque connection failures. */
+/**
+ * Supabase Postgres: enforce TLS with explicit `sslmode=verify-full`.
+ * pg-connection-string currently treats `require`/`prefer`/`verify-ca` as aliases for `verify-full`
+ * and warns; use `verify-full` so behavior stays strict after pg v9 / libpq semantics.
+ */
 function withSupabasePostgresSslMode(url: string): string {
   if (!/supabase\.co/i.test(url)) return url;
-  if (/[?&]sslmode=/i.test(url)) return url;
-  return url.includes("?") ? `${url}&sslmode=require` : `${url}?sslmode=require`;
+  if (/[?&]sslmode=/i.test(url)) {
+    return url.replace(
+      /([?&]sslmode=)(prefer|require|verify-ca)(?=(&|$))/i,
+      "$1verify-full",
+    );
+  }
+  return url.includes("?") ? `${url}&sslmode=verify-full` : `${url}?sslmode=verify-full`;
 }
 
 /**
