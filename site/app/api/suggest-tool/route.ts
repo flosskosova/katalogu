@@ -64,14 +64,28 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const secret = process.env.PAYLOAD_SECRET || "";
-  if (!secret || secret === "CHANGE_ME_DEV_ONLY") {
+  const payloadSecret = process.env.PAYLOAD_SECRET?.trim() || "";
+  const insecurePayloadSecret =
+    !payloadSecret || payloadSecret === "CHANGE_ME_DEV_ONLY";
+  if (process.env.NODE_ENV === "production" && insecurePayloadSecret) {
+    console.error(
+      "[suggest-tool] PAYLOAD_SECRET is missing/weak in production; refusing submissions.",
+    );
+    return jsonError("Service temporarily unavailable. Please try again later.", 503);
+  }
+  if (insecurePayloadSecret) {
     console.warn(
       "[suggest-tool] Set a strong PAYLOAD_SECRET in production for rate-limit hashing.",
     );
   }
 
-  const turnstileSecret = resolveTurnstileSecret();
+  let turnstileSecret: string;
+  try {
+    turnstileSecret = resolveTurnstileSecret();
+  } catch (err) {
+    console.error("[suggest-tool] Turnstile secret misconfiguration", err);
+    return jsonError("Verification service is unavailable. Please try again later.", 503);
+  }
   const token = body.turnstileToken?.trim();
   if (!token) {
     return jsonError("Verification required. Please complete the CAPTCHA.", 400);
@@ -132,7 +146,7 @@ export async function POST(req: Request) {
   }
 
   const ip = getClientIpFromHeaders(req.headers);
-  const ipHash = hashIpForRateLimit(ip, secret || "dev");
+  const ipHash = hashIpForRateLimit(ip, payloadSecret || "dev");
 
   let rate;
   try {
