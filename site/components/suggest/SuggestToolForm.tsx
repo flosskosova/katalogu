@@ -32,6 +32,8 @@ function describeSubmitFailure(err: unknown): string {
 export function SuggestToolForm() {
   const formId = useId();
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  /** Remount Turnstile after a failed verify so "Success" matches a fresh token. */
+  const [turnstileKey, setTurnstileKey] = useState(0);
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
     "idle",
   );
@@ -115,6 +117,13 @@ export function SuggestToolForm() {
                 ? "Too many submissions. Please try again later."
                 : "Something went wrong. Please try again."),
           );
+          if (
+            data.error?.includes("CAPTCHA") ||
+            data.error?.includes("Verification")
+          ) {
+            setTurnstileToken(null);
+            setTurnstileKey((k) => k + 1);
+          }
           return;
         }
 
@@ -324,8 +333,13 @@ export function SuggestToolForm() {
         <span className={labelClass}>Verification</span>
         {siteKey ? (
           <Turnstile
+            key={turnstileKey}
             siteKey={siteKey}
-            onSuccess={(token) => setTurnstileToken(token)}
+            onSuccess={(token) => {
+              setTurnstileToken(token);
+              setMessage(null);
+              setStatus((s) => (s === "error" ? "idle" : s));
+            }}
             onExpire={() => setTurnstileToken(null)}
             onError={() => setTurnstileToken(null)}
             options={{ theme: "auto" }}
