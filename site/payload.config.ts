@@ -169,6 +169,18 @@ function originFromUrlish(urlish: string | undefined): string | undefined {
   }
 }
 
+/** Comma-separated origins, e.g. `https://www.example.com` for apex+www during DNS moves. */
+function originsFromCommaEnv(name: string): string[] {
+  const raw = sanitizeEnvValue(process.env[name]);
+  if (!raw) return [];
+  const out: string[] = [];
+  for (const part of raw.split(",")) {
+    const o = originFromUrlish(part.trim());
+    if (o) out.push(o);
+  }
+  return out;
+}
+
 function resolvePayloadExtraCsrfOrigins(): string[] {
   const out = new Set<string>();
   const add = (o: string | undefined) => {
@@ -185,6 +197,8 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
     add(originFromUrlish(process.env.NEXT_PUBLIC_SERVER_URL));
     add(originFromUrlish(process.env.NEXT_PUBLIC_SITE_URL));
   } else {
+    /** Always align with `serverURL` (includes `PAYLOAD_SERVER_URL` precedence). */
+    add(originFromUrlish(resolvePayloadServerURL()));
     add(originFromUrlish(process.env.NEXT_PUBLIC_SERVER_URL));
     add(originFromUrlish(process.env.NEXT_PUBLIC_SITE_URL));
     add(originFromUrlish(process.env.PAYLOAD_SERVER_URL));
@@ -195,6 +209,7 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
       const host = vercel.replace(/^https?:\/\//i, "");
       add(`https://${host}`);
     }
+    for (const o of originsFromCommaEnv("PAYLOAD_CSRF_EXTRA_ORIGINS")) add(o);
   }
 
   return [...out];
