@@ -117,12 +117,18 @@ function postgresTlsStrictOffVercel(): boolean {
   return Boolean(v && /^(1|true|yes)$/i.test(v));
 }
 
+/** Opt-in: relax Supabase pg TLS even on Vercel if logs show `SELF_SIGNED_CERT_IN_CHAIN` there (rare). */
+function postgresForceRelaxedTlsOnVercel(): boolean {
+  const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_FORCE_RELAXED_TLS);
+  return Boolean(v && /^(1|true|yes)$/i.test(v));
+}
+
 /** pg Pool `ssl` — fixes `SELF_SIGNED_CERT_IN_CHAIN` when Node cannot validate through a proxy. */
 function postgresSslForPool(pgUrl: string): { rejectUnauthorized: boolean } | undefined {
   if (postgresTlsInsecureExplicit()) {
     return { rejectUnauthorized: false };
   }
-  if (isLikelyVercelRuntime()) {
+  if (isLikelyVercelRuntime() && !postgresForceRelaxedTlsOnVercel()) {
     return undefined;
   }
   if (postgresTlsStrictOffVercel()) {
