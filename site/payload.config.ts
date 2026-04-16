@@ -74,13 +74,14 @@ function isLikelyVercelRuntime(): boolean {
 }
 
 /**
- * Supabase Postgres TLS query param.
+ * Supabase Postgres TLS query param (URI `sslmode`).
  * - On **Vercel** (see `isLikelyVercelRuntime`): default `sslmode=verify-full`.
- * - Elsewhere: `uselibpqcompat=true&sslmode=require` (silences pg v8 alias warning; see PostgreSQL libpq SSL docs).
+ * - Elsewhere: `uselibpqcompat=true&sslmode=require` (pg v8 libpq-compat; see PostgreSQL SSL docs).
  * - Override: `PAYLOAD_POSTGRES_SSLMODE=verify-full|require|disable`.
- * - `PAYLOAD_POSTGRES_TLS_INSECURE=1` → always `rejectUnauthorized: false` (any host; dev only).
- * - Off real Vercel, Supabase hosts default to pg `ssl: { rejectUnauthorized: false }` (Windows / SSL inspection).
- *   Strict chain off-Vercel: `PAYLOAD_POSTGRES_TLS_STRICT=1`.
+ * - **Node/pg pool**: for `*.supabase.co` / `*.pooler.supabase.com`, we always set
+ *   `ssl: { rejectUnauthorized: false }` unless `PAYLOAD_POSTGRES_TLS_STRICT=1`, so Vercel and local
+ *   builds avoid `SELF_SIGNED_CERT_IN_CHAIN` while TLS is still encrypted.
+ * - `PAYLOAD_POSTGRES_TLS_INSECURE=1` → relax **any** Postgres host (non-Supabase too).
  */
 function resolveSupabaseSslModeForQueryString(): string {
   const o = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_SSLMODE)?.toLowerCase();
@@ -112,26 +113,18 @@ function postgresTlsInsecureExplicit(): boolean {
   return Boolean(v && /^(1|true|yes)$/i.test(v));
 }
 
-function postgresTlsStrictOffVercel(): boolean {
+/** When set, skip pool-level TLS relaxation for Supabase (full cert verification; may hit SELF_SIGNED_CERT). */
+function postgresSupabaseTlsStrictEnabled(): boolean {
   const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_TLS_STRICT);
   return Boolean(v && /^(1|true|yes)$/i.test(v));
 }
 
-/** Opt-in: relax Supabase pg TLS even on Vercel if logs show `SELF_SIGNED_CERT_IN_CHAIN` there (rare). */
-function postgresForceRelaxedTlsOnVercel(): boolean {
-  const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_FORCE_RELAXED_TLS);
-  return Boolean(v && /^(1|true|yes)$/i.test(v));
-}
-
-/** pg Pool `ssl` — fixes `SELF_SIGNED_CERT_IN_CHAIN` when Node cannot validate through a proxy. */
+/** pg Pool `ssl` — Supabase: relax Node cert verification by default (encrypted, avoids SELF_SIGNED_CERT_IN_CHAIN). */
 function postgresSslForPool(pgUrl: string): { rejectUnauthorized: boolean } | undefined {
   if (postgresTlsInsecureExplicit()) {
     return { rejectUnauthorized: false };
   }
-  if (isLikelyVercelRuntime() && !postgresForceRelaxedTlsOnVercel()) {
-    return undefined;
-  }
-  if (postgresTlsStrictOffVercel()) {
+  if (postgresSupabaseTlsStrictEnabled()) {
     return undefined;
   }
   if (isSupabasePostgresHost(pgUrl)) {
