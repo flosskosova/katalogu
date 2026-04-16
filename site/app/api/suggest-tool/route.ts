@@ -92,6 +92,18 @@ function collectErrorText(err: unknown): string {
   return parts.filter(Boolean).join(" | ") || String(err);
 }
 
+/** Host only — for ops logs when DNS fails (no password logged). */
+function postgresHostFromDatabaseUrlEnv(): string | undefined {
+  const raw = process.env.DATABASE_URL?.trim();
+  if (!raw || !/^postgres(ql)?:/i.test(raw)) return undefined;
+  try {
+    const u = new URL(raw.replace(/^postgres(ql)?:/i, "https:"));
+    return u.hostname || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function pgErrorCode(err: unknown): string | undefined {
   let e: unknown = err;
   let depth = 0;
@@ -122,12 +134,23 @@ function logDbFailure(context: string, err: unknown) {
   console.error(
     `[suggest-tool] ${context}${code ? ` code=${code}` : ""}: ${text}`,
   );
+  if (/enotfound/i.test(text)) {
+    const host = postgresHostFromDatabaseUrlEnv();
+    if (host) {
+      console.error(
+        `[suggest-tool] DATABASE_URL host "${host}" failed DNS (ENOTFOUND). On Vercel, do not use Supabase "Direct" (db.*.supabase.co — IPv6); use Session pooler URI from Supabase Connect (pooler.supabase.com:5432). See Supabase docs: IPv4 / Supavisor. Redeploy after changing DATABASE_URL.`,
+      );
+    }
+  }
 }
 
 function errorMessageForDbFailure(err: unknown): string {
   const blob = collectErrorText(err);
   const lower = blob.toLowerCase();
 
+  if (/enotfound/i.test(lower)) {
+    return "Database host could not be reached. On serverless hosts like Vercel, use Supabase Session pooler (IPv4), not the Direct db.* connection — copy the Session pooler URI from Supabase Connect, set DATABASE_URL in Vercel, and redeploy.";
+  }
   if (
     /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error|pgcode: 42p01/i.test(
       lower,
@@ -152,7 +175,7 @@ function errorMessageForDbFailure(err: unknown): string {
   ) {
     return "Could not connect to the database reliably. Please try again in a minute. If this keeps happening, the site administrator should check the Postgres connection (Supabase pooler vs direct port 5432).";
   }
-  if (/connection|econnrefused|timeout|etimedout|ssl|certificate|enotfound|getaddrinfo/i.test(lower)) {
+  if (/connection|econnrefused|timeout|etimedout|ssl|certificate|getaddrinfo/i.test(lower)) {
     return "Could not reach the database. Please try again in a few minutes.";
   }
   if (/failed query|insert into|update |violates|constraint|duplicate key|unique constraint|pgcode: 23/i.test(lower)) {
