@@ -64,6 +64,13 @@ function isPostgresUrl(url: string): boolean {
   return /^postgres(ql)?:\/\//i.test(url);
 }
 
+/** Supabase Postgres URLs should enforce TLS; missing sslmode can cause opaque connection failures. */
+function withSupabasePostgresSslMode(url: string): string {
+  if (!/supabase\.co/i.test(url)) return url;
+  if (/[?&]sslmode=/i.test(url)) return url;
+  return url.includes("?") ? `${url}&sslmode=require` : `${url}?sslmode=require`;
+}
+
 function resolvePayloadSecret(): string {
   const secret = sanitizeEnvValue(process.env.PAYLOAD_SECRET);
   if (process.env.NODE_ENV === "production") {
@@ -172,8 +179,14 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
+    const pgUrl = withSupabasePostgresSslMode(databaseUrl);
     return postgresAdapter({
-      pool: { connectionString: databaseUrl },
+      pool: {
+        connectionString: pgUrl,
+        max: 15,
+        connectionTimeoutMillis: 25_000,
+        idleTimeoutMillis: 30_000,
+      },
       /**
        * For a fresh Supabase Postgres DB, we prefer pushing schema automatically instead of
        * reusing sqlite-generated migrations (they are not compatible: db.run vs db.execute).

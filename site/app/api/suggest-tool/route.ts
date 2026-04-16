@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { getPayload } from "payload";
 
-import config from "@payload-config";
+import { getPayloadClient } from "@/lib/payload";
 import {
   sendToolSuggestionNotification,
   type ToolSuggestionDoc,
@@ -41,30 +40,78 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
-/** Walk Error.cause chains and driver-wrapped messages (Drizzle/pg). */
+/**
+ * Walk Error.cause chains and Payload/pg fields (detail, validation errors, Drizzle).
+ */
 function collectErrorText(err: unknown): string {
   const parts: string[] = [];
   let e: unknown = err;
   let depth = 0;
-  while (e != null && depth < 12) {
+  while (e != null && depth < 16) {
+    if (typeof e === "string") {
+      parts.push(e);
+      break;
+    }
     if (e instanceof Error) {
       parts.push(e.message);
       e = e.cause;
-    } else if (typeof e === "string") {
-      parts.push(e);
-      break;
-    } else {
-      break;
+      depth++;
+      continue;
     }
-    depth++;
+    if (e && typeof e === "object") {
+      const o = e as Record<string, unknown>;
+      if (typeof o.message === "string") parts.push(o.message);
+      if (typeof o.detail === "string") parts.push(`detail: ${o.detail}`);
+      if (typeof o.hint === "string") parts.push(`hint: ${o.hint}`);
+      if (typeof o.code === "string" && /^\d{5}$/.test(o.code)) {
+        parts.push(`pgcode: ${o.code}`);
+      }
+      if (Array.isArray(o.errors)) {
+        try {
+          parts.push(JSON.stringify(o.errors));
+        } catch {
+          parts.push("errors: [unserializable]");
+        }
+      }
+      if (o.data != null && typeof o.data === "object") {
+        try {
+          parts.push(JSON.stringify(o.data));
+        } catch {
+          /* ignore */
+        }
+      }
+      const next = o.cause ?? o.err ?? o.error;
+      if (next === e) break;
+      e = next;
+      depth++;
+      continue;
+    }
+    parts.push(String(e));
+    break;
   }
-  return parts.join(" | ");
+  return parts.filter(Boolean).join(" | ") || String(err);
 }
 
 function pgErrorCode(err: unknown): string | undefined {
-  if (err && typeof err === "object" && "code" in err) {
-    const c = (err as { code: unknown }).code;
-    if (typeof c === "string") return c;
+  let e: unknown = err;
+  let depth = 0;
+  while (e != null && depth < 12) {
+    if (e && typeof e === "object" && "code" in e) {
+      const c = (e as { code: unknown }).code;
+      if (typeof c === "string" && /^\d{5}$|^[A-Z0-9_]+$/.test(c)) return c;
+    }
+    if (e instanceof Error) {
+      e = e.cause;
+      depth++;
+      continue;
+    }
+    if (e && typeof e === "object") {
+      const o = e as Record<string, unknown>;
+      e = o.cause ?? o.err ?? o.error;
+      depth++;
+      continue;
+    }
+    break;
   }
   return undefined;
 }
@@ -82,7 +129,7 @@ function errorMessageForDbFailure(err: unknown): string {
   const lower = blob.toLowerCase();
 
   if (
-    /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error/i.test(
+    /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error|pgcode: 42p01/i.test(
       lower,
     )
   ) {
@@ -95,11 +142,21 @@ function errorMessageForDbFailure(err: unknown): string {
   ) {
     return "Could not save your suggestion due to a database access policy. Please contact the site administrator.";
   }
-  if (/permission denied|42501/.test(lower)) {
+  if (/permission denied|pgcode: 42501/i.test(lower)) {
     return "Could not save your suggestion due to a database permission error. Please contact the site administrator.";
   }
-  if (/connection|econnrefused|timeout|etimedout|ssl|certificate/i.test(lower)) {
+  if (
+    /pgbouncer|prepared statement|bind message|no more connections|server closed the connection|connection terminated|econnreset|connection reset|pool/i.test(
+      lower,
+    )
+  ) {
+    return "Could not connect to the database reliably. Please try again in a minute. If this keeps happening, the site administrator should check the Postgres connection (Supabase pooler vs direct port 5432).";
+  }
+  if (/connection|econnrefused|timeout|etimedout|ssl|certificate|enotfound|getaddrinfo/i.test(lower)) {
     return "Could not reach the database. Please try again in a few minutes.";
+  }
+  if (/failed query|insert into|update |violates|constraint|duplicate key|unique constraint|pgcode: 23/i.test(lower)) {
+    return "Could not save your suggestion due to a database error. Please try again or contact the site administrator.";
   }
   return "Could not save your suggestion. Please try again later.";
 }
@@ -195,7 +252,7 @@ export async function POST(req: Request) {
 
   let payload;
   try {
-    payload = await getPayload({ config });
+    payload = await getPayloadClient();
   } catch (err) {
     logDbFailure("getPayload failed", err);
     return jsonError(errorMessageForDbFailure(err), 503);
