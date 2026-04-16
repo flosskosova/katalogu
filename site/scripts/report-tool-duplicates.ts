@@ -6,7 +6,7 @@ import { tools } from "../data/tools";
 
 function normGithubRepo(u: unknown): string {
   if (!u || typeof u !== "string") return "";
-  let s = u.trim().toLowerCase().replace(/\.git$/i, "").replace(/\/$/, "");
+  const s = u.trim().toLowerCase().replace(/\.git$/i, "").replace(/\/$/, "");
   const m = s.match(/github\.com\/([^/]+)\/([^/?#]+)/i);
   if (!m) return "";
   return `${m[1]}/${m[2]}`;

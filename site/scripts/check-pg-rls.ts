@@ -1,61 +1,96 @@
-/**
- * Lists Postgres tables with Row Level Security enabled (common Supabase issue).
- * Payload permission checks read `users` from the DB; RLS can hide rows even when using
- * `overrideAccess: true` in app code.
- *
- * Run: npm run check:pg-rls
- */
 import pg from "pg";
 
-function sanitizeEnvValue(v: string | undefined): string | undefined {
-  if (v == null) return undefined;
-  const s = v.trim().replace(/\r\n/g, "").replace(/\n/g, "");
+type Row = {
+  table: string;
+  rls: boolean;
+  anon_grants: number;
+  auth_grants: number;
+};
+
+function clean(v: string | undefined): string | undefined {
+  if (!v) return undefined;
+  const s = v.trim().replace(/\r?\n/g, "");
   return s || undefined;
 }
 
+async function audit(client: pg.Client): Promise<Row[]> {
+  const { rows } = await client.query<Row>(`
+    SELECT
+      c.relname AS "table",
+      c.relrowsecurity AS rls,
+      COALESCE(SUM(CASE WHEN g.grantee = 'anon' THEN 1 ELSE 0 END), 0)::int AS anon_grants,
+      COALESCE(SUM(CASE WHEN g.grantee = 'authenticated' THEN 1 ELSE 0 END), 0)::int AS auth_grants
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    LEFT JOIN information_schema.role_table_grants g
+      ON g.table_schema = n.nspname
+     AND g.table_name = c.relname
+     AND g.grantee IN ('anon', 'authenticated')
+    WHERE n.nspname = 'public'
+      AND c.relkind = 'r'
+    GROUP BY c.relname, c.relrowsecurity
+    ORDER BY c.relname
+  `);
+  return rows;
+}
+
 async function main() {
-  const url = sanitizeEnvValue(process.env.DATABASE_URL);
+  const fix = process.argv.includes("--fix");
+  const url = clean(process.env.DATABASE_URL);
   if (!url || !/^postgres(ql)?:\/\//i.test(url)) {
-    console.log("DATABASE_URL is not a postgres URL — nothing to check.");
-    process.exit(0);
+    console.log("DATABASE_URL is not postgres; nothing to check.");
+    return;
   }
 
-  const client = new pg.Client({ connectionString: url });
-  await client.connect();
-
+  const c = new pg.Client({ connectionString: url });
+  await c.connect();
   try {
-    const { rows } = await client.query<{
-      schema: string;
-      table: string;
-      rls: boolean;
-    }>(`
-      SELECT n.nspname AS schema, c.relname AS "table", c.relrowsecurity AS rls
-      FROM pg_class c
-      JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname IN ('public', 'payload')
-        AND c.relkind = 'r'
-        AND c.relrowsecurity = true
-      ORDER BY n.nspname, c.relname
-    `);
-
-    if (rows.length === 0) {
-      console.log(
-        "No tables in schemas public/payload have RLS enabled. (Supabase auth.* / storage.* RLS is normal and unrelated to Payload.)",
+    const roleExists = async (role: "anon" | "authenticated") => {
+      const { rowCount } = await c.query(
+        "SELECT 1 FROM pg_roles WHERE rolname = $1 LIMIT 1",
+        [role],
       );
+      return (rowCount ?? 0) > 0;
+    };
+    const hasAnon = await roleExists("anon");
+    const hasAuthenticated = await roleExists("authenticated");
+
+    const before = await audit(c);
+    const bad = before.filter((r) => !r.rls || r.anon_grants > 0 || r.auth_grants > 0);
+    if (!fix) {
+      if (bad.length === 0) {
+        console.log("All public tables are locked down (RLS on, no anon/authenticated grants).");
+        return;
+      }
+      console.log("Insecure public tables:");
+      for (const r of bad) {
+        console.log(`  public.${r.table} (rls=${r.rls}, anon=${r.anon_grants}, authenticated=${r.auth_grants})`);
+      }
+      console.log("Run with --fix to harden automatically.");
+      process.exitCode = 1;
       return;
     }
 
-    console.log(
-      "Payload-relevant tables with RLS enabled (admin permission checks read these; disable RLS or allow your DB role):\n",
-    );
-    for (const r of rows) {
-      console.log(`  ${r.schema}.${r.table}`);
+    await c.query("BEGIN");
+    for (const r of before) {
+      const safeTable = r.table.replace(/"/g, "\"\"");
+      await c.query(`ALTER TABLE public."${safeTable}" ENABLE ROW LEVEL SECURITY;`);
+      if (hasAnon) {
+        await c.query(`REVOKE ALL ON TABLE public."${safeTable}" FROM anon;`);
+      }
+      if (hasAuthenticated) {
+        await c.query(`REVOKE ALL ON TABLE public."${safeTable}" FROM authenticated;`);
+      }
     }
-    console.log(
-      "\nExample fix (per table, adjust schema/name): ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;",
-    );
+    await c.query("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon;");
+    await c.query("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM authenticated;");
+    await c.query("COMMIT");
+    console.log(`Hardened ${before.length} public table(s).`);
+  } catch (e) {
+    await c.query("ROLLBACK");
+    throw e;
   } finally {
-    await client.end();
+    await c.end();
   }
 }
 

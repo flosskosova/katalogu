@@ -9,7 +9,7 @@
     "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "validate:tool-slugs": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/validate-tool-slugs.ts",
     "seed:catalog": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/seed-catalog.ts",
     "verify:catalog-sync": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/verify-catalog-sync.ts",
@@ -21,22 +21,24 @@
     "payload:migrate": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts run",
     "payload:migrate:status": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts status",
     "admin:reset-password": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/reset-admin-password.ts",
-    "check:pg-rls": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts"
+    "check:pg-rls": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts",
+    "check:pg-rls:fix": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts --fix"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "@marsidev/react-turnstile": "^1.5.0",
-    "@payloadcms/db-postgres": "^3.81.0",
-    "@payloadcms/db-sqlite": "^3.81.0",
-    "@payloadcms/next": "^3.81.0",
-    "@payloadcms/richtext-lexical": "^3.81.0",
-    "@payloadcms/ui": "^3.81.0",
+    "@payloadcms/db-postgres": "^3.83.0",
+    "@payloadcms/db-sqlite": "^3.83.0",
+    "@payloadcms/next": "^3.83.0",
+    "@payloadcms/richtext-lexical": "^3.83.0",
+    "@payloadcms/ui": "^3.83.0",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
+    "dompurify": "^3.4.0",
     "graphql": "^16.13.2",
-    "next": "15.4.11",
+    "next": "^16.2.4",
     "nodemailer": "^8.0.5",
-    "payload": "^3.81.0",
+    "payload": "^3.83.0",
     "pg": "^8.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -50,12 +52,18 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.4.11",
+    "eslint-config-next": "^16.2.4",
     "jiti": "^2.6.1",
     "patch-package": "^8.0.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.3",
     "typescript": "^5"
+  },
+  "overrides": {
+    "dompurify": "^3.4.0",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.11"
+    }
   }
 }
