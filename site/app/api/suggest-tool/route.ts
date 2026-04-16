@@ -151,6 +151,9 @@ function errorMessageForDbFailure(err: unknown): string {
   if (/enotfound/i.test(lower)) {
     return "Database host could not be reached. On serverless hosts like Vercel, use Supabase Session pooler (IPv4), not the Direct db.* connection — copy the Session pooler URI from Supabase Connect, set DATABASE_URL in Vercel, and redeploy.";
   }
+  if (/self-signed certificate in certificate chain|self_signed_cert|ssl.*cert|cert.*chain/i.test(lower)) {
+    return "Database TLS verification failed. On a dev machine, set PAYLOAD_POSTGRES_TLS_INSECURE=1 in .env only if behind SSL inspection, or use PAYLOAD_POSTGRES_SSLMODE=require; on Vercel keep defaults unless your host documents otherwise.";
+  }
   if (
     /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error|pgcode: 42p01/i.test(
       lower,
