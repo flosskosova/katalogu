@@ -4,8 +4,15 @@
  */
 
 export function getSiteUrl(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  return raw.replace(/\/$/, "");
+  let raw = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").trim();
+  raw = raw.replace(/\r\n/g, "").replace(/\n/g, "");
+  if (
+    (raw.startsWith('"') && raw.endsWith('"')) ||
+    (raw.startsWith("'") && raw.endsWith("'"))
+  ) {
+    raw = raw.slice(1, -1).trim();
+  }
+  return raw.replace(/\/$/, "") || "http://localhost:3000";
 }
 
 export function absoluteUrl(path: string): string {
