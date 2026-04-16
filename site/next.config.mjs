@@ -33,6 +33,11 @@ if (process.env.NODE_ENV === "production") {
   });
 }
 
+/** Payload admin loads many chunks/workers; CSP is easy to mis-tune here — keep other headers only. */
+const securityHeadersAdmin = securityHeaders.filter(
+  (h) => h.key !== "Content-Security-Policy",
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Payload ships server-only deps
@@ -43,6 +48,8 @@ const nextConfig = {
   ],
   async headers() {
     return [
+      { source: "/admin", headers: securityHeadersAdmin },
+      { source: "/admin/:path*", headers: securityHeadersAdmin },
       {
         source: "/(.*)",
         headers: securityHeaders,

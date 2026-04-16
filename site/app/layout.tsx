@@ -24,8 +24,21 @@ const verification = getGoogleSiteVerification()
   ? { google: getGoogleSiteVerification()! }
   : undefined;
 
+/** Avoid root layout throw if env URL is malformed (would 500 every route including /admin). */
+function safeMetadataBase(): URL | undefined {
+  try {
+    const u = getSiteUrl();
+    if (!u || !/^https?:\/\//i.test(u)) return undefined;
+    return new URL(u);
+  } catch {
+    return undefined;
+  }
+}
+
+const metadataBaseResolved = safeMetadataBase();
+
 export const metadata: Metadata = {
-  metadataBase: new URL(getSiteUrl()),
+  ...(metadataBaseResolved ? { metadataBase: metadataBaseResolved } : {}),
   applicationName: SITE.name,
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
