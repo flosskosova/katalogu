@@ -65,20 +65,31 @@ function isPostgresUrl(url: string): boolean {
 }
 
 /**
- * Supabase Postgres: enforce TLS with explicit `sslmode=verify-full`.
- * Applies to `*.supabase.co` (direct) and `*.pooler.supabase.com` (Supavisor — IPv4, required on Vercel).
- * pg-connection-string currently treats `require`/`prefer`/`verify-ca` as aliases for `verify-full`
- * and warns; use `verify-full` so behavior stays strict after pg v9 / libpq semantics.
+ * Supabase Postgres TLS query param.
+ * - On **Vercel** (`VERCEL=1`): default `verify-full` (strict).
+ * - Elsewhere (local `next start`, CI): default `require` — avoids `SELF_SIGNED_CERT_IN_CHAIN` on
+ *   Windows / corporate proxies where full-chain verification fails against Supabase’s real certs.
+ * - Override: `PAYLOAD_POSTGRES_SSLMODE=verify-full|require|disable`.
+ * - Last resort **local dev only**: `PAYLOAD_POSTGRES_TLS_INSECURE=1` → pg `rejectUnauthorized: false`.
  */
+function resolveSupabaseSslModeForQueryString(): string {
+  const o = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_SSLMODE)?.toLowerCase();
+  if (o === "verify-full" || o === "require" || o === "disable") return o;
+  return process.env.VERCEL === "1" ? "verify-full" : "require";
+}
+
 function withSupabasePostgresSslMode(url: string): string {
   if (!/supabase\.co|pooler\.supabase\.com/i.test(url)) return url;
+  const mode = resolveSupabaseSslModeForQueryString();
   if (/[?&]sslmode=/i.test(url)) {
-    return url.replace(
-      /([?&]sslmode=)(prefer|require|verify-ca)(?=(&|$))/i,
-      "$1verify-full",
-    );
+    return url.replace(/([?&]sslmode=)[^&]*/i, `$1${mode}`);
   }
-  return url.includes("?") ? `${url}&sslmode=verify-full` : `${url}?sslmode=verify-full`;
+  return url.includes("?") ? `${url}&sslmode=${mode}` : `${url}?sslmode=${mode}`;
+}
+
+function postgresPoolTlsRelaxed(): boolean {
+  const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_TLS_INSECURE);
+  return Boolean(v && /^(1|true|yes)$/i.test(v));
 }
 
 /**
@@ -219,12 +230,14 @@ function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
     const pgUrl = withSupabasePostgresSslMode(databaseUrl);
+    const tlsRelaxed = postgresPoolTlsRelaxed();
     return postgresAdapter({
       pool: {
         connectionString: pgUrl,
         max: 15,
         connectionTimeoutMillis: 25_000,
         idleTimeoutMillis: 30_000,
+        ...(tlsRelaxed ? { ssl: { rejectUnauthorized: false } } : {}),
       },
       /**
        * For a fresh Postgres DB in local/dev, schema push is convenient.

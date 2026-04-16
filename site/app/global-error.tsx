@@ -36,9 +36,10 @@ export default function GlobalError({
           </p>
         )}
         <p style={{ color: "#555", fontSize: "0.9rem" }}>
-          For Payload <code>/admin</code>, common causes: invalid{" "}
-          <code>NEXT_PUBLIC_SITE_URL</code> (breaks metadata), Postgres <code>DATABASE_URL</code>{" "}
-          pooler/auth, or missing migrations.
+          For Payload <code>/admin</code>: bad <code>NEXT_PUBLIC_SITE_URL</code>, Postgres{" "}
+          <code>DATABASE_URL</code>, migrations — or TLS (<code>SELF_SIGNED_CERT_IN_CHAIN</code> on
+          Windows: use <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code> in local <code>.env</code> only, or
+          run on Vercel where <code>VERCEL=1</code> uses strict TLS).
         </p>
         <button
           type="button"
