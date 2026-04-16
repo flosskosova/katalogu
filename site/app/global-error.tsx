@@ -36,10 +36,11 @@ export default function GlobalError({
           </p>
         )}
         <p style={{ color: "#555", fontSize: "0.9rem" }}>
-          For Payload <code>/admin</code>: bad <code>NEXT_PUBLIC_SITE_URL</code>, Postgres{" "}
-          <code>DATABASE_URL</code>, migrations — or TLS (<code>SELF_SIGNED_CERT_IN_CHAIN</code> on
-          Windows: rebuild after pull — off-Vercel Supabase uses relaxed pg TLS automatically; or set{" "}
-          <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code> for non-Supabase DBs. Vercel keeps strict TLS.
+          For Payload <code>/admin</code>: check <code>NEXT_PUBLIC_SITE_URL</code>,{" "}
+          <code>DATABASE_URL</code> (Supabase session pooler on Vercel), and migrations. If Vercel
+          logs show <code>SELF_SIGNED_CERT_IN_CHAIN</code>, set{" "}
+          <code>PAYLOAD_POSTGRES_FORCE_RELAXED_TLS=1</code> on Vercel (temporary), or{" "}
+          <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code> for any Postgres host — remove once fixed.
         </p>
         <button
           type="button"
