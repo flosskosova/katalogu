@@ -22,7 +22,8 @@
     "payload:migrate:status": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts status",
     "admin:reset-password": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/reset-admin-password.ts",
     "check:pg-rls": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts",
-    "check:pg-rls:fix": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts --fix"
+    "check:pg-rls:fix": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts --fix",
+    "check:pg-rls:sql": "type .\\scripts\\sql\\payload-postgres-hardening.sql"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

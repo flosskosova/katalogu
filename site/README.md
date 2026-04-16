@@ -62,3 +62,4 @@ Payload **cannot** use a on-disk `file:…` SQLite path on Vercel (ephemeral fil
 - Keep `PAYLOAD_SECRET` and `PREVIEW_SECRET` private; rotate if leaked.
 - Admin and APIs require authentication; public routes never expose draft content unless Draft Mode is enabled via the preview secret.
 - Media uploads are readable anonymously so logos/screenshots render on the public site; only staff can upload or replace files; only **admins** can delete media.
+- Supabase/Postgres with Payload: do not rely on RLS for Payload-managed `public` tables. Revoke `anon` / `authenticated` table grants and keep RLS disabled on those tables, or use a DB role with `BYPASSRLS`. Use `npm run check:pg-rls` to audit, `npm run check:pg-rls:fix` to apply the safe defaults directly, or `npm run check:pg-rls:sql` to print the equivalent SQL for Supabase SQL Editor from `scripts/sql/payload-postgres-hardening.sql`.
