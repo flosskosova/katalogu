@@ -41,12 +41,65 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
+/** Walk Error.cause chains and driver-wrapped messages (Drizzle/pg). */
+function collectErrorText(err: unknown): string {
+  const parts: string[] = [];
+  let e: unknown = err;
+  let depth = 0;
+  while (e != null && depth < 12) {
+    if (e instanceof Error) {
+      parts.push(e.message);
+      e = e.cause;
+    } else if (typeof e === "string") {
+      parts.push(e);
+      break;
+    } else {
+      break;
+    }
+    depth++;
+  }
+  return parts.join(" | ");
+}
+
+function pgErrorCode(err: unknown): string | undefined {
+  if (err && typeof err === "object" && "code" in err) {
+    const c = (err as { code: unknown }).code;
+    if (typeof c === "string") return c;
+  }
+  return undefined;
+}
+
+function logDbFailure(context: string, err: unknown) {
+  const text = collectErrorText(err);
+  const code = pgErrorCode(err);
+  console.error(
+    `[suggest-tool] ${context}${code ? ` code=${code}` : ""}: ${text}`,
+  );
+}
+
 function errorMessageForDbFailure(err: unknown): string {
+  const blob = collectErrorText(err);
+  const lower = blob.toLowerCase();
+
   if (
-    err instanceof Error &&
-    /no such table|relation .* does not exist|SQLITE_ERROR/i.test(err.message)
+    /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error/i.test(
+      lower,
+    )
   ) {
     return "Database is not migrated yet. Run Payload migrations on the server, then try again.";
+  }
+  if (
+    /row-level security|violates row-level security|rls policy|must provide a qualifying row/i.test(
+      lower,
+    )
+  ) {
+    return "Could not save your suggestion due to a database access policy. Please contact the site administrator.";
+  }
+  if (/permission denied|42501/.test(lower)) {
+    return "Could not save your suggestion due to a database permission error. Please contact the site administrator.";
+  }
+  if (/connection|econnrefused|timeout|etimedout|ssl|certificate/i.test(lower)) {
+    return "Could not reach the database. Please try again in a few minutes.";
   }
   return "Could not save your suggestion. Please try again later.";
 }
@@ -144,7 +197,7 @@ export async function POST(req: Request) {
   try {
     payload = await getPayload({ config });
   } catch (err) {
-    console.error("[suggest-tool] getPayload failed", err);
+    logDbFailure("getPayload failed", err);
     return jsonError(errorMessageForDbFailure(err), 503);
   }
 
@@ -154,6 +207,7 @@ export async function POST(req: Request) {
   try {
     rate = await assertSuggestionRateLimit(payload, ipHash, submitterEmail);
   } catch (err) {
+    logDbFailure("rate limit query failed", err);
     payload.logger.error({ err, msg: "[suggest-tool] rate limit query failed" });
     return jsonError(errorMessageForDbFailure(err), 500);
   }
@@ -182,6 +236,7 @@ export async function POST(req: Request) {
       overrideAccess: true,
     });
   } catch (err) {
+    logDbFailure("payload.create failed", err);
     payload.logger.error({ err, msg: "[suggest-tool] payload.create failed" });
     return jsonError(errorMessageForDbFailure(err), 500);
   }
