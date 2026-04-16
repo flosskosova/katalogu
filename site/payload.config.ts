@@ -71,6 +71,16 @@ function withSupabasePostgresSslMode(url: string): string {
   return url.includes("?") ? `${url}&sslmode=require` : `${url}?sslmode=require`;
 }
 
+/**
+ * Auto-pushing schema is helpful locally, but production requests should not perform
+ * database-management work on cold start. Enable explicitly only when needed.
+ */
+function shouldPushPostgresSchema(): boolean {
+  const explicit = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_PUSH);
+  if (explicit != null) return /^(1|true|yes|on)$/i.test(explicit);
+  return process.env.NODE_ENV !== "production";
+}
+
 function resolvePayloadSecret(): string {
   const secret = sanitizeEnvValue(process.env.PAYLOAD_SECRET);
   if (process.env.NODE_ENV === "production") {
@@ -188,8 +198,11 @@ function dbAdapter() {
         idleTimeoutMillis: 30_000,
       },
       /**
-       * For a fresh Supabase Postgres DB, we prefer pushing schema automatically instead of
-       * reusing sqlite-generated migrations (they are not compatible: db.run vs db.execute).
+       * For a fresh Postgres DB in local/dev, schema push is convenient.
+       *
+       * In production, disable it by default so normal requests (like the public suggest form)
+       * don't trigger schema-management work on startup. If you intentionally need a one-time push,
+       * set PAYLOAD_POSTGRES_PUSH=true for that deployment/job.
        *
        * Supabase: if admin saves return 403 (“not allowed”), Row Level Security on `public` tables
        * can block reads of `users` used for permission checks (Payload `overrideAccess` does not
@@ -197,7 +210,7 @@ function dbAdapter() {
        * grants, and disable RLS on those tables unless you use a DB role with BYPASSRLS.
        * Run `npm run check:pg-rls` to audit/fix the expected Postgres posture.
        */
-      push: true,
+      push: shouldPushPostgresSchema(),
     });
   }
 
