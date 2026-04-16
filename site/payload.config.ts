@@ -65,20 +65,27 @@ function isPostgresUrl(url: string): boolean {
 }
 
 /**
+ * Real Vercel lambdas set both `VERCEL=1` and `VERCEL_URL`. Local `.env` copies often set `VERCEL=1`
+ * alone — that must **not** skip TLS relaxation or local `next build` / `next start` hits
+ * `SELF_SIGNED_CERT_IN_CHAIN` on Windows.
+ */
+function isLikelyVercelRuntime(): boolean {
+  return process.env.VERCEL === "1" && Boolean(sanitizeEnvValue(process.env.VERCEL_URL));
+}
+
+/**
  * Supabase Postgres TLS query param.
- * - On **Vercel** (`VERCEL=1`): default `verify-full` (strict).
- * - Elsewhere (local `next start`, CI): default `require` — avoids `SELF_SIGNED_CERT_IN_CHAIN` on
- *   Windows / corporate proxies where full-chain verification fails against Supabase’s real certs.
+ * - On **Vercel** (see `isLikelyVercelRuntime`): default `sslmode=verify-full`.
+ * - Elsewhere: `uselibpqcompat=true&sslmode=require` (silences pg v8 alias warning; see PostgreSQL libpq SSL docs).
  * - Override: `PAYLOAD_POSTGRES_SSLMODE=verify-full|require|disable`.
  * - `PAYLOAD_POSTGRES_TLS_INSECURE=1` → always `rejectUnauthorized: false` (any host; dev only).
- * - Off Vercel, Supabase hosts default to pg `ssl: { rejectUnauthorized: false }` so `next start` on
- *   Windows / SSL-inspected networks works (`sslmode=require` alone does not fix SELF_SIGNED_CERT).
- *   Opt back to strict chain: `PAYLOAD_POSTGRES_TLS_STRICT=1` (e.g. Supabase on Fly/Railway).
+ * - Off real Vercel, Supabase hosts default to pg `ssl: { rejectUnauthorized: false }` (Windows / SSL inspection).
+ *   Strict chain off-Vercel: `PAYLOAD_POSTGRES_TLS_STRICT=1`.
  */
 function resolveSupabaseSslModeForQueryString(): string {
   const o = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_SSLMODE)?.toLowerCase();
   if (o === "verify-full" || o === "require" || o === "disable") return o;
-  return process.env.VERCEL === "1" ? "verify-full" : "require";
+  return isLikelyVercelRuntime() ? "verify-full" : "require";
 }
 
 function isSupabasePostgresHost(url: string): boolean {
@@ -88,10 +95,16 @@ function isSupabasePostgresHost(url: string): boolean {
 function withSupabasePostgresSslMode(url: string): string {
   if (!isSupabasePostgresHost(url)) return url;
   const mode = resolveSupabaseSslModeForQueryString();
-  if (/[?&]sslmode=/i.test(url)) {
-    return url.replace(/([?&]sslmode=)[^&]*/i, `$1${mode}`);
+  let out = url;
+  if (/[?&]sslmode=/i.test(out)) {
+    out = out.replace(/([?&]sslmode=)[^&]*/i, `$1${mode}`);
+  } else {
+    out = out.includes("?") ? `${out}&sslmode=${mode}` : `${out}?sslmode=${mode}`;
   }
-  return url.includes("?") ? `${url}&sslmode=${mode}` : `${url}?sslmode=${mode}`;
+  if (!isLikelyVercelRuntime() && mode === "require" && !/([?&])uselibpqcompat=/i.test(out)) {
+    out += "&uselibpqcompat=true";
+  }
+  return out;
 }
 
 function postgresTlsInsecureExplicit(): boolean {
@@ -109,7 +122,7 @@ function postgresSslForPool(pgUrl: string): { rejectUnauthorized: boolean } | un
   if (postgresTlsInsecureExplicit()) {
     return { rejectUnauthorized: false };
   }
-  if (process.env.VERCEL === "1") {
+  if (isLikelyVercelRuntime()) {
     return undefined;
   }
   if (postgresTlsStrictOffVercel()) {
