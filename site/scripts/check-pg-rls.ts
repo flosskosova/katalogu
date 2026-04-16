@@ -34,6 +34,10 @@ async function audit(client: pg.Client): Promise<Row[]> {
   return rows;
 }
 
+function isPayloadCompatible(row: Row): boolean {
+  return !row.rls && row.anon_grants === 0 && row.auth_grants === 0;
+}
+
 async function main() {
   const fix = process.argv.includes("--fix");
   const url = clean(process.env.DATABASE_URL);
@@ -56,17 +60,23 @@ async function main() {
     const hasAuthenticated = await roleExists("authenticated");
 
     const before = await audit(c);
-    const bad = before.filter((r) => !r.rls || r.anon_grants > 0 || r.auth_grants > 0);
+    const bad = before.filter((r) => !isPayloadCompatible(r));
     if (!fix) {
       if (bad.length === 0) {
-        console.log("All public tables are locked down (RLS on, no anon/authenticated grants).");
+        console.log(
+          "All public tables are Payload-safe (RLS off, no anon/authenticated grants).",
+        );
         return;
       }
-      console.log("Insecure public tables:");
+      console.log("Public tables needing Payload-safe hardening:");
       for (const r of bad) {
-        console.log(`  public.${r.table} (rls=${r.rls}, anon=${r.anon_grants}, authenticated=${r.auth_grants})`);
+        console.log(
+          `  public.${r.table} (rls=${r.rls}, anon=${r.anon_grants}, authenticated=${r.auth_grants})`,
+        );
       }
-      console.log("Run with --fix to harden automatically.");
+      console.log(
+        "Run with --fix to disable RLS and revoke anon/authenticated grants.",
+      );
       process.exitCode = 1;
       return;
     }
@@ -74,7 +84,7 @@ async function main() {
     await c.query("BEGIN");
     for (const r of before) {
       const safeTable = r.table.replace(/"/g, "\"\"");
-      await c.query(`ALTER TABLE public."${safeTable}" ENABLE ROW LEVEL SECURITY;`);
+      await c.query(`ALTER TABLE public."${safeTable}" DISABLE ROW LEVEL SECURITY;`);
       if (hasAnon) {
         await c.query(`REVOKE ALL ON TABLE public."${safeTable}" FROM anon;`);
       }
@@ -85,7 +95,7 @@ async function main() {
     await c.query("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon;");
     await c.query("ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM authenticated;");
     await c.query("COMMIT");
-    console.log(`Hardened ${before.length} public table(s).`);
+    console.log(`Applied Payload-safe hardening to ${before.length} public table(s).`);
   } catch (e) {
     await c.query("ROLLBACK");
     throw e;

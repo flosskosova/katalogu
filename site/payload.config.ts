@@ -180,8 +180,9 @@ function dbAdapter() {
        *
        * Supabase: if admin saves return 403 (“not allowed”), Row Level Security on `public` tables
        * can block reads of `users` used for permission checks (Payload `overrideAccess` does not
-       * bypass Postgres RLS). Disable RLS on Payload tables or use a DB role with BYPASSRLS.
-       * Run `npm run check:pg-rls` to list tables with RLS enabled.
+       * bypass Postgres RLS). Keep Payload tables private by revoking `anon`/`authenticated`
+       * grants, and disable RLS on those tables unless you use a DB role with BYPASSRLS.
+       * Run `npm run check:pg-rls` to audit/fix the expected Postgres posture.
        */
       push: true,
     });
