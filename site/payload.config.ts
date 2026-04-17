@@ -284,6 +284,20 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
   return [...out];
 }
 
+/**
+ * Supabase session pooler caps concurrent sessions; each Vercel lambda is its own process and
+ * would otherwise open `pool.max` connections — many concurrent invocations × 15 exhausts the
+ * pooler (`EMAXCONNSESSION max clients reached`). Use 1 on real Vercel; higher for long‑running Node.
+ */
+function postgresPoolMax(): number {
+  const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
+  if (raw && /^\d+$/.test(raw)) {
+    const n = Number.parseInt(raw, 10);
+    if (n >= 1 && n <= 50) return n;
+  }
+  return isLikelyVercelRuntime() ? 1 : 15;
+}
+
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
@@ -292,7 +306,7 @@ function dbAdapter() {
     return postgresAdapter({
       pool: {
         connectionString: pgUrl,
-        max: 15,
+        max: postgresPoolMax(),
         connectionTimeoutMillis: 25_000,
         idleTimeoutMillis: 30_000,
         ...(ssl ? { ssl } : {}),
