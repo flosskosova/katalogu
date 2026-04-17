@@ -40,6 +40,10 @@ const securityHeadersAdmin = securityHeaders.filter(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    /** Fewer parallel static workers → fewer concurrent Postgres sessions during build (Supabase pooler). */
+    staticGenerationMaxConcurrency: 1,
+  },
   // Payload ships server-only deps
   serverExternalPackages: [
     "@libsql/client",

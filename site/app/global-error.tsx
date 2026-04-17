@@ -36,10 +36,11 @@ export default function GlobalError({
           </p>
         )}
         <p style={{ color: "#555", fontSize: "0.9rem" }}>
-          For Payload <code>/admin</code>: check <code>NEXT_PUBLIC_SITE_URL</code>,{" "}
-          <code>DATABASE_URL</code> (Supabase session pooler on Vercel), and migrations. Postgres TLS
-          errors: ensure latest deploy; non-Supabase DBs may need{" "}
-          <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>.
+          For Payload <code>/admin</code>: check <code>DATABASE_URL</code> (Supabase session pooler
+          on Vercel), <code>PAYLOAD_SECRET</code>, and <code>PAYLOAD_SERVER_URL</code> matching your
+          live domain (production also uses Vercel&apos;s{" "}
+          <code>VERCEL_PROJECT_PRODUCTION_URL</code> when unset). Postgres TLS: non-Supabase DBs may
+          need <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>.
         </p>
         <button
           type="button"
