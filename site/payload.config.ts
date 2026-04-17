@@ -75,18 +75,24 @@ function isLikelyVercelRuntime(): boolean {
 
 /**
  * Supabase Postgres TLS query param (URI `sslmode`).
- * - On **Vercel** (see `isLikelyVercelRuntime`): default `sslmode=verify-full`.
- * - Elsewhere: `uselibpqcompat=true&sslmode=require` (pg v8 libpq-compat; see PostgreSQL SSL docs).
+ * - Default **`require`** (with `uselibpqcompat` when we append params) so the URI does not force
+ *   verify-full while the pg pool uses `ssl: { rejectUnauthorized: false }` — that combination
+ *   still hit `SELF_SIGNED_CERT_IN_CHAIN` on some hosts when Vercel defaulted to verify-full.
+ * - **`verify-full`** only when `PAYLOAD_POSTGRES_TLS_STRICT=1` and real Vercel (strict chain).
  * - Override: `PAYLOAD_POSTGRES_SSLMODE=verify-full|require|disable`.
- * - **Node/pg pool**: for `*.supabase.co` / `*.pooler.supabase.com`, we always set
- *   `ssl: { rejectUnauthorized: false }` unless `PAYLOAD_POSTGRES_TLS_STRICT=1`, so Vercel and local
- *   builds avoid `SELF_SIGNED_CERT_IN_CHAIN` while TLS is still encrypted.
+ * - **Node/pg pool**: for Supabase hosts, `rejectUnauthorized: false` unless `TLS_STRICT`.
  * - `PAYLOAD_POSTGRES_TLS_INSECURE=1` → relax **any** Postgres host (non-Supabase too).
  */
+function postgresTlsStrictEnv(): boolean {
+  const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_TLS_STRICT);
+  return Boolean(v && /^(1|true|yes)$/i.test(v));
+}
+
 function resolveSupabaseSslModeForQueryString(): string {
   const o = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_SSLMODE)?.toLowerCase();
   if (o === "verify-full" || o === "require" || o === "disable") return o;
-  return isLikelyVercelRuntime() ? "verify-full" : "require";
+  if (postgresTlsStrictEnv() && isLikelyVercelRuntime()) return "verify-full";
+  return "require";
 }
 
 function isSupabasePostgresHost(url: string): boolean {
@@ -114,7 +120,7 @@ function withSupabasePostgresSslMode(url: string): string {
   } else {
     out = out.includes("?") ? `${out}&sslmode=${mode}` : `${out}?sslmode=${mode}`;
   }
-  if (!isLikelyVercelRuntime() && mode === "require" && !/([?&])uselibpqcompat=/i.test(out)) {
+  if (mode === "require" && !/([?&])uselibpqcompat=/i.test(out)) {
     out += "&uselibpqcompat=true";
   }
   return out;
@@ -127,8 +133,7 @@ function postgresTlsInsecureExplicit(): boolean {
 
 /** When set, skip pool-level TLS relaxation for Supabase (full cert verification; may hit SELF_SIGNED_CERT). */
 function postgresSupabaseTlsStrictEnabled(): boolean {
-  const v = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_TLS_STRICT);
-  return Boolean(v && /^(1|true|yes)$/i.test(v));
+  return postgresTlsStrictEnv();
 }
 
 /** pg Pool `ssl` — Supabase: relax Node cert verification by default (encrypted, avoids SELF_SIGNED_CERT_IN_CHAIN). */
