@@ -211,10 +211,19 @@ export async function POST(req: Request) {
   const payloadSecret = process.env.PAYLOAD_SECRET?.trim() || "";
   const insecurePayloadSecret =
     !payloadSecret || payloadSecret === "CHANGE_ME_DEV_ONLY";
-  if (insecurePayloadSecret || payloadSecret.length < 32) {
+  const weakSecretForHashing =
+    insecurePayloadSecret || payloadSecret.length < 32;
+  if (weakSecretForHashing) {
     console.warn(
-      "[suggest-tool] Set a strong PAYLOAD_SECRET in production for rate-limit hashing.",
+      "[suggest-tool] Set a strong PAYLOAD_SECRET (>= 32 chars) for production rate-limit hashing.",
     );
+  }
+  /** Fail closed for this public write surface only — does not block Payload /admin startup. */
+  if (process.env.NODE_ENV === "production" && weakSecretForHashing) {
+    console.error(
+      "[suggest-tool] Refusing submission: PAYLOAD_SECRET missing or too short in production.",
+    );
+    return jsonError("Service temporarily unavailable. Please try again later.", 503);
   }
 
   let turnstileSecret: string;
