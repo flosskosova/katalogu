@@ -152,7 +152,12 @@ function errorMessageForDbFailure(err: unknown): string {
     return "Database host could not be reached. On serverless hosts like Vercel, use Supabase Session pooler (IPv4), not the Direct db.* connection — copy the Session pooler URI from Supabase Connect, set DATABASE_URL in Vercel, and redeploy.";
   }
   if (/self-signed certificate in certificate chain|self_signed_cert|ssl.*cert|cert.*chain/i.test(lower)) {
-    return "Database TLS verification failed. If you run `next start` locally against Supabase, pull latest (relaxed TLS off Vercel) or set PAYLOAD_POSTGRES_TLS_INSECURE=1 for non-Supabase URLs; use PAYLOAD_POSTGRES_TLS_STRICT=1 when hosting Supabase off Vercel without relaxation.";
+    return (
+      "Database TLS verification failed. " +
+      "If PAYLOAD_POSTGRES_TLS_STRICT=1 is set in Vercel or .env, remove it and redeploy (it disables the default Supabase TLS workaround). " +
+      "If you still see this on your PC (antivirus / SSL inspection), set PAYLOAD_POSTGRES_TLS_INSECURE=1 in .env.local for local dev only. " +
+      "Ensure DATABASE_URL uses the Session pooler host (*.pooler.supabase.com:5432)."
+    );
   }
   if (
     /no such table|relation .* does not exist|undefined_table|42p01|sqlite_error|pgcode: 42p01/i.test(
@@ -167,6 +172,9 @@ function errorMessageForDbFailure(err: unknown): string {
     )
   ) {
     return "Could not save your suggestion due to a database access policy. Please contact the site administrator.";
+  }
+  if (/password authentication failed|invalid password|pgcode: 28p01/i.test(lower)) {
+    return "Database credentials are invalid. Update DATABASE_URL (user/password) in Vercel and redeploy.";
   }
   if (/permission denied|pgcode: 42501/i.test(lower)) {
     return "Could not save your suggestion due to a database permission error. Please contact the site administrator.";
@@ -203,13 +211,7 @@ export async function POST(req: Request) {
   const payloadSecret = process.env.PAYLOAD_SECRET?.trim() || "";
   const insecurePayloadSecret =
     !payloadSecret || payloadSecret === "CHANGE_ME_DEV_ONLY";
-  if (process.env.NODE_ENV === "production" && insecurePayloadSecret) {
-    console.error(
-      "[suggest-tool] PAYLOAD_SECRET is missing/weak in production; refusing submissions.",
-    );
-    return jsonError("Service temporarily unavailable. Please try again later.", 503);
-  }
-  if (insecurePayloadSecret) {
+  if (insecurePayloadSecret || payloadSecret.length < 32) {
     console.warn(
       "[suggest-tool] Set a strong PAYLOAD_SECRET in production for rate-limit hashing.",
     );

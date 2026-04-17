@@ -47,6 +47,7 @@ export default function SiteLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`${sans.variable} ${display.variable} ${alfabetiBrand.variable}`}
     >
       <body>
