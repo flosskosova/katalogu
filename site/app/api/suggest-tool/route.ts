@@ -40,6 +40,77 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ ok: false, error: message }, { status });
 }
 
+function hostOnlyFromForwardedOrHost(req: Request): string | undefined {
+  const xf = req.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const h = (xf || req.headers.get("host") || "").trim();
+  if (!h) return undefined;
+  return h.split(":")[0].toLowerCase();
+}
+
+function hostnameFromEnvUrl(raw: string | undefined): string | undefined {
+  const u = raw?.trim();
+  if (!u) return undefined;
+  try {
+    const normalized = /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    return new URL(normalized).hostname.toLowerCase();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Production: when `Origin` is present, it must match this deployment's host
+ * (`Host` / `X-Forwarded-Host`) or configured public URLs. If `Origin` is
+ * omitted (non-browser clients), the request is still allowed — Turnstile and
+ * validation remain required.
+ */
+function assertSuggestToolOrigin(req: Request): NextResponse | null {
+  if (process.env.NODE_ENV !== "production") return null;
+
+  const origin = req.headers.get("origin");
+  if (!origin) return null;
+
+  let originHost: string;
+  try {
+    originHost = new URL(origin).hostname.toLowerCase();
+  } catch {
+    return jsonError("Forbidden", 403);
+  }
+
+  const allowed = new Set<string>();
+  const requestHost = hostOnlyFromForwardedOrHost(req);
+  if (requestHost) allowed.add(requestHost);
+
+  for (const v of [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.NEXT_PUBLIC_SERVER_URL,
+    process.env.PAYLOAD_SERVER_URL,
+    process.env.VERCEL_URL,
+    process.env.VERCEL_BRANCH_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ]) {
+    const h = hostnameFromEnvUrl(v);
+    if (h) allowed.add(h);
+  }
+
+  const extra = process.env.PAYLOAD_CSRF_EXTRA_ORIGINS?.trim();
+  if (extra) {
+    for (const part of extra.split(",")) {
+      const h = hostnameFromEnvUrl(part.trim());
+      if (h) allowed.add(h);
+    }
+  }
+
+  if (!allowed.has(originHost)) {
+    console.warn(
+      `[suggest-tool] blocked cross-origin POST origin=${originHost} allowed=${[...allowed].join(",")}`,
+    );
+    return jsonError("Forbidden", 403);
+  }
+
+  return null;
+}
+
 /**
  * Walk Error.cause chains and Payload/pg fields (detail, validation errors, Drizzle).
  */
@@ -196,6 +267,9 @@ function errorMessageForDbFailure(err: unknown): string {
 }
 
 export async function POST(req: Request) {
+  const originBlock = assertSuggestToolOrigin(req);
+  if (originBlock) return originBlock;
+
   let body: Body;
   try {
     body = (await req.json()) as Body;
