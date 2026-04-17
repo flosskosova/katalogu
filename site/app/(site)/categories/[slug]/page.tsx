@@ -13,7 +13,8 @@ import { buildCollectionPageJsonLd } from "@/lib/seo/structured-data";
 type Props = { params: Promise<{ slug: string }> };
 
 /** On-demand + ISR — avoids pre-rendering every category at build. */
-export const revalidate = 3600;
+/** ISR — short TTL so catalog edits from admin propagate to category pages quickly. */
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

@@ -10,7 +10,8 @@ import { buildCuratedCollectionJsonLd } from "@/lib/seo/structured-data";
 type Props = { params: Promise<{ slug: string }> };
 
 /** On-demand + ISR — avoids pre-rendering every collection at build. */
-export const revalidate = 3600;
+/** ISR — short TTL so curated collection edits propagate quickly. */
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

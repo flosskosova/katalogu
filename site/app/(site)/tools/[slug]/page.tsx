@@ -20,8 +20,9 @@ type Props = { params: Promise<{ slug: string }> };
 /**
  * Do not enumerate all tool slugs at build time — that forces thousands of static
  * pages and very slow Vercel builds. Pages are generated on first request, then cached (ISR).
+ * Keep TTL short so admin edits show on the public tool page without waiting an hour.
  */
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
