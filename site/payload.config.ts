@@ -286,8 +286,9 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
 
 /**
  * Supabase session pooler caps concurrent sessions; each Vercel lambda is its own process and
- * would otherwise open `pool.max` connections — many concurrent invocations × 15 exhausts the
- * pooler (`EMAXCONNSESSION max clients reached`). Use 1 on real Vercel; higher for long‑running Node.
+ * many concurrent invocations × high `pool.max` exhausts the pooler (`EMAXCONNSESSION`).
+ * Default **2** on Vercel: enough for Payload + parallel work; far below 15. Use
+ * `PAYLOAD_POSTGRES_POOL_MAX=1` if you still hit pool limits (catalog uses per-request `cache()`).
  */
 function postgresPoolMax(): number {
   const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
@@ -295,7 +296,7 @@ function postgresPoolMax(): number {
     const n = Number.parseInt(raw, 10);
     if (n >= 1 && n <= 50) return n;
   }
-  return isLikelyVercelRuntime() ? 1 : 15;
+  return isLikelyVercelRuntime() ? 2 : 15;
 }
 
 function dbAdapter() {

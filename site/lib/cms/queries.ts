@@ -20,6 +20,8 @@ import type {
   ToolWithCategory,
 } from "@/lib/types";
 import type { Where } from "payload";
+import { cache } from "react";
+
 import { getPayloadClient } from "@/lib/payload";
 
 const envForcesStaticCatalog = () =>
@@ -124,7 +126,11 @@ async function loadFromCms(
   }
 }
 
-export async function getCatalogData(): Promise<{
+/**
+ * One CMS read per React server request — `Promise.all([getTopPicks(), getCategories(), …])`
+ * otherwise hit Postgres several times in parallel and stall with a tiny serverless pool (`max: 1–2`).
+ */
+export const getCatalogData = cache(async function getCatalogData(): Promise<{
   categories: Category[];
   tools: ToolWithCategory[];
 }> {
@@ -156,7 +162,7 @@ export async function getCatalogData(): Promise<{
   );
   const merged = { categories: categoriesMerged, tools: toolsMerged };
   return preview ? merged : applyPublicWebsiteVisibility(merged.categories, merged.tools);
-}
+});
 
 export async function getCategories(): Promise<Category[]> {
   const { categories } = await getCatalogData();
