@@ -209,6 +209,18 @@ function resolvePayloadServerURL(): string {
   if (explicit) {
     return explicit.replace(/\/+$/, "");
   }
+  /**
+   * Production deploys on a custom domain: `VERCEL_URL` is often `*.vercel.app`, which breaks
+   * Payload cookies/CSRF for `https://your-domain`. Vercel exposes the canonical production host
+   * here (no scheme). Skip on preview so branch/preview URLs still use `VERCEL_URL`.
+   */
+  if (process.env.VERCEL_ENV === "production") {
+    const prodHost = sanitizeEnvValue(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+    if (prodHost) {
+      const host = prodHost.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
+      if (host) return `https://${host}`;
+    }
+  }
   const vercel = process.env.VERCEL_URL?.trim();
   if (vercel) {
     const host = vercel.replace(/^https?:\/\//i, "");
@@ -286,9 +298,9 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
 
 /**
  * Supabase session pooler caps concurrent sessions; each Vercel lambda is its own process and
- * many concurrent invocations × high `pool.max` exhausts the pooler (`EMAXCONNSESSION`).
- * Default **2** on Vercel: enough for Payload + parallel work; far below 15. Use
- * `PAYLOAD_POSTGRES_POOL_MAX=1` if you still hit pool limits (catalog uses per-request `cache()`).
+ * many concurrent invocations × `pool.max` exhausts the pooler (`EMAXCONNSESSION`).
+ * Default **1** on Vercel (one session per lambda). Raise with `PAYLOAD_POSTGRES_POOL_MAX` only if
+ * your pooler limit allows it (catalog reads use per-request `React.cache()`).
  */
 function postgresPoolMax(): number {
   const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
@@ -296,7 +308,12 @@ function postgresPoolMax(): number {
     const n = Number.parseInt(raw, 10);
     if (n >= 1 && n <= 50) return n;
   }
-  return isLikelyVercelRuntime() ? 2 : 15;
+  return isLikelyVercelRuntime() ? 1 : 15;
+}
+
+/** Shorter idle timeout on Vercel so pooler sessions are released sooner between requests. */
+function postgresPoolIdleTimeoutMillis(): number {
+  return isLikelyVercelRuntime() ? 10_000 : 30_000;
 }
 
 function dbAdapter() {
@@ -309,7 +326,7 @@ function dbAdapter() {
         connectionString: pgUrl,
         max: postgresPoolMax(),
         connectionTimeoutMillis: 25_000,
-        idleTimeoutMillis: 30_000,
+        idleTimeoutMillis: postgresPoolIdleTimeoutMillis(),
         ...(ssl ? { ssl } : {}),
       },
       /**
