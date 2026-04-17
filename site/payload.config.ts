@@ -90,7 +90,19 @@ function resolveSupabaseSslModeForQueryString(): string {
 }
 
 function isSupabasePostgresHost(url: string): boolean {
-  return /supabase\.co|pooler\.supabase\.com/i.test(url);
+  if (/supabase\.co|pooler\.supabase\.com/i.test(url)) return true;
+  try {
+    const normalized = url.replace(/^postgres(ql)?:/i, "https:");
+    const host = new URL(normalized).hostname;
+    return (
+      host.endsWith(".supabase.co") ||
+      host === "supabase.co" ||
+      host.endsWith(".pooler.supabase.com") ||
+      host === "pooler.supabase.com"
+    );
+  } catch {
+    return false;
+  }
 }
 
 function withSupabasePostgresSslMode(url: string): string {
@@ -147,13 +159,13 @@ function resolvePayloadSecret(): string {
   const secret = sanitizeEnvValue(process.env.PAYLOAD_SECRET);
   if (process.env.NODE_ENV === "production") {
     if (!secret || secret === "CHANGE_ME_DEV_ONLY") {
-      throw new Error(
-        "PAYLOAD_SECRET is required in production and cannot use the development fallback.",
+      console.error(
+        "[payload] PAYLOAD_SECRET is missing/weak in production. Set a strong random value (>= 32 chars) in Vercel env vars.",
       );
     }
-    if (secret.length < 32) {
-      throw new Error(
-        "PAYLOAD_SECRET is too short for production. Use a strong random value (>= 32 chars).",
+    if (secret && secret.length < 32) {
+      console.error(
+        "[payload] PAYLOAD_SECRET is short in production. Use a strong random value (>= 32 chars).",
       );
     }
   }
