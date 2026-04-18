@@ -1,6 +1,7 @@
 import path from "path";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { sqliteAdapter } from "@payloadcms/db-sqlite";
+import { vercelBlobStorage } from "@payloadcms/storage-vercel-blob";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
 import sharp from "sharp";
 import { buildConfig } from "payload";
@@ -33,6 +34,31 @@ function sanitizeEnvValue(v: string | undefined): string | undefined {
     s = s.slice(1, -1).trim();
   }
   return s || undefined;
+}
+
+/**
+ * `@payloadcms/storage-vercel-blob` throws at init if the token does not match this shape.
+ * Only register the plugin when the token looks valid so `/admin` still loads.
+ */
+function isVercelBlobReadWriteTokenSyntaxOk(token: string): boolean {
+  return /^vercel_blob_rw_[a-z\d]+_[a-z\d]+$/i.test(token);
+}
+
+function payloadPlugins() {
+  const token = sanitizeEnvValue(process.env.BLOB_READ_WRITE_TOKEN);
+  if (!token) return [];
+  if (!isVercelBlobReadWriteTokenSyntaxOk(token)) {
+    console.error(
+      "[payload] BLOB_READ_WRITE_TOKEN is set but is not a valid `vercel_blob_rw_…` read/write token. Skipping Vercel Blob — fix or remove the env var. https://vercel.com/docs/storage/blob",
+    );
+    return [];
+  }
+  return [
+    vercelBlobStorage({
+      collections: { media: true },
+      token,
+    }),
+  ];
 }
 
 /**
@@ -458,4 +484,9 @@ export default buildConfig({
   graphQL: {
     disable: true,
   },
+  /**
+   * Vercel: `media` uploads need Blob when `BLOB_READ_WRITE_TOKEN` is set (Vercel → Storage → Blob).
+   * https://payloadcms.com/docs/upload/storage-adapters
+   */
+  plugins: payloadPlugins(),
 });
