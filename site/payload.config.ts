@@ -344,6 +344,20 @@ function postgresPoolIdleTimeoutMillis(): number {
 
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
+  /** Fail fast on Vercel production instead of falling through to file SQLite (opaque admin / digest errors). */
+  if (isVercelPostgresPoolCap() && process.env.NODE_ENV === "production") {
+    if (!databaseUrl) {
+      throw new Error(
+        "[payload] DATABASE_URL is unset on Vercel production. Set Postgres (Supabase session pooler URI) or libsql:// (Turso) in Vercel → Environment Variables → Production, then redeploy.",
+      );
+    }
+    if (!isPostgresUrl(databaseUrl) && !databaseUrl.startsWith("libsql:")) {
+      const hint = databaseUrl.length > 40 ? `${databaseUrl.slice(0, 40)}…` : databaseUrl;
+      throw new Error(
+        `[payload] On Vercel production DATABASE_URL must be postgres:// or libsql:// (received: ${hint}). Fix env and redeploy.`,
+      );
+    }
+  }
   if (databaseUrl && isPostgresUrl(databaseUrl)) {
     const pgUrl = withSupabasePostgresSslMode(databaseUrl);
     const ssl = postgresSslForPool(pgUrl);

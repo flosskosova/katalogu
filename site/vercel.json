@@ -6,6 +6,9 @@
   "functions": {
     "app/api/suggest-tool/route.ts": {
       "maxDuration": 60
+    },
+    "app/(payload)/api/[...slug]/route.ts": {
+      "maxDuration": 60
     }
   }
 }
