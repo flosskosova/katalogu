@@ -12,7 +12,17 @@ export function getSiteUrl(): string {
   ) {
     raw = raw.slice(1, -1).trim();
   }
-  return raw.replace(/\/$/, "") || "http://localhost:3000";
+  if (!raw) return "http://localhost:3000";
+  /** Dashboard paste like `catalog.flossk.org` breaks `new URL()` and metadata without a scheme. */
+  if (!/^https?:\/\//i.test(raw)) {
+    raw = `https://${raw.replace(/^\/+/, "")}`;
+  }
+  try {
+    const u = new URL(raw);
+    return u.origin.replace(/\/$/, "");
+  } catch {
+    return "http://localhost:3000";
+  }
 }
 
 export function absoluteUrl(path: string): string {
