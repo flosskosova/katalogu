@@ -74,6 +74,16 @@ function isLikelyVercelRuntime(): boolean {
 }
 
 /**
+ * Pool sizing: use `VERCEL=1` only (do not require `VERCEL_URL`). If we key off
+ * {@link isLikelyVercelRuntime}, missing `VERCEL_URL` makes `pool.max` 15 per worker and exhausts
+ * Supabase session pooler → admin + suggest fail with generic DB errors.
+ * TLS still uses {@link isLikelyVercelRuntime}.
+ */
+function isVercelPostgresPoolCap(): boolean {
+  return process.env.VERCEL === "1";
+}
+
+/**
  * Supabase Postgres TLS query param (URI `sslmode`).
  * - Default **`require`** (with `uselibpqcompat` when we append params) so the URI does not force
  *   verify-full while the pg pool uses `ssl: { rejectUnauthorized: false }` — that combination
@@ -190,6 +200,20 @@ function resolvePayloadSecret(): string {
  * In **production**, `PAYLOAD_SERVER_URL` wins over `NEXT_PUBLIC_*` so Payload `serverURL` (cookies,
  * CSRF) matches the real host even if an older build inlined stale public env values.
  */
+function normalizedHttpsOrigin(raw: string | undefined): string | undefined {
+  const s = sanitizeEnvValue(raw);
+  if (!s) return undefined;
+  let u = s.replace(/\/+$/, "");
+  if (!/^https?:\/\//i.test(u)) {
+    u = `https://${u.replace(/^\/+/, "")}`;
+  }
+  try {
+    return new URL(u).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 function resolvePayloadServerURL(): string {
   if (process.env.NODE_ENV !== "production") {
     const devOverride =
@@ -203,11 +227,11 @@ function resolvePayloadServerURL(): string {
   }
 
   const explicit =
-    sanitizeEnvValue(process.env.PAYLOAD_SERVER_URL) ||
-    sanitizeEnvValue(process.env.NEXT_PUBLIC_SERVER_URL) ||
-    sanitizeEnvValue(process.env.NEXT_PUBLIC_SITE_URL);
+    normalizedHttpsOrigin(process.env.PAYLOAD_SERVER_URL) ||
+    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SERVER_URL) ||
+    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SITE_URL);
   if (explicit) {
-    return explicit.replace(/\/+$/, "");
+    return explicit;
   }
   /**
    * Production deploys on a custom domain: `VERCEL_URL` is often `*.vercel.app`, which breaks
@@ -215,17 +239,11 @@ function resolvePayloadServerURL(): string {
    * here (no scheme). Skip on preview so branch/preview URLs still use `VERCEL_URL`.
    */
   if (process.env.VERCEL_ENV === "production") {
-    const prodHost = sanitizeEnvValue(process.env.VERCEL_PROJECT_PRODUCTION_URL);
-    if (prodHost) {
-      const host = prodHost.replace(/^https?:\/\//i, "").replace(/\/+$/, "");
-      if (host) return `https://${host}`;
-    }
+    const fromProd = normalizedHttpsOrigin(process.env.VERCEL_PROJECT_PRODUCTION_URL);
+    if (fromProd) return fromProd;
   }
-  const vercel = process.env.VERCEL_URL?.trim();
-  if (vercel) {
-    const host = vercel.replace(/^https?:\/\//i, "");
-    return `https://${host}`;
-  }
+  const fromVercelUrl = normalizedHttpsOrigin(process.env.VERCEL_URL);
+  if (fromVercelUrl) return fromVercelUrl;
   return "http://localhost:3000";
 }
 
@@ -299,21 +317,29 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
 /**
  * Supabase session pooler caps concurrent sessions; each Vercel lambda is its own process and
  * many concurrent invocations × `pool.max` exhausts the pooler (`EMAXCONNSESSION`).
- * Default **1** on Vercel (one session per lambda). Raise with `PAYLOAD_POSTGRES_POOL_MAX` only if
- * your pooler limit allows it (catalog reads use per-request `React.cache()`).
+ * Default **1** whenever `VERCEL=1` (see {@link isVercelPostgresPoolCap}). Raise with
+ * `PAYLOAD_POSTGRES_POOL_MAX` only if your pooler limit allows it (catalog reads use per-request `React.cache()`).
  */
 function postgresPoolMax(): number {
   const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
   if (raw && /^\d+$/.test(raw)) {
     const n = Number.parseInt(raw, 10);
-    if (n >= 1 && n <= 50) return n;
+    if (n >= 1 && n <= 50) {
+      if (isVercelPostgresPoolCap() && n > 2) {
+        console.warn(
+          `[payload] PAYLOAD_POSTGRES_POOL_MAX=${n} on Vercel is unsafe for Supabase session pooler; using 1. Unset or set ≤2.`,
+        );
+        return 1;
+      }
+      return n;
+    }
   }
-  return isLikelyVercelRuntime() ? 1 : 15;
+  return isVercelPostgresPoolCap() ? 1 : 15;
 }
 
 /** Shorter idle timeout on Vercel so pooler sessions are released sooner between requests. */
 function postgresPoolIdleTimeoutMillis(): number {
-  return isLikelyVercelRuntime() ? 10_000 : 30_000;
+  return isVercelPostgresPoolCap() ? 10_000 : 30_000;
 }
 
 function dbAdapter() {

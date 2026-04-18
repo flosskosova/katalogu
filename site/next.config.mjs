@@ -47,7 +47,9 @@ const nextConfig = {
   // Payload ships server-only deps
   serverExternalPackages: [
     "@libsql/client",
+    "@payloadcms/db-postgres",
     "@payloadcms/db-sqlite",
+    "pg",
     "payload",
   ],
   async headers() {

@@ -21,6 +21,9 @@ import {
 
 export const runtime = "nodejs";
 
+/** Payload + Postgres cold start can exceed Vercel’s default function limit without this. */
+export const maxDuration = 60;
+
 type Body = {
   appName?: string;
   repoUrl?: string;
