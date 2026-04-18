@@ -32,6 +32,7 @@
     "@payloadcms/db-sqlite": "^3.83.0",
     "@payloadcms/next": "^3.83.0",
     "@payloadcms/richtext-lexical": "^3.83.0",
+    "@payloadcms/storage-vercel-blob": "^3.83.0",
     "@payloadcms/ui": "^3.83.0",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
