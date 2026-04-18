@@ -37,10 +37,11 @@ export default function GlobalError({
         )}
         <p style={{ color: "#555", fontSize: "0.9rem" }}>
           For Payload <code>/admin</code>: check <code>DATABASE_URL</code> (Supabase session pooler
-          on Vercel), <code>PAYLOAD_SECRET</code>, and <code>PAYLOAD_SERVER_URL</code> matching your
-          live domain (production also uses Vercel&apos;s{" "}
-          <code>VERCEL_PROJECT_PRODUCTION_URL</code> when unset). Postgres TLS: non-Supabase DBs may
-          need <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>.
+          on Vercel), <code>PAYLOAD_SECRET</code>, and <code>PAYLOAD_SERVER_URL</code> (or bare
+          hostname — normalized to <code>https://</code>) matching your live domain (production also
+          uses <code>VERCEL_PROJECT_PRODUCTION_URL</code> when unset). If the digest is a timeout,
+          increase the function <code>maxDuration</code> for admin/API routes on your Vercel plan.
+          Postgres TLS: non-Supabase DBs may need <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>.
         </p>
         <button
           type="button"
