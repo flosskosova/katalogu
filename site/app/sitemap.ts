@@ -4,11 +4,13 @@ import {
   getCategories,
   getPublishedCollectionSlugs,
 } from "@/lib/catalog";
+import { getSiteUrl } from "@/lib/seo/site";
 
-const base =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+/** Avoid build-time static generation: CMS + many URLs can exceed the default ~60s budget on Vercel. */
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const base = getSiteUrl();
   const staticRoutes: MetadataRoute.Sitemap = [
     "",
     "/browse",
