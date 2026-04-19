@@ -57,6 +57,8 @@ function payloadPlugins() {
     vercelBlobStorage({
       collections: { media: true },
       token,
+      /** Vercel serverless upload size cap; client uploads go straight to Blob (storage-vercel-blob README). */
+      clientUploads: true,
     }),
   ];
 }
