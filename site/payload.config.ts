@@ -254,10 +254,15 @@ function resolvePayloadServerURL(): string {
     return `http://localhost:${port}`;
   }
 
+  /**
+   * Prefer `NEXT_PUBLIC_SITE_URL` over `NEXT_PUBLIC_SERVER_URL`: teams often leave the latter as
+   * `*.vercel.app` while the real traffic (and cookies) use a custom domain like `catalog.flossk.org`.
+   * Wrong order breaks Payload `serverURL` / CSRF for `/admin` on the public host.
+   */
   const explicit =
     normalizedHttpsOrigin(process.env.PAYLOAD_SERVER_URL) ||
-    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SERVER_URL) ||
-    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SITE_URL);
+    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SITE_URL) ||
+    normalizedHttpsOrigin(process.env.NEXT_PUBLIC_SERVER_URL);
   if (explicit) {
     return explicit;
   }

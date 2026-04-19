@@ -80,8 +80,13 @@ function assertSuggestToolOrigin(req: Request): NextResponse | null {
     return jsonError("Forbidden", 403);
   }
 
-  const allowed = new Set<string>();
   const requestHost = hostOnlyFromForwardedOrHost(req);
+  /** Browser Origin host matches the request Host (custom domain, preview URL, etc.). */
+  if (requestHost && originHost === requestHost) {
+    return null;
+  }
+
+  const allowed = new Set<string>();
   if (requestHost) allowed.add(requestHost);
 
   for (const v of [
