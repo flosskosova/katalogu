@@ -88,7 +88,7 @@ export default async function CuratedCollectionPage({ params }: Props) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
           Curated list
         </p>
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+        <h1 className="mt-4 font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
           {c.name}
         </h1>
         {c.description ? (

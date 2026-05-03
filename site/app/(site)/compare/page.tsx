@@ -60,7 +60,7 @@ export default async function ComparePage({ searchParams }: Props) {
   if (ids.length < 2) {
     return (
       <div className="max-w-xl">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--foreground)]">
+        <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold text-[var(--foreground)]">
           Compare tools
         </h1>
         <p className="mt-4 text-[var(--foreground-muted)]">
@@ -97,7 +97,7 @@ export default async function ComparePage({ searchParams }: Props) {
   return (
     <div>
       <header className="mb-10">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold text-[var(--foreground)] sm:text-4xl">
+        <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold text-[var(--foreground)] sm:text-4xl">
           Compare {enriched.length} tools
         </h1>
         <p className="mt-3 text-[var(--foreground-muted)]">

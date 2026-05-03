@@ -80,7 +80,7 @@ export default async function HomePage() {
             href="/browse"
             className="inline-flex flex-wrap items-baseline gap-x-1.5 rounded-md text-[var(--foreground)] outline-none ring-[var(--ring)] transition-colors hover:text-[var(--accent)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
           >
-            <span className="font-[family-name:var(--font-display)] text-2xl font-semibold tabular-nums tracking-tight">
+            <span className="font-[family-name:var(--font-brand)] text-2xl font-semibold tabular-nums tracking-tight">
               {toolCount.toLocaleString("en-US")}
             </span>
             <span className="text-[var(--foreground-muted)]">
@@ -89,7 +89,11 @@ export default async function HomePage() {
           </Link>
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button href="/browse" variant="primary" className="!px-6 !py-3">
+          <Button
+            href="/browse"
+            variant="primary"
+            className="!px-6 !py-3 !bg-[#fff176]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#fdd835]/95 hover:!text-[var(--foreground)] dark:!bg-[#fdd835]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fdd835]/55 dark:hover:!text-[var(--foreground)]"
+          >
             Browse all tools
           </Button>
           <Button href="/categories" variant="secondary" className="!px-6 !py-3">

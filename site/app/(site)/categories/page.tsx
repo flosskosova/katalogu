@@ -41,7 +41,7 @@ export default async function CategoriesPage() {
   return (
     <div>
       <header className="mb-10">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+        <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
           Categories
         </h1>
         <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">

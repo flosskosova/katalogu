@@ -38,6 +38,7 @@ yarn-error.log*
 /data/payload.sqlite
 /data/payload.sqlite-*
 /media/
+/temp-payload/
 
 # vercel
 .vercel

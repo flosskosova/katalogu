@@ -78,7 +78,7 @@ export function SiteHeader() {
           <Button
             href="/browse"
             variant="primary"
-            className="!px-3 !py-2 text-xs sm:!px-4 sm:text-sm"
+            className="!px-3 !py-2 text-xs sm:!px-4 sm:text-sm !bg-[#fff176]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#fdd835]/95 hover:!text-[var(--foreground)] dark:!bg-[#fdd835]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fdd835]/55 dark:hover:!text-[var(--foreground)]"
             onClick={closeMenu}
           >
             Explore
