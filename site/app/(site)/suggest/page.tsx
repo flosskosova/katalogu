@@ -36,7 +36,7 @@ export const metadata: Metadata = {
 export default function SuggestPage() {
   return (
     <div className="max-w-2xl">
-      <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
+      <h1 className="font-[family-name:var(--font-brand)] text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
         Suggest a FOSS app or tool
       </h1>
       <p className="mt-3 text-[var(--foreground-muted)] leading-relaxed">

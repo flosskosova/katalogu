@@ -120,7 +120,7 @@ export default async function ToolPage({ params }: Props) {
             />
           ) : null}
           <div className="min-w-0 flex-1">
-            <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+            <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
               {tool.name}
             </h1>
             <p className="mt-4 max-w-3xl text-lg leading-relaxed text-[var(--foreground-muted)]">

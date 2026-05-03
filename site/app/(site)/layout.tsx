@@ -1,5 +1,5 @@
 import { Analytics } from "@vercel/analytics/next";
-import { DM_Sans, Newsreader } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
 import { CompareProvider } from "@/components/catalog/CompareProvider";
@@ -15,13 +15,7 @@ const sans = DM_Sans({
   display: "swap",
 });
 
-const display = Newsreader({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-/** Local Alfabeti Demi (`site/font`) — header brand + homepage hero headline. */
+/** Local Alfabeti Demi (`site/font`) — header brand, hero, and page titles. */
 const alfabetiBrand = localFont({
   src: [
     {
@@ -48,7 +42,7 @@ export default function SiteLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${sans.variable} ${display.variable} ${alfabetiBrand.variable}`}
+      className={`${sans.variable} ${alfabetiBrand.variable}`}
     >
       <body>
         <SiteJsonLd />

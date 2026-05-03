@@ -88,7 +88,7 @@ export default async function CategoryPage({ params }: Props) {
       </nav>
 
       <header className="mt-6 border-b border-[var(--border)] pb-10">
-        <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+        <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
           {cat.name}
         </h1>
         <p className="mt-4 max-w-3xl text-lg text-[var(--foreground-muted)]">

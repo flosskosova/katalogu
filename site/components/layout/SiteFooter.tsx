@@ -50,7 +50,7 @@ export function SiteFooter() {
               <p className="text-lg font-semibold text-[var(--foreground)]">
                 {SITE.name}
               </p>
-              <p className="mt-1 text-xs font-medium leading-snug text-[var(--foreground-muted)]">
+              <p className="mt-1 font-[family-name:var(--font-sans)] text-xs font-normal leading-snug text-[var(--foreground-muted)]">
                 {SITE_ATTRIBUTION_LINE}
               </p>
               <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
@@ -60,7 +60,7 @@ export function SiteFooter() {
             </div>
           </div>
         </div>
-        <p className="mt-10 text-xs text-[var(--foreground-subtle)]">
+        <p className="mt-10 font-[family-name:var(--font-sans)] text-xs font-normal text-[var(--foreground-subtle)]">
           <a
             className="underline decoration-[var(--border)] underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:decoration-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
             href={SITE_SOURCE_LICENSE_URL}
