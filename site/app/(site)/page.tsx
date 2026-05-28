@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/catalog/JsonLd";
-import { CategoryCard } from "@/components/catalog/CategoryCard";
-import { ToolCard } from "@/components/catalog/ToolCard";
+import { CategoryResultsView } from "@/components/catalog/CategoryResultsView";
+import { ToolResultsView } from "@/components/catalog/ToolResultsView";
 import { Button } from "@/components/ui/Button";
 import {
-  getCategories,
+  getCategoriesWithCounts,
   getFeaturedCuratedCollections,
   getToolCount,
   getTopPicks,
@@ -51,13 +51,13 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [picks, categories, featuredLists, toolCount] = await Promise.all([
+  const [picks, categoriesWithCounts, featuredLists, toolCount] = await Promise.all([
     getTopPicks(9),
-    getCategories(),
+    getCategoriesWithCounts(),
     getFeaturedCuratedCollections(4),
     getToolCount(),
   ]);
-  const categoryPreview = categories.slice(0, 9);
+  const categoryPreview = categoriesWithCounts.slice(0, 9);
 
   return (
     <>
@@ -120,11 +120,7 @@ export default async function HomePage() {
             Full browse →
           </Link>
         </div>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {picks.map((tool) => (
-            <ToolCard key={tool.slug} tool={tool} />
-          ))}
-        </div>
+        <ToolResultsView tools={picks} className="mt-8" />
       </section>
 
       {featuredLists.length > 0 ? (
@@ -177,11 +173,7 @@ export default async function HomePage() {
           monitoring, and education—each with multiple vetted entries where the
           ecosystem supports it.
         </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categoryPreview.map((c) => (
-            <CategoryCard key={c.slug} category={c} />
-          ))}
-        </div>
+        <CategoryResultsView categories={categoryPreview} className="mt-8" />
         <p className="mt-8 text-center">
           <Button href="/categories" variant="secondary">
             All categories

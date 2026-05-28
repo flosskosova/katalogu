@@ -169,6 +169,23 @@ export async function getCategories(): Promise<Category[]> {
   return categories;
 }
 
+export async function getCategoriesWithCounts(): Promise<
+  (Category & { count: number })[]
+> {
+  const { categories, tools } = await getCatalogData();
+  const countBySlug = new Map<string, number>();
+  for (const tool of tools) {
+    countBySlug.set(
+      tool.categorySlug,
+      (countBySlug.get(tool.categorySlug) ?? 0) + 1,
+    );
+  }
+  return categories.map((category) => ({
+    ...category,
+    count: countBySlug.get(category.slug) ?? 0,
+  }));
+}
+
 export async function getCategoryBySlug(
   slug: string,
 ): Promise<Category | undefined> {

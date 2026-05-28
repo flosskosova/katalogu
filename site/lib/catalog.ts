@@ -8,6 +8,7 @@ export {
   getAllTools,
   getCatalogData,
   getCategories,
+  getCategoriesWithCounts,
   getCategoryBySlug,
   getCuratedCollectionBySlug,
   getFeaturedCuratedCollections,

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useId, useState } from "react";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { Button } from "@/components/ui/Button";
 import { SITE } from "@/lib/seo/site";
 
@@ -67,6 +68,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <ViewModeToggle className="hidden sm:inline-flex" />
+          <ViewModeToggle variant="icon" className="sm:hidden" />
           <Button
             href="/suggest"
             variant="secondary"
@@ -152,6 +155,14 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            <div className="mt-2 border-t border-[var(--border)] pt-3">
+              <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+                View as
+              </p>
+              <div className="px-3">
+                <ViewModeToggle />
+              </div>
+            </div>
           </nav>
         </div>
       ) : null}

@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { BrowseFilters } from "@/components/catalog/BrowseFilters";
-import { ToolCard } from "@/components/catalog/ToolCard";
+import { ToolResultsView } from "@/components/catalog/ToolResultsView";
+import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { getAllPlatforms, getAllTags, getCatalogData, getCategories } from "@/lib/catalog";
 import { filterTools } from "@/lib/search";
 import { parseSearchParams } from "@/lib/search-params";
@@ -90,15 +91,14 @@ export default async function BrowsePage({
         />
       </Suspense>
 
-      <p className="mb-6 text-sm text-[var(--foreground-muted)]" role="status">
-        {results.length} tool{results.length === 1 ? "" : "s"} match your filters
-      </p>
-
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {results.map((tool) => (
-          <ToolCard key={tool.slug} tool={tool} />
-        ))}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-[var(--foreground-muted)]" role="status">
+          {results.length} tool{results.length === 1 ? "" : "s"} match your filters
+        </p>
+        <ViewModeToggle />
       </div>
+
+      <ToolResultsView tools={results} />
 
       {results.length === 0 ? (
         <p className="mt-12 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--card)] p-10 text-center text-[var(--foreground-muted)]">
