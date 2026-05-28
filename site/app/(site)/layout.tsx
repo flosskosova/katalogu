@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
 import { CompareProvider } from "@/components/catalog/CompareProvider";
+import { ViewModeProvider } from "@/components/catalog/ViewModeProvider";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SkipLink } from "@/components/layout/SkipLink";
@@ -47,6 +48,7 @@ export default function SiteLayout({
       <body>
         <SiteJsonLd />
         <CompareProvider>
+          <ViewModeProvider>
           <SkipLink />
           <SiteHeader />
           <main
@@ -57,6 +59,7 @@ export default function SiteLayout({
           </main>
           <SiteFooter />
           <CompareBar />
+          </ViewModeProvider>
         </CompareProvider>
         <Analytics />
       </body>

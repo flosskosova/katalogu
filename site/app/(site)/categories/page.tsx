@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { CategoryCard } from "@/components/catalog/CategoryCard";
-import { getCategories } from "@/lib/catalog";
+import { CategoryResultsView } from "@/components/catalog/CategoryResultsView";
+import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
+import { getCategoriesWithCounts } from "@/lib/catalog";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 
 const catDesc =
@@ -37,24 +38,23 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
-  const categories = await getCategories();
+  const categories = await getCategoriesWithCounts();
   return (
     <div>
-      <header className="mb-10">
-        <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
-          Categories
-        </h1>
-        <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
-          Each category includes an editorial summary and hand-picked tools that
-          meet our inclusion bar: open license, real maintenance, and practical
-          usefulness.
-        </p>
+      <header className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
+            Categories
+          </h1>
+          <p className="mt-3 max-w-2xl text-[var(--foreground-muted)]">
+            Each category includes an editorial summary and hand-picked tools that
+            meet our inclusion bar: open license, real maintenance, and practical
+            usefulness.
+          </p>
+        </div>
+        <ViewModeToggle />
       </header>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {categories.map((c) => (
-          <CategoryCard key={c.slug} category={c} />
-        ))}
-      </div>
+      <CategoryResultsView categories={categories} />
     </div>
   );
 }

@@ -1,10 +1,13 @@
 import Link from "next/link";
 import type { Category } from "@/lib/types";
-import { getToolsByCategory } from "@/lib/catalog";
 
-export async function CategoryCard({ category }: { category: Category }) {
-  const list = await getToolsByCategory(category.slug);
-  const count = list.length;
+export function CategoryCard({
+  category,
+  count,
+}: {
+  category: Category;
+  count: number;
+}) {
   return (
     <Link
       href={`/categories/${category.slug}`}

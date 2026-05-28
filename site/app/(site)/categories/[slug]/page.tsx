@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/catalog/JsonLd";
-import { ToolCard } from "@/components/catalog/ToolCard";
+import { ToolResultsView } from "@/components/catalog/ToolResultsView";
+import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import {
   getCategoryBySlug,
   getToolsByCategory,
@@ -97,14 +98,13 @@ export default async function CategoryPage({ params }: Props) {
       </header>
 
       <section className="py-10">
-        <h2 className="font-[family-name:var(--font-brand)] text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
-          Tools in this category ({tools.length})
-        </h2>
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {tools.map((tool) => (
-            <ToolCard key={tool.slug} tool={tool} />
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-[family-name:var(--font-brand)] text-sm font-semibold uppercase tracking-wider text-[var(--foreground-subtle)]">
+            Tools in this category ({tools.length})
+          </h2>
+          <ViewModeToggle />
         </div>
+        <ToolResultsView tools={tools} className="mt-6" />
         {tools.length === 0 ? (
           <p className="mt-8 text-[var(--foreground-muted)]">
             No tools seeded for this category yet—check back as the catalog
