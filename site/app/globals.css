@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8f7f4;
+  --background: #ffffff;
   --foreground: #14120f;
   --foreground-muted: #4a4742;
   --foreground-subtle: #7c776d;
-  --muted: #ebe8e1;
+  --muted: #ffffff;
   --card: #ffffff;
-  --border: #e2ddd4;
+  --border: #e8e6e3;
   --accent: #1e5f4a;
   --accent-hover: #174a3a;
   --accent-fg: #f7f6f2;
@@ -20,19 +20,20 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f0e0c;
-    --foreground: #f2f0eb;
-    --foreground-muted: #b8b3a8;
-    --foreground-subtle: #8a8478;
-    --muted: #1c1a17;
-    --card: #161412;
-    --border: #2a2723;
-    --accent: #6bc4a3;
-    --accent-hover: #8dd4bd;
-    --accent-fg: #0f0e0c;
-    --accent-subtle: #1a2e28;
-    --accent-border: #2d4a40;
-    --ring: #6bc4a3;
+    /* Match light surfaces: white page everywhere; keep dark text for contrast */
+    --background: #ffffff;
+    --foreground: #14120f;
+    --foreground-muted: #4a4742;
+    --foreground-subtle: #7c776d;
+    --muted: #ffffff;
+    --card: #ffffff;
+    --border: #e8e6e3;
+    --accent: #1e5f4a;
+    --accent-hover: #174a3a;
+    --accent-fg: #f7f6f2;
+    --accent-subtle: #e8f2ee;
+    --accent-border: #b8d4c9;
+    --ring: #1e5f4a;
   }
 }
 
