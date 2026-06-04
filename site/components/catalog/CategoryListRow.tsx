@@ -14,7 +14,7 @@ export function CategoryListRow({
       className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-[var(--muted)]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--ring)] sm:gap-4"
     >
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)]"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)] text-[var(--foreground-muted)]"
         aria-hidden
       >
         <svg
@@ -33,10 +33,10 @@ export function CategoryListRow({
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <h2 className="font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">
+          <h2 className="inline font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f] group-hover:outline group-hover:outline-2 group-hover:outline-[#14120f] group-hover:outline-offset-1">
             {category.name}
           </h2>
-          <span className="text-xs font-medium text-[var(--foreground-subtle)]">
+          <span className="inline-flex items-center rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-medium text-[#14120f]">
             {count} tool{count === 1 ? "" : "s"}
           </span>
         </div>
