@@ -32,11 +32,13 @@ export function CategoryListRow({
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-          <h2 className="inline font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]">
-            {category.name}
+        <div className="flex min-w-0 flex-nowrap items-baseline gap-x-2">
+          <h2 className="min-w-0 flex-1 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]">
+            <span className="inline-block max-w-full truncate rounded px-0.5 py-px align-baseline transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]" title={category.name}>
+              {category.name}
+            </span>
           </h2>
-          <span className="inline-flex items-center rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-medium text-[#14120f]">
+          <span className="inline-flex shrink-0 items-center rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-medium text-[#14120f]">
             {count} tool{count === 1 ? "" : "s"}
           </span>
         </div>

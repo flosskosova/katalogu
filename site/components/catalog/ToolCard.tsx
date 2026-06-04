@@ -31,7 +31,7 @@ export function ToolCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1 pr-2">
           <Badge
             tone="accent"
             className="mb-2"
@@ -39,10 +39,11 @@ export function ToolCard({
           >
             {tool.category.name}
           </Badge>
-          <h3 className="font-[family-name:var(--font-brand)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
+          <h3 className="min-w-0 overflow-hidden font-[family-name:var(--font-brand)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
             <Link
               href={`/tools/${tool.slug}`}
-              className="inline rounded px-0.5 py-px -mx-0.5 outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+              className="inline-block max-w-full truncate rounded px-0.5 py-px align-baseline outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+              title={tool.name}
             >
               {tool.name}
             </Link>

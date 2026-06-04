@@ -40,16 +40,21 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h3 className="font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]">
+          <div className="flex min-w-0 flex-nowrap items-center gap-x-2">
+            <h3 className="min-w-0 flex-1 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]">
               <Link
                 href={`/tools/${tool.slug}`}
-                className="inline rounded px-0.5 py-px -mx-0.5 outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                className="inline-block max-w-full truncate rounded px-0.5 py-px align-baseline outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                title={tool.name}
               >
                 {tool.name}
               </Link>
             </h3>
-            <Badge tone="accent" href={`/categories/${tool.category.slug}`}>
+            <Badge
+              tone="accent"
+              className="shrink-0"
+              href={`/categories/${tool.category.slug}`}
+            >
               {tool.category.name}
             </Badge>
           </div>

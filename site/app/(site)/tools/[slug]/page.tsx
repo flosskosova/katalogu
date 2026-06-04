@@ -342,7 +342,7 @@ export default async function ToolPage({ params }: Props) {
                 <li key={tag}>
                   <Link
                     href={`/browse?tags=${encodeURIComponent(tag)}`}
-                    className="rounded-md border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--accent)] hover:bg-[var(--muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+                    className="rounded-md border border-[var(--border)] px-2 py-1 text-xs font-medium text-[var(--foreground)] hover:bg-[var(--muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
                   >
                     {tag}
                   </Link>
@@ -367,7 +367,7 @@ export default async function ToolPage({ params }: Props) {
                 href={`/tools/${r.slug}`}
                 className="block rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
               >
-                <p className="text-xs font-medium text-[var(--accent)]">
+                <p className="text-xs font-medium text-[var(--foreground)]">
                   {r.category.name}
                 </p>
                 <p className="mt-1 font-[family-name:var(--font-brand)] font-medium text-[var(--foreground)]">
