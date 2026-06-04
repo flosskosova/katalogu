@@ -1,26 +1,31 @@
 import Image from "next/image";
 import { SITE_LOGO_PATH } from "@/lib/seo/site";
+import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  /** Larger default for header; footer can pass h-10 w-10 */
+  /** When true, preload (e.g. header LCP). */
   priority?: boolean;
 };
 
 /**
- * Site wordmark graphic (dark silhouette — inverted in `prefers-color-scheme: dark`
- * so it stays visible on dark backgrounds).
+ * Site mark from `SITE_LOGO_PATH` (`public/black.svg`).
+ * Use **height + `w-auto`** so the mark scales without square letterboxing.
  */
-export function BrandLogo({ className = "h-9 w-9", priority = false }: Props) {
+export function BrandLogo({
+  className = "h-16 w-auto max-h-16 sm:h-20 sm:max-h-20",
+  priority = false,
+}: Props) {
   return (
     <Image
       src={SITE_LOGO_PATH}
       alt=""
-      width={256}
-      height={256}
-      sizes="(max-width: 768px) 36px, 40px"
-      className={`object-contain dark:invert ${className}`}
+      width={186}
+      height={153}
+      sizes="(max-width: 768px) 120px, 160px"
+      className={cn("block shrink-0 object-contain object-left", className)}
       priority={priority}
+      unoptimized
     />
   );
 }

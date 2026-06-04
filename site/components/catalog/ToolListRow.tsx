@@ -69,7 +69,7 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
           className={cn(
             "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]",
             selected
-              ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[var(--accent)]"
+              ? "border-[var(--accent)] bg-[var(--accent-subtle)] text-[#14120f]"
               : "border-[var(--border)] text-[var(--foreground-muted)] hover:bg-[var(--muted)]",
           )}
         >

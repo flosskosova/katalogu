@@ -93,8 +93,8 @@ export const metadata: Metadata = {
   },
   ...(verification ? { verification } : {}),
   /**
-   * Favicon + Apple touch: `app/icon.png` and `app/apple-icon.png` (same asset as
-   * `public/brand-logo.png`). Next injects `<link rel="icon">` / apple-touch automatically.
+   * Favicon + Apple touch: `app/icon.png` and `app/apple-icon.png`. Header/footer
+   * use `public/black.svg` via `SITE_LOGO_PATH`. Next injects icon links automatically.
    */
 };
 

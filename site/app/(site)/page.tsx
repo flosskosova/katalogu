@@ -63,7 +63,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={buildHomeFaqJsonLd()} />
       <section className="border-b border-[var(--border)] pb-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)] [paint-order:stroke_fill] [-webkit-text-stroke:0.75px_#14120f]">
           Editorial catalog
         </p>
         <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-brand)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
