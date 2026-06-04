@@ -92,7 +92,7 @@ export default async function HomePage() {
           <Button
             href="/browse"
             variant="primary"
-            className="!px-6 !py-3 !bg-[#fff176]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#fdd835]/95 hover:!text-[var(--foreground)] dark:!bg-[#fdd835]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fdd835]/55 dark:hover:!text-[var(--foreground)]"
+            className="!px-6 !py-3 !bg-[#fff200]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#e0cd00]/95 hover:!text-[var(--foreground)] dark:!bg-[#fff200]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fff200]/55 dark:hover:!text-[var(--foreground)]"
           >
             Browse all tools
           </Button>
@@ -141,12 +141,12 @@ export default async function HomePage() {
               <li key={list.slug}>
                 <Link
                   href={`/collections/${list.slug}`}
-                  className="block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+                  className="group block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)]">
+                  <p className="inline-flex rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-[#14120f]">
                     Collection
                   </p>
-                  <p className="mt-2 font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)]">
+                  <p className="mt-2 inline font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f] group-hover:outline group-hover:outline-2 group-hover:outline-[#14120f] group-hover:outline-offset-1">
                     {list.name}
                   </p>
                   {list.description ? (
@@ -154,7 +154,7 @@ export default async function HomePage() {
                       {list.description}
                     </p>
                   ) : null}
-                  <p className="mt-4 text-sm font-medium text-[var(--accent)]">
+                  <p className="mt-4 text-sm font-medium text-[var(--foreground-muted)] transition-colors group-hover:text-[#14120f]">
                     View list →
                   </p>
                 </Link>

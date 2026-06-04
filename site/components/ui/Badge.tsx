@@ -3,9 +3,11 @@ import { cn } from "@/lib/utils";
 
 const tones: Record<string, string> = {
   default: "bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]",
-  accent: "bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent-border)]",
-  success: "bg-emerald-500/10 text-emerald-800 border border-emerald-500/20",
-  warn: "bg-amber-500/10 text-amber-900 border border-amber-500/20",
+  accent:
+    "border border-[#fff200]/55 bg-[#fff200]/50 text-[#14120f]",
+  success:
+    "bg-[#fff200]/14 text-[#5c5600] border border-[#fff200]/32",
+  warn: "bg-[#fffce8] text-[#665e00] border border-[#efe24d]",
 };
 
 const linkRing =
