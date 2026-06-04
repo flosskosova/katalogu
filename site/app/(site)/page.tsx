@@ -146,7 +146,7 @@ export default async function HomePage() {
                   <p className="inline-flex rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-[#14120f]">
                     Collection
                   </p>
-                  <p className="mt-2 inline font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f] group-hover:outline group-hover:outline-2 group-hover:outline-[#14120f] group-hover:outline-offset-1">
+                  <p className="mt-2 inline font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]">
                     {list.name}
                   </p>
                   {list.description ? (
