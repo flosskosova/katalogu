@@ -42,7 +42,7 @@ export function ToolCard({
           <h3 className="font-[family-name:var(--font-brand)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
             <Link
               href={`/tools/${tool.slug}`}
-              className="rounded px-0.5 py-px -mx-0.5 outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] hover:outline hover:outline-2 hover:outline-[#14120f] hover:outline-offset-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+              className="inline rounded px-0.5 py-px -mx-0.5 outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
             >
               {tool.name}
             </Link>
