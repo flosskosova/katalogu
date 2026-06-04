@@ -4,9 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 const STORAGE_KEY = "opencatalog-view-mode-v1";
@@ -23,6 +22,30 @@ type ViewModeContextValue = {
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
 
+type Listener = () => void;
+const listeners = new Set<Listener>();
+
+function emitViewModeChange() {
+  listeners.forEach((l) => l());
+}
+
+function subscribe(callback: Listener) {
+  listeners.add(callback);
+  if (typeof window === "undefined") {
+    return () => {
+      listeners.delete(callback);
+    };
+  }
+  const onStorage = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY || e.key === null) callback();
+  };
+  window.addEventListener("storage", onStorage);
+  return () => {
+    listeners.delete(callback);
+    window.removeEventListener("storage", onStorage);
+  };
+}
+
 function readStored(): ViewMode {
   if (typeof window === "undefined") return "grid";
   try {
@@ -33,19 +56,40 @@ function readStored(): ViewMode {
   }
 }
 
-export function ViewModeProvider({ children }: { children: React.ReactNode }) {
-  const [viewMode, setViewModeState] = useState<ViewMode>(readStored);
+function getSnapshot(): ViewMode {
+  return readStored();
+}
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, viewMode);
-  }, [viewMode]);
+function getServerSnapshot(): ViewMode {
+  return "grid";
+}
+
+export function ViewModeProvider({ children }: { children: React.ReactNode }) {
+  const viewMode = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   const setViewMode = useCallback((mode: ViewMode) => {
-    setViewModeState(mode);
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(STORAGE_KEY, mode);
+    } catch {
+      return;
+    }
+    emitViewModeChange();
   }, []);
 
   const toggleViewMode = useCallback(() => {
-    setViewModeState((prev) => (prev === "grid" ? "list" : "grid"));
+    if (typeof window === "undefined") return;
+    const next: ViewMode = readStored() === "grid" ? "list" : "grid";
+    try {
+      localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      return;
+    }
+    emitViewModeChange();
   }, []);
 
   const value = useMemo(
