@@ -36,14 +36,14 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--background)]/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 sm:gap-4 sm:px-6 md:min-h-[5.25rem]">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-2 sm:gap-4 sm:px-6 md:min-h-20">
         <Link
           href="/"
           className="group flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5 md:flex-none md:max-w-[min(100%,20rem)]"
           onClick={closeMenu}
         >
           <BrandLogo
-            className="h-16 w-auto max-h-16 shrink-0 self-center transition-opacity group-hover:opacity-90 sm:h-20 sm:max-h-20"
+            className="h-[2.56rem] w-auto max-h-[2.56rem] shrink-0 self-center transition-opacity group-hover:opacity-90 sm:h-[3.2rem] sm:max-h-[3.2rem]"
             priority
           />
           <span className="flex min-w-0 flex-col leading-tight">

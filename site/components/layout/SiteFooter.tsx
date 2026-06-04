@@ -45,7 +45,7 @@ export function SiteFooter() {
           </div>
 
           <div className="flex gap-3">
-            <BrandLogo className="h-14 w-auto max-h-14 shrink-0 sm:h-16 sm:max-h-16" />
+            <BrandLogo className="h-[2.52rem] w-auto max-h-[2.52rem] shrink-0 sm:h-[2.88rem] sm:max-h-[2.88rem]" />
             <div>
               <p className="text-lg font-semibold text-[var(--foreground)]">
                 {SITE.name}

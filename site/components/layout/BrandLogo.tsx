@@ -13,7 +13,7 @@ type Props = {
  * Use **height + `w-auto`** so the mark scales without square letterboxing.
  */
 export function BrandLogo({
-  className = "h-16 w-auto max-h-16 sm:h-20 sm:max-h-20",
+  className = "h-[2.56rem] w-auto max-h-[2.56rem] sm:h-[3.2rem] sm:max-h-[3.2rem]",
   priority = false,
 }: Props) {
   return (
@@ -22,7 +22,7 @@ export function BrandLogo({
       alt=""
       width={186}
       height={153}
-      sizes="(max-width: 768px) 120px, 160px"
+      sizes="(max-width: 768px) 80px, 100px"
       className={cn("block shrink-0 object-contain object-left", className)}
       priority={priority}
       unoptimized
