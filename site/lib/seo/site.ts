@@ -31,8 +31,8 @@ export function absoluteUrl(path: string): string {
   return `${base}${p}`;
 }
 
-/** Logo / favicon under `public/` (PNG with transparent background). */
-export const SITE_LOGO_PATH = "/brand-logo.png" as const;
+/** Logo under `public/` (SVG mark for header, footer, manifest, JSON-LD). */
+export const SITE_LOGO_PATH = "/black.svg" as const;
 
 /** Public credit under the site name (header, footer). */
 export const SITE_ATTRIBUTION_LINE =
