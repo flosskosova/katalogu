@@ -18,7 +18,7 @@ export default function OpenGraphImage() {
           flexDirection: "column",
           alignItems: "flex-start",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
+          background: "#ffffff",
           padding: 72,
         }}
       >
@@ -26,7 +26,7 @@ export default function OpenGraphImage() {
           style={{
             fontSize: 64,
             fontWeight: 700,
-            color: "#f8fafc",
+            color: "#14120f",
             letterSpacing: "-0.03em",
             lineHeight: 1.1,
             maxWidth: 900,
@@ -38,7 +38,7 @@ export default function OpenGraphImage() {
           style={{
             marginTop: 20,
             fontSize: 28,
-            color: "#94a3b8",
+            color: "#4a4742",
             maxWidth: 820,
             lineHeight: 1.35,
           }}
@@ -49,7 +49,7 @@ export default function OpenGraphImage() {
           style={{
             marginTop: 36,
             fontSize: 20,
-            color: "#64748b",
+            color: "#7c776d",
           }}
         >
           Curated · Evidence-based · Free & open source
