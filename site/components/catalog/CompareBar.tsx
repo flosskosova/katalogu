@@ -16,15 +16,17 @@ export function CompareBar() {
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--border)] bg-[var(--background)]/95 px-4 py-3 shadow-[0_-8px_30px_rgba(0,0,0,0.06)] backdrop-blur-md"
     >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-[var(--foreground)]">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2">
+          <span className="shrink-0 text-sm font-medium text-[var(--foreground)]">
             Compare ({entries.length})
           </span>
-          <ul className="flex flex-wrap gap-2">
+          <ul className="flex min-w-0 flex-1 flex-wrap gap-2">
             {entries.map((e) => (
-              <li key={e.slug}>
-                <span className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--card)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)]">
-                  {e.name}
+              <li key={e.slug} className="max-w-full shrink-0">
+                <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--card)] px-2.5 py-1 text-xs font-medium text-[var(--foreground)]">
+                  <span className="min-w-0 truncate" title={e.name}>
+                    {e.name}
+                  </span>
                   <button
                     type="button"
                     onClick={() => remove(e.slug)}
