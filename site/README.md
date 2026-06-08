@@ -33,6 +33,15 @@ Copy `.env.example` to `.env.local`.
 
 Payload **cannot** use a on-disk `file:…` SQLite path on Vercel (ephemeral filesystem). Create a **Turso** database and set **`TURSO_DATABASE_URL` + `TURSO_AUTH_TOKEN`** (or the `DATABASE_*` pair) for **Production**, without extra quotes around values—HTTP **401** from Turso almost always means a missing/wrong token or a var not enabled for that environment. Redeploy after changing env. Apply the schema once (e.g. `npm run payload:migrate` locally, or [Payload + Turso on Vercel](https://payloadcms.com/posts/guides/how-to-set-up-payload-with-sqlite-and-turso-for-deployment-on-vercel)). Alternatively, set **`USE_STATIC_CATALOG=true`** for a **public catalog only** (no durable CMS), but `/admin` still expects a working DB.
 
+#### Vercel checklist (Supabase Postgres + `next build`)
+
+These steps are done in the **Vercel dashboard** (not in git):
+
+1. **Production branch** — **Settings → Environments**: Production should track **`main`** (or whichever branch you intend). After merging features into `main`, wait for the **Production** deployment to finish **Ready**.
+2. **`DATABASE_URL` at build time** — **Settings → Environment Variables** → edit **`DATABASE_URL`**. It must apply to **Production** (and **Preview** if you want Preview builds). If the UI offers **Build** vs **Runtime** (or “available during build”), enable **Build** for Production: `next build` runs Payload and needs `DATABASE_URL`, or the build fails with `[payload] DATABASE_URL is unset on Vercel production`.
+3. **Session pooler** — Use Supabase **Connect → Session pooler**, host `*.pooler.supabase.com`, port **5432**; URL-encode special characters in the DB password. See `site/.env.example` (Postgres section).
+4. **Secrets** — Resolve **Needs Attention** on **`PAYLOAD_SECRET`**, **`PREVIEW_SECRET`**, etc. Redeploy after any change.
+
 ## CMS workflow
 
 1. Copy `.env.example` → `.env` and set **`PAYLOAD_SECRET`** (and URLs). Then run **`npm run seed:catalog`** so Categories, Tags, and Tools match `data/*.ts` (the admin lists start empty until you seed).
@@ -63,4 +72,4 @@ Payload **cannot** use a on-disk `file:…` SQLite path on Vercel (ephemeral fil
 - Admin and APIs require authentication; public routes never expose draft content unless Draft Mode is enabled via the preview secret.
 - Media uploads are readable anonymously so logos/screenshots render on the public site; only staff can upload or replace files; only **admins** can delete media.
 - Supabase/Postgres with Payload: do not rely on RLS for Payload-managed `public` tables. Revoke `anon` / `authenticated` table grants and keep RLS disabled on those tables, or use a DB role with `BYPASSRLS`. Use `npm run check:pg-rls` to audit, `npm run check:pg-rls:fix` to apply the safe defaults directly, or `npm run check:pg-rls:sql` to print the equivalent SQL for Supabase SQL Editor from `scripts/sql/payload-postgres-hardening.sql`.
-- Supabase/Postgres in production: use the direct `5432` connection or a session pooler, not the transaction pooler. Keep `PAYLOAD_POSTGRES_PUSH=false` for normal runtime traffic; only enable it temporarily for an intentional one-time schema push.
+- Supabase/Postgres on **Vercel**: use the **Session pooler** URI (host `*.pooler.supabase.com`, port **5432**). Avoid **Transaction** pooler (port **6543**) for Payload/Drizzle prepared statements. Direct `db.*.supabase.co` often fails from serverless (IPv4/DNS). Keep `PAYLOAD_POSTGRES_PUSH=false` for normal runtime traffic; only enable it temporarily for an intentional one-time schema push.
