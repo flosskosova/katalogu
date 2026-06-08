@@ -381,19 +381,56 @@ function postgresPoolIdleTimeoutMillis(): number {
   return isVercelPostgresPoolCap() ? 10_000 : 30_000;
 }
 
+/** Next sets this while `next build` is collecting static / route data in production mode. */
+function isNextProductionBuildPhase(): boolean {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+/**
+ * Vercel often scopes `DATABASE_URL` to Runtime only; `next build` then runs without it and pages
+ * that import Payload (e.g. `/sitemap.xml`) would fail before deploy. Use ephemeral SQLite only
+ * for this build worker — lambdas must still have Postgres or libsql (see fail-fast below).
+ */
+function shouldUseVercelBuildOnlyEphemeralSqlite(
+  databaseUrl: string | undefined,
+  tursoDatabaseUrl: string | undefined,
+): boolean {
+  return (
+    isVercelPostgresPoolCap() &&
+    process.env.NODE_ENV === "production" &&
+    isNextProductionBuildPhase() &&
+    !databaseUrl &&
+    !tursoDatabaseUrl
+  );
+}
+
 function dbAdapter() {
   const databaseUrl = sanitizeEnvValue(process.env.DATABASE_URL);
+  const tursoDatabaseUrl = sanitizeEnvValue(process.env.TURSO_DATABASE_URL);
+
+  if (shouldUseVercelBuildOnlyEphemeralSqlite(databaseUrl, tursoDatabaseUrl)) {
+    console.warn(
+      "[payload] DATABASE_URL is unset during `next build` on Vercel — using in-memory SQLite for this build phase only. In Vercel → Environment Variables, enable DATABASE_URL for Build (and Runtime) for Production/Preview, then redeploy so the live site uses Postgres. See site/README.md.",
+    );
+    return sqliteAdapter({
+      client: { url: "file::memory:?cache=shared" },
+      prodMigrations: migrations as unknown as never,
+    });
+  }
+
+  const vercelProdDbUrl = databaseUrl || tursoDatabaseUrl;
   /** Fail fast on Vercel production instead of falling through to file SQLite (opaque admin / digest errors). */
   if (isVercelPostgresPoolCap() && process.env.NODE_ENV === "production") {
-    if (!databaseUrl) {
+    if (!vercelProdDbUrl) {
       throw new Error(
-        "[payload] DATABASE_URL is unset on Vercel production. Set Postgres (Supabase session pooler URI) or libsql:// (Turso) in Vercel → Environment Variables → Production, then redeploy.",
+        "[payload] DATABASE_URL (or TURSO_DATABASE_URL for Turso) is unset on Vercel production. Set Postgres (Supabase session pooler URI) or libsql:// in Vercel → Environment Variables → Production (Build + Runtime), then redeploy.",
       );
     }
-    if (!isPostgresUrl(databaseUrl) && !databaseUrl.startsWith("libsql:")) {
-      const hint = databaseUrl.length > 40 ? `${databaseUrl.slice(0, 40)}…` : databaseUrl;
+    if (!isPostgresUrl(vercelProdDbUrl) && !vercelProdDbUrl.startsWith("libsql:")) {
+      const hint =
+        vercelProdDbUrl.length > 40 ? `${vercelProdDbUrl.slice(0, 40)}…` : vercelProdDbUrl;
       throw new Error(
-        `[payload] On Vercel production DATABASE_URL must be postgres:// or libsql:// (received: ${hint}). Fix env and redeploy.`,
+        `[payload] On Vercel production DATABASE_URL / TURSO_DATABASE_URL must be postgres:// or libsql:// (received: ${hint}). Fix env and redeploy.`,
       );
     }
   }
