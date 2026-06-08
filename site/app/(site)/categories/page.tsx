@@ -4,6 +4,9 @@ import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { getCategoriesWithCounts } from "@/lib/catalog";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 
+/** Skip SSG at build time — cold Postgres/Supabase pooler often exceeds Next’s per-page static budget on Vercel. */
+export const dynamic = "force-dynamic";
+
 const catDesc =
   "Explore curated free and open source software by practical category—from browsers and operating systems to databases, monitoring, education, and design.";
 

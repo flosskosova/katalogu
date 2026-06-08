@@ -45,7 +45,7 @@ const nextConfig = {
    * during `next build` on Vercel. Prefer fixing DATABASE_URL latency; this avoids flaky build failures.
    * @see https://nextjs.org/docs/messages/static-page-generation-timeout
    */
-  staticPageGenerationTimeout: 300,
+  staticPageGenerationTimeout: 600,
   experimental: {
     /** Fewer parallel static workers → fewer concurrent Postgres sessions during build (Supabase pooler). */
     staticGenerationMaxConcurrency: 1,
