@@ -40,6 +40,12 @@ const securityHeadersAdmin = securityHeaders.filter(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /**
+   * Default 60s is easy to hit when SSG pages await Payload + Postgres on a cold Supabase pooler
+   * during `next build` on Vercel. Prefer fixing DATABASE_URL latency; this avoids flaky build failures.
+   * @see https://nextjs.org/docs/messages/static-page-generation-timeout
+   */
+  staticPageGenerationTimeout: 300,
   experimental: {
     /** Fewer parallel static workers → fewer concurrent Postgres sessions during build (Supabase pooler). */
     staticGenerationMaxConcurrency: 1,
