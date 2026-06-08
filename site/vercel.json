@@ -8,7 +8,10 @@
       "maxDuration": 60
     },
     "app/(payload)/api/[...slug]/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
+    },
+    "app/(payload)/admin/[[...segments]]/page.tsx": {
+      "maxDuration": 300
     }
   }
 }
