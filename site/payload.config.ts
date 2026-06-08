@@ -1,3 +1,4 @@
+import dns from "node:dns";
 import path from "path";
 import { postgresAdapter } from "@payloadcms/db-postgres";
 import { sqliteAdapter } from "@payloadcms/db-sqlite";
@@ -20,6 +21,11 @@ import { CuratedCollections } from "./payload/collections/CuratedCollections";
 import { Media } from "./payload/collections/Media";
 import { Users } from "./payload/collections/Users";
 import { ToolSuggestions } from "./payload/collections/ToolSuggestions";
+
+/** Prefer IPv4 when resolving dual-stack hosts (helps some serverless ↔ Postgres setups). */
+if (typeof dns.setDefaultResultOrder === "function") {
+  dns.setDefaultResultOrder("ipv4first");
+}
 
 const root = process.cwd();
 
