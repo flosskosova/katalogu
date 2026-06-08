@@ -398,7 +398,7 @@ function dbAdapter() {
       pool: {
         connectionString: pgUrl,
         max: postgresPoolMax(),
-        connectionTimeoutMillis: 25_000,
+        connectionTimeoutMillis: 60_000,
         idleTimeoutMillis: postgresPoolIdleTimeoutMillis(),
         ...(ssl ? { ssl } : {}),
       },
