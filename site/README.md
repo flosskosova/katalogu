@@ -44,6 +44,7 @@ These steps are done in the **Vercel dashboard** (not in git):
 5. **Dashboard won’t save `DATABASE_URL`** — put the URI in a one-line file `site/dburl.secret.txt` (gitignored), then from `site/`: create a [Vercel token](https://vercel.com/account/tokens), run `npx vercel link` once, then  
    `$env:VERCEL_TOKEN="…"; npm run vercel:push-database-url -- --file dburl.secret.txt`  
    This uses the REST API via `scripts/push-vercel-database-url.mjs`. Delete the file after. Redeploy Production.
+6. **Test DB from your PC (no `psql`)** — `npm run test:pg -- --url-file dburl.secret.txt` or after `vercel env pull .env.check`: `npm run test:pg -- --env-file .env.check`. On success it prints host + timing only; on failure you see the real driver error (fix URI/Supabase before chasing Vercel).
 
 ## CMS workflow
 
