@@ -42,6 +42,8 @@ yarn-error.log*
 
 # vercel
 .vercel
+# One-line Postgres URL for `npm run vercel:push-database-url` (never commit)
+dburl.secret.txt
 
 # typescript
 *.tsbuildinfo

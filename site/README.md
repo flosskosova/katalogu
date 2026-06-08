@@ -41,6 +41,9 @@ These steps are done in the **Vercel dashboard** (not in git):
 2. **`DATABASE_URL` at build time** — **Settings → Environment Variables** → edit **`DATABASE_URL`**. It must apply to **Production** (and **Preview** if you want Preview builds). If the UI offers **Build** vs **Runtime** (or “available during build”), enable **Build** for Production: `next build` runs Payload and needs `DATABASE_URL`, or the build fails with `[payload] DATABASE_URL is unset on Vercel production`.
 3. **Session pooler** — Use Supabase **Connect → Session pooler**, host `*.pooler.supabase.com`, port **5432**; URL-encode special characters in the DB password. See `site/.env.example` (Postgres section).
 4. **Secrets** — Resolve **Needs Attention** on **`PAYLOAD_SECRET`**, **`PREVIEW_SECRET`**, etc. Redeploy after any change.
+5. **Dashboard won’t save `DATABASE_URL`** — put the URI in a one-line file `site/dburl.secret.txt` (gitignored), then from `site/`: create a [Vercel token](https://vercel.com/account/tokens), run `npx vercel link` once, then  
+   `$env:VERCEL_TOKEN="…"; npm run vercel:push-database-url -- --file dburl.secret.txt`  
+   This uses the REST API via `scripts/push-vercel-database-url.mjs`. Delete the file after. Redeploy Production.
 
 ## CMS workflow
 
