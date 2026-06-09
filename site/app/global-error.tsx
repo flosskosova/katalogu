@@ -41,7 +41,9 @@ export default function GlobalError({
           hostname — normalized to <code>https://</code>) matching your live domain (production also
           uses <code>VERCEL_PROJECT_PRODUCTION_URL</code> when unset). If the digest is a timeout,
           increase the function <code>maxDuration</code> for admin/API routes on your Vercel plan.
-          Postgres TLS: non-Supabase DBs may need <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>.
+          Postgres TLS: non-Supabase DBs may need <code>PAYLOAD_POSTGRES_TLS_INSECURE=1</code>. If you set{" "}
+          <code>CMS_PREFLIGHT_SECRET</code> in Vercel and redeploy, <code>/api/cms-preflight?secret=…</code>{" "}
+          confirms whether <code>DATABASE_URL</code> is visible to the server (see <code>site/README.md</code>).
         </p>
         <button
           type="button"

@@ -10,6 +10,7 @@ import {
   getToolCount,
   getTopPicks,
 } from "@/lib/catalog";
+import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 import { buildHomeFaqJsonLd } from "@/lib/seo/structured-data";
 
@@ -51,6 +52,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  await ensureRequestRender();
   const [picks, categoriesWithCounts, featuredLists, toolCount] = await Promise.all([
     getTopPicks(9),
     getCategoriesWithCounts(),

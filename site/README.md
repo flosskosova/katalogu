@@ -45,6 +45,7 @@ These steps are done in the **Vercel dashboard** (not in git):
    `$env:VERCEL_TOKEN="…"; npm run vercel:push-database-url -- --file dburl.secret.txt`  
    This uses the REST API via `scripts/push-vercel-database-url.mjs`. Delete the file after. Redeploy Production.
 6. **Test DB from your PC (no `psql`)** — `npm run test:pg -- --url-file dburl.secret.txt` or after `vercel env pull .env.check`: `npm run test:pg -- --env-file .env.check`. On success it prints host + timing only; on failure you see the real driver error (fix URI/Supabase before chasing Vercel).
+7. **`/admin` still fails (digest in browser, build is green)** — Production hides the real error. In **Vercel → Logs**, open the error for the same time as the page load (search the digest). Common causes: **`DATABASE_URL` not enabled for Runtime** (only Build), wrong password / not URL-encoded, using transaction pooler **`:6543`** instead of session **`:5432`**, or **`PAYLOAD_SERVER_URL`** / **`NEXT_PUBLIC_SITE_URL`** not matching the exact origin you open in the browser (www vs apex). To verify env is injected into the **lambda** (not only your local machine), set **`CMS_PREFLIGHT_SECRET`** in Vercel, **redeploy**, then open **`/api/cms-preflight?secret=…`** — it reports whether `DATABASE_URL` / Turso vars look set (no secrets returned). Remove `CMS_PREFLIGHT_SECRET` after debugging.
 
 ## CMS workflow
 
