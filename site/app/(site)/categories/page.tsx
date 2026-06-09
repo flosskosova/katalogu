@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { CategoryResultsView } from "@/components/catalog/CategoryResultsView";
 import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { getCategoriesWithCounts } from "@/lib/catalog";
+import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 
-/** Skip SSG at build time — cold Postgres/Supabase pooler often exceeds Next’s per-page static budget on Vercel. */
+/** Hint for caching; build-time prerender is skipped via `ensureRequestRender()` + `connection()`. */
 export const dynamic = "force-dynamic";
 
 const catDesc =
@@ -41,6 +42,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
+  await ensureRequestRender();
   const categories = await getCategoriesWithCounts();
   return (
     <div>
