@@ -4,7 +4,10 @@
  * clears long / special-character connection strings).
  *
  * Prerequisites:
- *   1. `cd site` then `npx vercel link` — creates `.vercel/project.json`.
+ *   1. Link the project **either** by:
+ *      - `cd site` then `npx vercel link` (creates `.vercel/project.json`), **or**
+ *      - set `VERCEL_PROJECT_ID` (and `VERCEL_ORG_ID` for a team) — ids are under
+ *        Vercel → Project → Settings → General.
  *   2. Create a token: https://vercel.com/account/tokens (Full account, or
  *      a token with permission to manage project environment variables).
  *   3. Set `VERCEL_TOKEN` in the shell (never commit it).
@@ -53,11 +56,27 @@ async function readUrl({ file, stdin }) {
 }
 
 function loadProjectMeta() {
+  const fromEnvProject = process.env.VERCEL_PROJECT_ID?.trim();
+  const fromEnvOrg = process.env.VERCEL_ORG_ID?.trim();
+  if (fromEnvProject) {
+    return { projectId: fromEnvProject, orgId: fromEnvOrg || undefined };
+  }
+
   const p = path.join(process.cwd(), ".vercel", "project.json");
   if (!fs.existsSync(p)) {
-    console.error(
-      `Missing ${p}. Run: cd site && npx vercel link`,
-    );
+    console.error(`Missing ${p} and VERCEL_PROJECT_ID is unset.
+
+Fix one of:
+  A) From folder site/: run  npx vercel link
+     (log in if asked; pick team + existing project — creates .vercel/project.json)
+
+  B) Non-interactive:  npx vercel link --yes --project YOUR_PROJECT_NAME --team YOUR_TEAM_SLUG
+
+  C) Set env then re-run (ids: Vercel → Project → Settings → General):
+     PowerShell:
+       $env:VERCEL_PROJECT_ID="prj_..."
+       $env:VERCEL_ORG_ID="team_..."   # omit on personal (Hobby) account
+`);
     process.exit(1);
   }
   const j = JSON.parse(fs.readFileSync(p, "utf8"));
