@@ -120,21 +120,42 @@ export function ToolSuggestionDocumentControls() {
       return;
     }
     setBusy("delete");
+    const ac = new AbortController();
+    const t = window.setTimeout(() => ac.abort(), 120_000);
     try {
       const res = await fetch(`/api/${COLLECTION}/${id}`, {
         method: "DELETE",
         credentials: "include",
+        signal: ac.signal,
       });
+      const raw = await res.text();
       if (!res.ok) {
-        const raw = await res.text();
-        throw new Error(raw || `HTTP ${res.status}`);
+        let errMsg = `HTTP ${res.status}`;
+        try {
+          const j = raw ? JSON.parse(raw) : {};
+          const first =
+            Array.isArray(j?.errors) && j.errors[0] && typeof j.errors[0].message === "string"
+              ? j.errors[0].message
+              : undefined;
+          errMsg = first ?? (typeof j?.message === "string" ? j.message : errMsg);
+        } catch {
+          if (raw) errMsg = raw.slice(0, 500);
+        }
+        throw new Error(errMsg);
       }
       toast.success("Suggestion deleted.");
-      router.push(`/admin/collections/${COLLECTION}`);
+      router.replace(`/admin/collections/${COLLECTION}`);
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not delete.");
+      if (ac.signal.aborted) {
+        toast.error(
+          "Delete timed out (120s). If this persists after redeploy, check Vercel logs — often Postgres pool or DB connectivity.",
+        );
+      } else {
+        toast.error(e instanceof Error ? e.message : "Could not delete.");
+      }
     } finally {
+      window.clearTimeout(t);
       setBusy(null);
     }
   }, [id, router]);

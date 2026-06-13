@@ -11,6 +11,9 @@ import {
   REST_PUT,
 } from '@payloadcms/next/routes'
 
+/** Vercel: allow long admin REST calls (bulk ops, cold DB). Mirrors `vercel.json` `functions` entry. */
+export const maxDuration = 300
+
 export const GET = REST_GET(config)
 export const POST = REST_POST(config)
 export const DELETE = REST_DELETE(config)
