@@ -1,8 +1,5 @@
 import type { CollectionConfig } from "payload";
-import {
-  adminOnlyAccess,
-  editorAndAdminAccess,
-} from "../access";
+import { editorAndAdminAccess } from "../access";
 
 function relationshipHasId(val: unknown): boolean {
   if (val == null) return false;
@@ -35,7 +32,7 @@ export const ToolSuggestions: CollectionConfig = {
       "createdAt",
     ],
     description:
-      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Deleting rows is admin-only. If delete hangs or never applies, redeploy the latest build (Postgres pool must allow at least two connections on Vercel) and remove PAYLOAD_POSTGRES_POOL_MAX=1 from Vercel env if present — see site README.",
+      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Staff (editors and admins) may delete rows. If delete hangs or never applies, redeploy the latest build (Postgres pool must allow at least two connections on Vercel) and remove PAYLOAD_POSTGRES_POOL_MAX=1 from Vercel env if present — see site README.",
     components: {
       beforeList: ["@/payload/components/ToolSuggestionsListHint#ToolSuggestionsListHint"],
       edit: {
@@ -50,7 +47,8 @@ export const ToolSuggestions: CollectionConfig = {
     create: () => false,
     read: editorAndAdminAccess,
     update: editorAndAdminAccess,
-    delete: adminOnlyAccess,
+    /** Editors and admins may remove spam / mistaken rows (list bulk delete uses this too). */
+    delete: editorAndAdminAccess,
   },
   hooks: {
     beforeChange: [

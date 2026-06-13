@@ -25,7 +25,7 @@ export function ToolSuggestionsListHint() {
         Use the buttons on a suggestion’s edit screen to <strong>Accept</strong> (requires a catalog
         category), <strong>Decline</strong>, or <strong>Delete</strong>. For multiple rows: select
         them, then use <strong>Edit</strong> to set Status and <strong>Suggested catalog category</strong>{" "}
-        together, or <strong>Delete</strong> to remove suggestions (admins only).
+        together, or <strong>Delete</strong> to remove suggestions (editors and admins).
       </span>
     </div>
   );

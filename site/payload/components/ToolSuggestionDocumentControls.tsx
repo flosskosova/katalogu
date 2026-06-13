@@ -227,7 +227,18 @@ export function ToolSuggestionDocumentControls() {
           >
             {busy === "delete" ? "Deleting…" : "Delete"}
           </Button>
-        ) : null}
+        ) : (
+          <span
+            style={{
+              fontSize: "0.75rem",
+              color: "var(--theme-elevation-600)",
+              maxWidth: "14rem",
+            }}
+            title="Your account needs editor or admin role to delete."
+          >
+            Delete unavailable — sign in as an editor or admin.
+          </span>
+        )}
       </div>
     </div>
   );
