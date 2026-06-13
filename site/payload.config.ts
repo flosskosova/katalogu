@@ -417,8 +417,11 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
 /**
  * Supabase session pooler caps concurrent sessions; each Vercel lambda is its own process and
  * many concurrent invocations × `pool.max` exhausts the pooler (`EMAXCONNSESSION`).
- * Default **1** whenever `VERCEL=1` (see {@link isVercelPostgresPoolCap}). Raise with
- * `PAYLOAD_POSTGRES_POOL_MAX` only if your pooler limit allows it (catalog reads use per-request `React.cache()`).
+ *
+ * Default **2** on Vercel (`VERCEL=1`): Payload’s Postgres adapter calls `pool.connect()` at init and
+ * keeps that client checked out for error handling — with `max: 1`, every Drizzle query waits on the
+ * pool queue until `connectionTimeoutMillis` and fails with `timeout exceeded when trying to connect`.
+ * Keep `PAYLOAD_POSTGRES_POOL_MAX` ≤ 2 unless your pooler tier allows more.
  */
 function postgresPoolMax(): number {
   const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
@@ -427,14 +430,20 @@ function postgresPoolMax(): number {
     if (n >= 1 && n <= 50) {
       if (isVercelPostgresPoolCap() && n > 2) {
         console.warn(
-          `[payload] PAYLOAD_POSTGRES_POOL_MAX=${n} on Vercel is unsafe for Supabase session pooler; using 1. Unset or set ≤2.`,
+          `[payload] PAYLOAD_POSTGRES_POOL_MAX=${n} on Vercel is unsafe for Supabase session pooler; clamping to 2. Unset or set ≤2.`,
         );
-        return 1;
+        return 2;
+      }
+      if (isVercelPostgresPoolCap() && n === 1) {
+        console.warn(
+          "[payload] PAYLOAD_POSTGRES_POOL_MAX=1 on Vercel starves Payload Postgres (init holds a checkout). Using 2 — remove the var or set 2.",
+        );
+        return 2;
       }
       return n;
     }
   }
-  return isVercelPostgresPoolCap() ? 1 : 15;
+  return isVercelPostgresPoolCap() ? 2 : 15;
 }
 
 /** Shorter idle timeout on Vercel so pooler sessions are released sooner between requests. */
