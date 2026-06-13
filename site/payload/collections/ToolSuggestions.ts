@@ -35,7 +35,7 @@ export const ToolSuggestions: CollectionConfig = {
       "createdAt",
     ],
     description:
-      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate.",
+      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Deleting rows is admin-only. If delete hangs or never applies, redeploy the latest build (Postgres pool must allow at least two connections on Vercel) and remove PAYLOAD_POSTGRES_POOL_MAX=1 from Vercel env if present — see site README.",
     components: {
       beforeList: ["@/payload/components/ToolSuggestionsListHint#ToolSuggestionsListHint"],
       edit: {
