@@ -6,7 +6,8 @@ Next.js + TypeScript + Tailwind public catalog with an embedded **[Payload CMS 3
 
 ```bash
 npm install
-npm run dev       # http://localhost:3000 — site + /admin
+npm run dev       # http://localhost:3000 — site + /admin (Turbopack is default in Next 16)
+npm run dev:webpack   # use if /admin shows importMap / “1 Issue” glitches under Turbopack
 npm run build
 npm run start
 npm run lint
@@ -28,6 +29,7 @@ Copy `.env.example` to `.env.local`.
 | `USE_STATIC_CATALOG` | If `true`, public pages use only `data/*.ts` (no CMS reads). |
 | `CMS_FALLBACK_STATIC` | If CMS has zero tools, fall back to static data (default on). Set `false` to show empty. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Used by `seed:catalog` when creating the first admin user. |
+| `PAYLOAD_DEV_ALLOW_TUNNEL` | In **development**, set to `1` when `PAYLOAD_SERVER_URL` is ngrok / Vercel preview / any non-local host. Otherwise remote URLs are ignored so `/admin` does not fetch the wrong origin (browser **NetworkError**). |
 
 ### Vercel / serverless
 
@@ -46,6 +48,8 @@ These steps are done in the **Vercel dashboard** (not in git):
    This uses the REST API via `scripts/push-vercel-database-url.mjs`. Delete the file after. Redeploy Production.
 6. **Test DB from your PC (no `psql`)** — `npm run test:pg -- --url-file dburl.secret.txt` or after `vercel env pull .env.check`: `npm run test:pg -- --env-file .env.check`. On success it prints host + timing only; on failure you see the real driver error (fix URI/Supabase before chasing Vercel).
 7. **`/admin` still fails (digest in browser, build is green)** — Production hides the real error. In **Vercel → Logs**, open the error for the same time as the page load (search the digest). Common causes: **`DATABASE_URL` not enabled for Runtime** (only Build), wrong password / not URL-encoded, using transaction pooler **`:6543`** instead of session **`:5432`**, or **`PAYLOAD_SERVER_URL`** / **`NEXT_PUBLIC_SITE_URL`** not matching the exact origin you open in the browser (www vs apex). To verify env is injected into the **lambda** (not only your local machine), set **`CMS_PREFLIGHT_SECRET`** in Vercel, **redeploy**, then open **`/api/cms-preflight?secret=…`** — it reports whether `DATABASE_URL` / Turso vars look set (no secrets returned). Remove `CMS_PREFLIGHT_SECRET` after debugging.
+
+| `PAYLOAD_DEV_ALLOW_TUNNEL` | Set to `1` in **development** when `PAYLOAD_SERVER_URL` points at ngrok / Vercel preview / any non-local host (otherwise it is ignored so `/admin` does not fetch the wrong origin → **NetworkError**). |
 
 ## CMS workflow
 

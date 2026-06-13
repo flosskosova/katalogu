@@ -230,6 +230,7 @@ function resolvePayloadSecret(): string {
  * (“You are not allowed to perform this action”).
  *
  * Override local origin only if needed: `PAYLOAD_SERVER_URL=https://your-tunnel.ngrok.io`
+ * (set `PAYLOAD_DEV_ALLOW_TUNNEL=1` when that host is not localhost / a private LAN IP, e.g. ngrok).
  *
  * In **production**, `PAYLOAD_SERVER_URL` wins over `NEXT_PUBLIC_*` so Payload `serverURL` (cookies,
  * CSRF) matches the real host even if an older build inlined stale public env values.
@@ -248,11 +249,71 @@ function normalizedHttpsOrigin(raw: string | undefined): string | undefined {
   }
 }
 
+/** Parse `PAYLOAD_SERVER_URL`-style strings; default missing scheme to `http://` for dev. */
+function parseDevServerUrl(raw: string): URL | null {
+  let s = raw.replace(/\/+$/, "").trim();
+  if (!s) return null;
+  if (!/^https?:\/\//i.test(s)) {
+    s = `http://${s.replace(/^\/+/, "")}`;
+  }
+  try {
+    return new URL(s);
+  } catch {
+    return null;
+  }
+}
+
+/** Hosts safe to use as Payload `serverURL` during `next dev` without `PAYLOAD_DEV_ALLOW_TUNNEL`. */
+function isDevLocalOrLanPayloadHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  if (h === "localhost" || h === "127.0.0.1" || h === "[::1]" || h === "::1") return true;
+  if (h.endsWith(".local")) return true;
+  if (/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  if (/^192\.168\.\d{1,3}\.\d{1,3}$/.test(h)) return true;
+  const m = /^172\.(\d{1,3})\.\d{1,3}\.\d{1,3}$/.exec(h);
+  if (m) {
+    const second = Number(m[1]);
+    if (second >= 16 && second <= 31) return true;
+  }
+  return false;
+}
+
+/**
+ * In dev, a copied production `PAYLOAD_SERVER_URL` (e.g. `https://*.vercel.app`) makes the admin UI
+ * fetch that origin from a `http://localhost` tab → browser **NetworkError**. Ignore remote hosts
+ * unless **`PAYLOAD_DEV_ALLOW_TUNNEL=1`** (ngrok, etc.).
+ */
+function resolveDevPayloadServerUrlOverride(): string | undefined {
+  const raw =
+    sanitizeEnvValue(process.env.PAYLOAD_SERVER_URL) ||
+    sanitizeEnvValue(process.env.PAYLOAD_DEV_SERVER_URL);
+  if (!raw) return undefined;
+
+  const u = parseDevServerUrl(raw);
+  if (!u) {
+    console.warn(
+      "[payload] Could not parse PAYLOAD_SERVER_URL / PAYLOAD_DEV_SERVER_URL — ignoring for dev serverURL.",
+    );
+    return undefined;
+  }
+
+  const allowTunnel = /^(1|true|yes)$/i.test(
+    sanitizeEnvValue(process.env.PAYLOAD_DEV_ALLOW_TUNNEL) ?? "",
+  );
+  if (!isDevLocalOrLanPayloadHost(u.hostname) && !allowTunnel) {
+    console.warn(
+      `[payload] Ignoring PAYLOAD_SERVER_URL / PAYLOAD_DEV_SERVER_URL (${u.origin}) in development — ` +
+        `the admin UI would fetch that host while you use http://localhost → NetworkError. ` +
+        `Unset those vars for normal local dev, or set PAYLOAD_DEV_ALLOW_TUNNEL=1 for ngrok / public preview URLs.`,
+    );
+    return undefined;
+  }
+  return raw.replace(/\/+$/, "");
+}
+
 function resolvePayloadServerURL(): string {
   if (process.env.NODE_ENV !== "production") {
-    const devOverride =
-      sanitizeEnvValue(process.env.PAYLOAD_SERVER_URL) ||
-      sanitizeEnvValue(process.env.PAYLOAD_DEV_SERVER_URL);
+    const devOverride = resolveDevPayloadServerUrlOverride();
     if (devOverride) {
       return devOverride.replace(/\/+$/, "");
     }
