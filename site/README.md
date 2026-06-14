@@ -30,6 +30,8 @@ Copy `.env.example` to `.env.local`.
 | `CMS_FALLBACK_STATIC` | If CMS has zero tools, fall back to static data (default on). Set `false` to show empty. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Used by `seed:catalog` when creating the first admin user. |
 | `PAYLOAD_DEV_ALLOW_TUNNEL` | In **development**, set to `1` when `PAYLOAD_SERVER_URL` is ngrok / Vercel preview / any non-local host. Otherwise remote URLs are ignored so `/admin` does not fetch the wrong origin (browser **NetworkError**). |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile for the suggest-tool form (local/preview). **Production** uses `NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION` and `TURNSTILE_SECRET_KEY_PRODUCTION` when set. Site key and secret must come from the **same** Turnstile widget. |
+| `TURNSTILE_SITEVERIFY_SEND_REMOTEIP` | Optional. Defaults unset: server verification does **not** send `remoteip` to Cloudflare (avoids failures when proxy headers disagree with the IP bound to the token). Set to `1` only if you need that check and trust your forwarded client IP. |
 
 ### Vercel / serverless
 
@@ -48,8 +50,6 @@ These steps are done in the **Vercel dashboard** (not in git):
    This uses the REST API via `scripts/push-vercel-database-url.mjs`. Delete the file after. Redeploy Production.
 6. **Test DB from your PC (no `psql`)** — `npm run test:pg -- --url-file dburl.secret.txt` or after `vercel env pull .env.check`: `npm run test:pg -- --env-file .env.check`. On success it prints host + timing only; on failure you see the real driver error (fix URI/Supabase before chasing Vercel).
 7. **`/admin` still fails (digest in browser, build is green)** — Production hides the real error. In **Vercel → Logs**, open the error for the same time as the page load (search the digest). Common causes: **`DATABASE_URL` not enabled for Runtime** (only Build), wrong password / not URL-encoded, using transaction pooler **`:6543`** instead of session **`:5432`**, or **`PAYLOAD_SERVER_URL`** / **`NEXT_PUBLIC_SITE_URL`** not matching the exact origin you open in the browser (www vs apex). To verify env is injected into the **lambda** (not only your local machine), set **`CMS_PREFLIGHT_SECRET`** in Vercel, **redeploy**, then open **`/api/cms-preflight?secret=…&probe=1`** — it reports env flags, the **effective Payload `serverURL` origin** (must match the tab you use for `/admin`), and runs a **live Postgres** `SELECT 1` from Vercel (same driver family as Payload). If the probe fails, fix `DATABASE_URL` before chasing RSC errors. Remove `CMS_PREFLIGHT_SECRET` after debugging.
-
-| `PAYLOAD_DEV_ALLOW_TUNNEL` | Set to `1` in **development** when `PAYLOAD_SERVER_URL` points at ngrok / Vercel preview / any non-local host (otherwise it is ignored so `/admin` does not fetch the wrong origin → **NetworkError**). |
 
 ## CMS workflow
 

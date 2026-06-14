@@ -320,10 +320,11 @@ export async function POST(req: Request) {
     return jsonError("Verification required. Please complete the CAPTCHA.", 400);
   }
   const clientIp = getClientIpFromHeaders(req.headers);
-  const captchaOk = await verifyTurnstileToken(token, turnstileSecret, {
+  const captcha = await verifyTurnstileToken(token, turnstileSecret, {
     remoteIp: clientIp,
   });
-  if (!captchaOk) {
+  if (!captcha.success) {
+    console.warn("[suggest-tool] Turnstile siteverify rejected token", captcha.errorCodes ?? []);
     return jsonError("CAPTCHA verification failed. Please try again.", 400);
   }
 

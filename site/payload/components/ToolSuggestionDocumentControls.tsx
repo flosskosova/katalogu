@@ -1,8 +1,14 @@
 "use client";
 
-import { Button, toast, useDocumentInfo } from "@payloadcms/ui";
+import {
+  Button,
+  toast,
+  useDocumentInfo,
+  useRouteCache,
+  useTranslation,
+} from "@payloadcms/ui";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const COLLECTION = "tool-suggestions";
 
@@ -24,10 +30,29 @@ function relationshipId(val: unknown): string | number | null {
 export function ToolSuggestionDocumentControls() {
   const router = useRouter();
   const info = useDocumentInfo();
+  const { i18n } = useTranslation();
+  const { clearRouteCache } = useRouteCache();
   const id = info.id;
   const slug = info.collectionSlug ?? info.docConfig?.slug;
   const data = info.data;
   const hasDelete = info.hasDeletePermission === true;
+
+  /** Same headers Payload’s list/bulk delete uses for REST (see DeleteMany in @payloadcms/ui). */
+  const restHeaders = useMemo(
+    () => ({
+      "Accept-Language": i18n.language,
+      "Content-Type": "application/json",
+    }),
+    [i18n.language],
+  );
+
+  /** Same URL Payload uses for this document (locale, depth, etc. in query — see DocumentInfo `action`). */
+  const documentUrl = useMemo(() => {
+    if (typeof info.action === "string" && info.action.length > 0) {
+      return info.action;
+    }
+    return `/api/${COLLECTION}/${encodeURIComponent(String(id ?? ""))}`;
+  }, [info.action, id]);
 
   const [categoryId, setCategoryId] = useState<string>("");
   const [reviewNote, setReviewNote] = useState("");
@@ -42,9 +67,9 @@ export function ToolSuggestionDocumentControls() {
 
   const patch = useCallback(
     async (body: Record<string, unknown>) => {
-      const res = await fetch(`/api/${COLLECTION}/${id}`, {
+      const res = await fetch(documentUrl, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: restHeaders,
         credentials: "include",
         body: JSON.stringify(body),
       });
@@ -66,7 +91,7 @@ export function ToolSuggestionDocumentControls() {
         throw new Error(errMsg || "Update failed");
       }
     },
-    [id],
+    [documentUrl, restHeaders],
   );
 
   const onAccept = useCallback(async () => {
@@ -123,9 +148,10 @@ export function ToolSuggestionDocumentControls() {
     const ac = new AbortController();
     const t = window.setTimeout(() => ac.abort(), 120_000);
     try {
-      const res = await fetch(`/api/${COLLECTION}/${id}`, {
+      const res = await fetch(documentUrl, {
         method: "DELETE",
         credentials: "include",
+        headers: restHeaders,
         signal: ac.signal,
       });
       const raw = await res.text();
@@ -144,8 +170,8 @@ export function ToolSuggestionDocumentControls() {
         throw new Error(errMsg);
       }
       toast.success("Suggestion deleted.");
-      router.replace(`/admin/collections/${COLLECTION}`);
-      router.refresh();
+      clearRouteCache();
+      window.location.assign(`/admin/collections/${COLLECTION}`);
     } catch (e) {
       if (ac.signal.aborted) {
         toast.error(
@@ -158,7 +184,7 @@ export function ToolSuggestionDocumentControls() {
       window.clearTimeout(t);
       setBusy(null);
     }
-  }, [id, router]);
+  }, [clearRouteCache, documentUrl, id, restHeaders]);
 
   if (slug !== COLLECTION || id == null) {
     return null;
