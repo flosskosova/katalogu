@@ -30,7 +30,7 @@ Copy `.env.example` to `.env.local`.
 | `CMS_FALLBACK_STATIC` | If CMS has zero tools, fall back to static data (default on). Set `false` to show empty. |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Used by `seed:catalog` when creating the first admin user. |
 | `PAYLOAD_DEV_ALLOW_TUNNEL` | In **development**, set to `1` when `PAYLOAD_SERVER_URL` is ngrok / Vercel preview / any non-local host. Otherwise remote URLs are ignored so `/admin` does not fetch the wrong origin (browser **NetworkError**). |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile for the suggest-tool form (local/preview). **Production** uses `NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION` and `TURNSTILE_SECRET_KEY_PRODUCTION` when set. Site key and secret must come from the **same** Turnstile widget. On **Vercel**, enable the `NEXT_PUBLIC_*` keys for **Build** and **Runtime** so the widget matches the server secret. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile for the suggest-tool form (local/preview). **Production:** if `NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION` is set, the server uses **only** `TURNSTILE_SECRET_KEY_PRODUCTION` (same widget); otherwise it uses `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` only. Mixing tiers causes Cloudflare `invalid-input-secret`. On **Vercel**, enable `NEXT_PUBLIC_*` for **Build** and **Runtime**. |
 | `TURNSTILE_SITEVERIFY_SEND_REMOTEIP` | Optional. Defaults unset: server verification does **not** send `remoteip` to Cloudflare (avoids failures when proxy headers disagree with the IP bound to the token). Set to `1` only if you need that check and trust your forwarded client IP. |
 
 ### Vercel / serverless

@@ -69,7 +69,7 @@ export async function verifyTurnstileToken(
     );
     return {
       success: false,
-      errorCodes: codes.length > 0 ? [...codes, `http_${res.status}`] : [`http_${res.status}`],
+      errorCodes: codes.length > 0 ? codes : [`http_${res.status}`],
     };
   }
 
