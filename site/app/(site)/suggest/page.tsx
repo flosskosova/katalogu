@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { SuggestToolForm } from "@/components/suggest/SuggestToolForm";
+import { resolveTurnstileSiteKey } from "@/lib/suggest-tool/turnstile-public";
 import { absoluteUrl, SITE } from "@/lib/seo/site";
+
+/** Read Turnstile site key per request so it matches serverless `/api/suggest-tool` (not a stale build-inlined `NEXT_PUBLIC_*`). */
+export const dynamic = "force-dynamic";
 
 const desc =
   "Suggest a free and open source application or tool for the OpenCatalog editorial team to review. Include the repository, a short description, and your contact email.";
@@ -34,6 +38,7 @@ export const metadata: Metadata = {
 };
 
 export default function SuggestPage() {
+  const turnstileSiteKey = resolveTurnstileSiteKey();
   return (
     <div className="max-w-2xl">
       <h1 className="font-[family-name:var(--font-brand)] text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
@@ -48,7 +53,7 @@ export default function SuggestPage() {
         blocked; please use a real repository URL on GitHub or GitLab.
       </p>
       <div className="mt-10">
-        <SuggestToolForm />
+        <SuggestToolForm siteKey={turnstileSiteKey} />
       </div>
     </div>
   );

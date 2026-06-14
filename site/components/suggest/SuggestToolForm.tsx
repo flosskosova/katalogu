@@ -1,11 +1,14 @@
 "use client";
 
-import { Turnstile } from "@marsidev/react-turnstile";
-import { useCallback, useId, useState } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+import { useCallback, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { resolveTurnstileSiteKey } from "@/lib/suggest-tool/turnstile-public";
+import { TURNSTILE_TEST_SITE_KEY } from "@/lib/suggest-tool/turnstile-public";
 
-const siteKey = resolveTurnstileSiteKey();
+export type SuggestToolFormProps = {
+  /** From the Server Component page — must match `TURNSTILE_SECRET_*` used by `/api/suggest-tool`. */
+  siteKey: string;
+};
 
 const inputClass =
   "mt-1 w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] shadow-sm placeholder:text-[var(--foreground-subtle)] focus:border-[var(--accent)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]";
@@ -29,8 +32,9 @@ function describeSubmitFailure(err: unknown): string {
   return "Something went wrong while sending your suggestion. Please try again.";
 }
 
-export function SuggestToolForm() {
+export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
   const formId = useId();
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   /** Remount Turnstile after a failed verify so "Success" matches a fresh token. */
   const [turnstileKey, setTurnstileKey] = useState(0);
@@ -55,7 +59,9 @@ export function SuggestToolForm() {
         return;
       }
 
-      if (!turnstileToken) {
+      const tokenFromWidget = turnstileRef.current?.getResponse?.()?.trim() ?? "";
+      const token = tokenFromWidget || (turnstileToken ?? "").trim();
+      if (!token) {
         setStatus("error");
         setMessage("Please complete the verification below.");
         return;
@@ -79,7 +85,7 @@ export function SuggestToolForm() {
         submitterName: String(fd.get("submitterName") ?? "").trim(),
         submitterEmail: String(fd.get("submitterEmail") ?? "").trim(),
         company: "",
-        turnstileToken: turnstileToken ?? undefined,
+        turnstileToken: token,
       };
 
       setStatus("submitting");
@@ -142,7 +148,7 @@ export function SuggestToolForm() {
         setMessage(msg);
       }
     },
-    [turnstileToken],
+    [turnstileToken, siteKey],
   );
 
   if (status === "success") {
@@ -333,6 +339,7 @@ export function SuggestToolForm() {
         <span className={labelClass}>Verification</span>
         {siteKey ? (
           <Turnstile
+            ref={turnstileRef}
             key={turnstileKey}
             siteKey={siteKey}
             onSuccess={(token) => {
@@ -359,14 +366,13 @@ export function SuggestToolForm() {
                 <code className="rounded bg-[var(--muted)] px-1">
                   TURNSTILE_SECRET_KEY_PRODUCTION
                 </code>{" "}
-                (or the non-production key pair).
+                (or the non-production key pair). On Vercel, enable those for <strong>Build</strong>{" "}
+                and <strong>Runtime</strong> so the widget and API stay in sync.
               </p>
             ) : null}
           </div>
         )}
-        {!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION?.trim() &&
-        !process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() &&
-        process.env.NODE_ENV === "development" ? (
+        {process.env.NODE_ENV === "development" && siteKey === TURNSTILE_TEST_SITE_KEY ? (
           <p className="text-xs text-[var(--foreground-subtle)]">
             Using Cloudflare test keys locally. For production, set{" "}
             <code className="rounded bg-[var(--muted)] px-1">
@@ -377,7 +383,8 @@ export function SuggestToolForm() {
               TURNSTILE_SECRET_KEY_PRODUCTION
             </code>{" "}
             (Vercel Production), or the non-{" "}
-            <code className="rounded bg-[var(--muted)] px-1">_PRODUCTION</code> pair.
+            <code className="rounded bg-[var(--muted)] px-1">_PRODUCTION</code> pair — same widget for
+            both keys; enable Build + Runtime in Vercel.
           </p>
         ) : null}
       </div>
