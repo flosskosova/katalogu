@@ -117,7 +117,7 @@ export default async function HomePage() {
           </div>
           <Link
             href="/browse"
-            className="text-sm font-medium text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+            className="text-sm font-medium text-black underline-offset-2 visited:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:text-white dark:visited:text-white"
           >
             Full browse →
           </Link>
@@ -156,7 +156,7 @@ export default async function HomePage() {
                       {list.description}
                     </p>
                   ) : null}
-                  <p className="mt-4 text-sm font-medium text-[var(--foreground-muted)] transition-colors group-hover:text-[#14120f]">
+                  <p className="mt-4 text-sm font-medium text-black transition-colors group-hover:text-[#14120f] dark:text-white dark:group-hover:text-neutral-950">
                     View list →
                   </p>
                 </Link>

@@ -75,7 +75,7 @@ export default async function ComparePage({ searchParams }: Props) {
         <p className="mt-6">
           <Link
             href="/browse"
-            className="font-medium text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+            className="text-sm font-medium text-black underline-offset-2 visited:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:text-white dark:visited:text-white"
           >
             Go to browse →
           </Link>
