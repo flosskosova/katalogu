@@ -51,6 +51,12 @@ function hostOnlyFromForwardedOrHost(req: Request): string | undefined {
   return h.split(":")[0].toLowerCase();
 }
 
+/** `www.catalog.org` and `catalog.org` must match for Turnstile + form POST in production. */
+function hostnameWithoutLeadingWww(host: string): string {
+  const h = host.toLowerCase();
+  return h.startsWith("www.") ? h.slice(4) : h;
+}
+
 function hostnameFromEnvUrl(raw: string | undefined): string | undefined {
   const u = raw?.trim();
   if (!u) return undefined;
@@ -82,13 +88,20 @@ function assertSuggestToolOrigin(req: Request): NextResponse | null {
   }
 
   const requestHost = hostOnlyFromForwardedOrHost(req);
-  /** Browser Origin host matches the request Host (custom domain, preview URL, etc.). */
-  if (requestHost && originHost === requestHost) {
+  /** Browser Origin host matches the request Host (custom domain, preview URL, www vs apex, etc.). */
+  if (requestHost && hostnameWithoutLeadingWww(originHost) === hostnameWithoutLeadingWww(requestHost)) {
     return null;
   }
 
   const allowed = new Set<string>();
-  if (requestHost) allowed.add(requestHost);
+  const addHost = (h: string | undefined) => {
+    if (!h) return;
+    const x = h.toLowerCase();
+    allowed.add(x);
+    if (x.startsWith("www.")) allowed.add(x.slice(4));
+    else allowed.add(`www.${x}`);
+  };
+  addHost(requestHost);
 
   for (const v of [
     process.env.NEXT_PUBLIC_SITE_URL,
@@ -98,23 +111,26 @@ function assertSuggestToolOrigin(req: Request): NextResponse | null {
     process.env.VERCEL_BRANCH_URL,
     process.env.VERCEL_PROJECT_PRODUCTION_URL,
   ]) {
-    const h = hostnameFromEnvUrl(v);
-    if (h) allowed.add(h);
+    addHost(hostnameFromEnvUrl(v));
   }
 
   const extra = process.env.PAYLOAD_CSRF_EXTRA_ORIGINS?.trim();
   if (extra) {
     for (const part of extra.split(",")) {
-      const h = hostnameFromEnvUrl(part.trim());
-      if (h) allowed.add(h);
+      addHost(hostnameFromEnvUrl(part.trim()));
     }
   }
 
-  if (!allowed.has(originHost)) {
+  const originBase = hostnameWithoutLeadingWww(originHost);
+  const matched = [...allowed].some((h) => hostnameWithoutLeadingWww(h) === originBase);
+  if (!matched) {
     console.warn(
       `[suggest-tool] blocked cross-origin POST origin=${originHost} allowed=${[...allowed].join(",")}`,
     );
-    return jsonError("Forbidden", 403);
+    return jsonError(
+      "This page address does not match the site configuration (try the same www or non-www URL as in your site settings).",
+      403,
+    );
   }
 
   return null;
