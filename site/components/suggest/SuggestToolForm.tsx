@@ -1,7 +1,7 @@
 "use client";
 
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
-import { useCallback, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { TURNSTILE_TEST_SITE_KEY } from "@/lib/suggest-tool/turnstile-public";
 
@@ -42,6 +42,34 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
     "idle",
   );
   const [message, setMessage] = useState<string | null>(null);
+
+  /**
+   * Turnstile sometimes fills the widget token before `onSuccess` runs (e.g. slow iframe,
+   * automation/Selenium). Poll `getResponse()` briefly so the submit button enables when a token
+   * exists even if the callback was missed.
+   */
+  useEffect(() => {
+    if (!siteKey || turnstileToken) return;
+    let cancelled = false;
+    const interval = window.setInterval(() => {
+      if (cancelled) return;
+      const r = turnstileRef.current?.getResponse?.()?.trim();
+      if (r) {
+        setTurnstileToken(r);
+        setMessage(null);
+        setStatus((s) => (s === "error" ? "idle" : s));
+        window.clearInterval(interval);
+      }
+    }, 300);
+    const maxWait = window.setTimeout(() => {
+      window.clearInterval(interval);
+    }, 120_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      window.clearTimeout(maxWait);
+    };
+  }, [siteKey, turnstileKey, turnstileToken]);
 
   const onSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
