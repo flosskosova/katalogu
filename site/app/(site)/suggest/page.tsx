@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SuggestToolForm } from "@/components/suggest/SuggestToolForm";
+import { isSuggestTurnstileDisabled } from "@/lib/suggest-tool/turnstile-disabled";
 import { resolveTurnstileSiteKey } from "@/lib/suggest-tool/turnstile-public";
 import { absoluteUrl, SITE } from "@/lib/seo/site";
 
@@ -39,6 +40,7 @@ export const metadata: Metadata = {
 
 export default function SuggestPage() {
   const turnstileSiteKey = resolveTurnstileSiteKey();
+  const turnstileDisabled = isSuggestTurnstileDisabled();
   return (
     <div className="max-w-2xl">
       <h1 className="font-[family-name:var(--font-brand)] text-3xl font-bold tracking-tight text-[var(--foreground)] sm:text-4xl">
@@ -53,7 +55,7 @@ export default function SuggestPage() {
         blocked; please use a real repository URL on GitHub or GitLab.
       </p>
       <div className="mt-10">
-        <SuggestToolForm siteKey={turnstileSiteKey} />
+        <SuggestToolForm siteKey={turnstileSiteKey} turnstileDisabled={turnstileDisabled} />
       </div>
     </div>
   );
