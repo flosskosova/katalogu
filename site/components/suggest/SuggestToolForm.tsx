@@ -37,6 +37,13 @@ function turnstileErrorUserMessage(code: unknown): string {
   if (n === 110100 || n === 110110) {
     return "Verification configuration looks wrong (site key). Please contact the site admin.";
   }
+  /** Cloudflare: 400020 = widget/site key config (often wrong env key or hostname not allowlisted). */
+  if (n === 400020) {
+    return `Verification could not start (400020). Admins: ensure the Turnstile site key in deployment env matches this widget in Cloudflare (same keys for Build and Runtime), and add "${host}" under Turnstile → Hostname Management if visitors use this host. Others: try a refresh or another browser.`;
+  }
+  if (n === 400070) {
+    return "This verification widget is disabled in Cloudflare. Please contact the site admin.";
+  }
   if (n != null && n >= 110000 && n < 120000) {
     return `Verification failed (code ${String(n)}). If this keeps happening, try another browser or contact the site admin.`;
   }
@@ -45,6 +52,9 @@ function turnstileErrorUserMessage(code: unknown): string {
     ((n >= 300000 && n < 400000) || (n >= 600000 && n < 700000))
   ) {
     return "Verification had a problem. Try refreshing the page, or disable extensions that block security challenges.";
+  }
+  if (n != null && n >= 400000 && n < 500000) {
+    return `Verification failed (code ${String(n)}). Check Turnstile site key and hostname allowlist in Cloudflare, then refresh.`;
   }
   return n != null
     ? `Verification failed (code ${String(n)}). Please refresh and try again.`
