@@ -331,6 +331,8 @@ export async function POST(req: Request) {
     return jsonError("Service temporarily unavailable. Please try again later.", 503);
   }
 
+  const clientIp = getClientIpFromHeaders(req.headers);
+
   if (isSuggestTurnstileDisabled()) {
     console.warn(
       "[suggest-tool] Turnstile verification DISABLED (DISABLE_SUGGEST_TURNSTILE). Remove before production.",
@@ -347,7 +349,6 @@ export async function POST(req: Request) {
     if (!token) {
       return jsonError("Verification required. Please complete the CAPTCHA.", 400);
     }
-    const clientIp = getClientIpFromHeaders(req.headers);
     const captcha = await verifyTurnstileToken(token, turnstileSecret, {
       remoteIp: clientIp,
     });
