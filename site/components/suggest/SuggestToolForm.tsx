@@ -3,13 +3,12 @@
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { SUGGEST_TURNSTILE_DISABLED } from "@/lib/suggest-tool/turnstile-disabled";
 import { TURNSTILE_TEST_SITE_KEY } from "@/lib/suggest-tool/turnstile-public";
 
 export type SuggestToolFormProps = {
   /** From the Server Component page — must match `TURNSTILE_SECRET_*` used by `/api/suggest-tool`. */
   siteKey: string;
-  /** When true, widget and token checks are skipped (see `SUGGEST_TURNSTILE_DISABLED` in `turnstile-disabled.ts`). */
-  turnstileDisabled?: boolean;
 };
 
 const inputClass =
@@ -80,7 +79,9 @@ function describeSubmitFailure(err: unknown): string {
   return "Something went wrong while sending your suggestion. Please try again.";
 }
 
-export function SuggestToolForm({ siteKey, turnstileDisabled = false }: SuggestToolFormProps) {
+export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
+  /** Client reads the same flag as `/api/suggest-tool` so Turnstile cannot mount when disabled (avoids stale RSC props / old deploys). */
+  const turnstileDisabled = SUGGEST_TURNSTILE_DISABLED;
   const formId = useId();
   const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
