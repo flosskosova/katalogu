@@ -418,89 +418,75 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <span className={labelClass}>Verification</span>
-        {turnstileDisabled ? (
-          <div
-            className="rounded-md border border-amber-700/40 bg-amber-950/15 px-3 py-2 dark:border-amber-500/35 dark:bg-amber-950/25"
-            role="status"
-          >
-            <p className="text-sm text-[var(--foreground)]">
-              The security check is turned off in code for now (
-              <code className="rounded bg-[var(--muted)] px-1 text-xs">
-                SUGGEST_TURNSTILE_DISABLED
-              </code>{" "}
-              in <code className="rounded bg-[var(--muted)] px-1 text-xs">turnstile-disabled.ts</code>
-              ). Editors should turn Turnstile back on after configuration is fixed.
-            </p>
-          </div>
-        ) : siteKey ? (
-          <Turnstile
-            ref={turnstileRef}
-            key={turnstileKey}
-            siteKey={siteKey}
-            onSuccess={(token) => {
-              setTurnstileToken(token);
-              setMessage(null);
-              setTurnstileHint(null);
-              setStatus((s) => (s === "error" ? "idle" : s));
-            }}
-            onExpire={() => {
-              setTurnstileToken(null);
-              setTurnstileHint(
-                "Verification expired. Complete the check again to enable Submit.",
-              );
-            }}
-            onError={(code) => {
-              setTurnstileToken(null);
-              setTurnstileHint(turnstileErrorUserMessage(code));
-            }}
-            options={{ theme: "auto" }}
-          />
-        ) : (
-          <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2">
-            <p className="text-sm text-[var(--foreground-muted)]" role="status">
-              Suggestions are temporarily unavailable.
-            </p>
-            {process.env.NODE_ENV !== "production" ? (
-              <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
-                Admin hint: set{" "}
-                <code className="rounded bg-[var(--muted)] px-1">
-                  NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION
-                </code>{" "}
-                and{" "}
-                <code className="rounded bg-[var(--muted)] px-1">
-                  TURNSTILE_SECRET_KEY_PRODUCTION
-                </code>{" "}
-                (or the non-production key pair). On Vercel, enable those for <strong>Build</strong>{" "}
-                and <strong>Runtime</strong> so the widget and API stay in sync.
+      {!turnstileDisabled ? (
+        <div className="flex flex-col gap-2">
+          <span className={labelClass}>Verification</span>
+          {siteKey ? (
+            <Turnstile
+              ref={turnstileRef}
+              key={turnstileKey}
+              siteKey={siteKey}
+              onSuccess={(token) => {
+                setTurnstileToken(token);
+                setMessage(null);
+                setTurnstileHint(null);
+                setStatus((s) => (s === "error" ? "idle" : s));
+              }}
+              onExpire={() => {
+                setTurnstileToken(null);
+                setTurnstileHint(
+                  "Verification expired. Complete the check again to enable Submit.",
+                );
+              }}
+              onError={(code) => {
+                setTurnstileToken(null);
+                setTurnstileHint(turnstileErrorUserMessage(code));
+              }}
+              options={{ theme: "auto" }}
+            />
+          ) : (
+            <div className="rounded-md border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2">
+              <p className="text-sm text-[var(--foreground-muted)]" role="status">
+                Suggestions are temporarily unavailable.
               </p>
-            ) : null}
-          </div>
-        )}
-        {turnstileHint ? (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-            {turnstileHint}
-          </p>
-        ) : null}
-        {process.env.NODE_ENV === "development" &&
-        siteKey === TURNSTILE_TEST_SITE_KEY &&
-        !turnstileDisabled ? (
-          <p className="text-xs text-[var(--foreground-subtle)]">
-            Using Cloudflare test keys locally. For production, set{" "}
-            <code className="rounded bg-[var(--muted)] px-1">
-              NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION
-            </code>{" "}
-            and{" "}
-            <code className="rounded bg-[var(--muted)] px-1">
-              TURNSTILE_SECRET_KEY_PRODUCTION
-            </code>{" "}
-            (Vercel Production), or the non-{" "}
-            <code className="rounded bg-[var(--muted)] px-1">_PRODUCTION</code> pair — same widget for
-            both keys; enable Build + Runtime in Vercel.
-          </p>
-        ) : null}
-      </div>
+              {process.env.NODE_ENV !== "production" ? (
+                <p className="mt-1 text-xs text-[var(--foreground-subtle)]">
+                  Admin hint: set{" "}
+                  <code className="rounded bg-[var(--muted)] px-1">
+                    NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION
+                  </code>{" "}
+                  and{" "}
+                  <code className="rounded bg-[var(--muted)] px-1">
+                    TURNSTILE_SECRET_KEY_PRODUCTION
+                  </code>{" "}
+                  (or the non-production key pair). On Vercel, enable those for <strong>Build</strong>{" "}
+                  and <strong>Runtime</strong> so the widget and API stay in sync.
+                </p>
+              ) : null}
+            </div>
+          )}
+          {turnstileHint ? (
+            <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+              {turnstileHint}
+            </p>
+          ) : null}
+          {process.env.NODE_ENV === "development" && siteKey === TURNSTILE_TEST_SITE_KEY ? (
+            <p className="text-xs text-[var(--foreground-subtle)]">
+              Using Cloudflare test keys locally. For production, set{" "}
+              <code className="rounded bg-[var(--muted)] px-1">
+                NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION
+              </code>{" "}
+              and{" "}
+              <code className="rounded bg-[var(--muted)] px-1">
+                TURNSTILE_SECRET_KEY_PRODUCTION
+              </code>{" "}
+              (Vercel Production), or the non-{" "}
+              <code className="rounded bg-[var(--muted)] px-1">_PRODUCTION</code> pair — same widget for
+              both keys; enable Build + Runtime in Vercel.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
       {status === "error" && message ? (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
