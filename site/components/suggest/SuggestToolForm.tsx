@@ -8,7 +8,7 @@ import { TURNSTILE_TEST_SITE_KEY } from "@/lib/suggest-tool/turnstile-public";
 export type SuggestToolFormProps = {
   /** From the Server Component page — must match `TURNSTILE_SECRET_*` used by `/api/suggest-tool`. */
   siteKey: string;
-  /** When true (env `DISABLE_SUGGEST_TURNSTILE`), widget and token checks are skipped — admin testing only. */
+  /** When true, widget and token checks are skipped (see `SUGGEST_TURNSTILE_DISABLED` in `turnstile-disabled.ts`). */
   turnstileDisabled?: boolean;
 };
 
@@ -425,9 +425,12 @@ export function SuggestToolForm({ siteKey, turnstileDisabled = false }: SuggestT
             role="status"
           >
             <p className="text-sm text-[var(--foreground)]">
-              The security check is off for this deployment (
-              <code className="rounded bg-[var(--muted)] px-1 text-xs">DISABLE_SUGGEST_TURNSTILE</code>
-              ). Use only for debugging; turn it back on afterward.
+              The security check is turned off in code for now (
+              <code className="rounded bg-[var(--muted)] px-1 text-xs">
+                SUGGEST_TURNSTILE_DISABLED
+              </code>{" "}
+              in <code className="rounded bg-[var(--muted)] px-1 text-xs">turnstile-disabled.ts</code>
+              ). Editors should turn Turnstile back on after configuration is fixed.
             </p>
           </div>
         ) : siteKey ? (
