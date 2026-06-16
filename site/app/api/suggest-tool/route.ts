@@ -94,14 +94,16 @@ function assertSuggestToolOrigin(req: Request): NextResponse | null {
   }
 
   const allowed = new Set<string>();
-  const addHost = (h: string | undefined) => {
-    if (!h) return;
-    const x = h.toLowerCase();
+  /** Keep request Host exactly as sent; do not synthesize `www.` + requestHost (invalid for many hosts). */
+  if (requestHost) allowed.add(requestHost);
+
+  const addHostAliases = (hostname: string | undefined) => {
+    if (!hostname) return;
+    const x = hostname.toLowerCase();
     allowed.add(x);
     if (x.startsWith("www.")) allowed.add(x.slice(4));
     else allowed.add(`www.${x}`);
   };
-  addHost(requestHost);
 
   for (const v of [
     process.env.NEXT_PUBLIC_SITE_URL,
@@ -111,19 +113,22 @@ function assertSuggestToolOrigin(req: Request): NextResponse | null {
     process.env.VERCEL_BRANCH_URL,
     process.env.VERCEL_PROJECT_PRODUCTION_URL,
   ]) {
-    addHost(hostnameFromEnvUrl(v));
+    addHostAliases(hostnameFromEnvUrl(v));
   }
 
   const extra = process.env.PAYLOAD_CSRF_EXTRA_ORIGINS?.trim();
   if (extra) {
     for (const part of extra.split(",")) {
-      addHost(hostnameFromEnvUrl(part.trim()));
+      addHostAliases(hostnameFromEnvUrl(part.trim()));
     }
   }
 
+  if (allowed.has(originHost)) {
+    return null;
+  }
   const originBase = hostnameWithoutLeadingWww(originHost);
-  const matched = [...allowed].some((h) => hostnameWithoutLeadingWww(h) === originBase);
-  if (!matched) {
+  const aliasMatch = [...allowed].some((h) => hostnameWithoutLeadingWww(h) === originBase);
+  if (!aliasMatch) {
     console.warn(
       `[suggest-tool] blocked cross-origin POST origin=${originHost} allowed=${[...allowed].join(",")}`,
     );
