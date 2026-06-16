@@ -12,6 +12,7 @@ import {
 import { assertSuggestionRateLimit } from "@/lib/suggest-tool/rate-limit";
 import { getTurnstilePublicKeySource, resolveTurnstileSiteKey } from "@/lib/suggest-tool/turnstile-public";
 import { resolveTurnstileSecret } from "@/lib/suggest-tool/turnstile-server";
+import { isSuggestTurnstileDisabled } from "@/lib/suggest-tool/turnstile-disabled";
 import { verifyTurnstileToken } from "@/lib/suggest-tool/turnstile";
 import {
   clampLen,
@@ -330,36 +331,42 @@ export async function POST(req: Request) {
     return jsonError("Service temporarily unavailable. Please try again later.", 503);
   }
 
-  let turnstileSecret: string;
-  try {
-    turnstileSecret = resolveTurnstileSecret();
-  } catch (err) {
-    console.error("[suggest-tool] Turnstile secret misconfiguration", err);
-    return jsonError("Verification service is unavailable. Please try again later.", 503);
-  }
-  const token = body.turnstileToken?.trim();
-  if (!token) {
-    return jsonError("Verification required. Please complete the CAPTCHA.", 400);
-  }
-  const clientIp = getClientIpFromHeaders(req.headers);
-  const captcha = await verifyTurnstileToken(token, turnstileSecret, {
-    remoteIp: clientIp,
-  });
-  if (!captcha.success) {
-    console.warn("[suggest-tool] Turnstile siteverify rejected token", captcha.errorCodes ?? []);
-    if (captcha.errorCodes?.includes("invalid-input-secret")) {
-      const siteKey = resolveTurnstileSiteKey();
-      console.warn(
-        "[suggest-tool] invalid-input-secret: use Turnstile **Secret key** (not Site key) from the **same widget** as the active site key. In Vercel do not wrap values in extra quotes.",
-        {
-          publicKeySource: getTurnstilePublicKeySource(),
-          siteKeyLength: siteKey.length,
-          secretLength: turnstileSecret.length,
-          siteKeyPrefix: siteKey ? `${siteKey.slice(0, 8)}…` : "(empty)",
-        },
-      );
+  if (isSuggestTurnstileDisabled()) {
+    console.warn(
+      "[suggest-tool] Turnstile verification DISABLED (DISABLE_SUGGEST_TURNSTILE). Remove before production.",
+    );
+  } else {
+    let turnstileSecret: string;
+    try {
+      turnstileSecret = resolveTurnstileSecret();
+    } catch (err) {
+      console.error("[suggest-tool] Turnstile secret misconfiguration", err);
+      return jsonError("Verification service is unavailable. Please try again later.", 503);
     }
-    return jsonError("CAPTCHA verification failed. Please try again.", 400);
+    const token = body.turnstileToken?.trim();
+    if (!token) {
+      return jsonError("Verification required. Please complete the CAPTCHA.", 400);
+    }
+    const clientIp = getClientIpFromHeaders(req.headers);
+    const captcha = await verifyTurnstileToken(token, turnstileSecret, {
+      remoteIp: clientIp,
+    });
+    if (!captcha.success) {
+      console.warn("[suggest-tool] Turnstile siteverify rejected token", captcha.errorCodes ?? []);
+      if (captcha.errorCodes?.includes("invalid-input-secret")) {
+        const siteKey = resolveTurnstileSiteKey();
+        console.warn(
+          "[suggest-tool] invalid-input-secret: use Turnstile **Secret key** (not Site key) from the **same widget** as the active site key. In Vercel do not wrap values in extra quotes.",
+          {
+            publicKeySource: getTurnstilePublicKeySource(),
+            siteKeyLength: siteKey.length,
+            secretLength: turnstileSecret.length,
+            siteKeyPrefix: siteKey ? `${siteKey.slice(0, 8)}…` : "(empty)",
+          },
+        );
+      }
+      return jsonError("CAPTCHA verification failed. Please try again.", 400);
+    }
   }
 
   const appName = typeof body.appName === "string" ? body.appName : "";

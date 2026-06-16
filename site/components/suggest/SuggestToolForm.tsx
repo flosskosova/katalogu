@@ -8,6 +8,8 @@ import { TURNSTILE_TEST_SITE_KEY } from "@/lib/suggest-tool/turnstile-public";
 export type SuggestToolFormProps = {
   /** From the Server Component page — must match `TURNSTILE_SECRET_*` used by `/api/suggest-tool`. */
   siteKey: string;
+  /** When true (env `DISABLE_SUGGEST_TURNSTILE`), widget and token checks are skipped — admin testing only. */
+  turnstileDisabled?: boolean;
 };
 
 const inputClass =
@@ -78,7 +80,7 @@ function describeSubmitFailure(err: unknown): string {
   return "Something went wrong while sending your suggestion. Please try again.";
 }
 
-export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
+export function SuggestToolForm({ siteKey, turnstileDisabled = false }: SuggestToolFormProps) {
   const formId = useId();
   const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
    * exists even if the callback was missed.
    */
   useEffect(() => {
-    if (!siteKey || turnstileToken) return;
+    if (turnstileDisabled || !siteKey || turnstileToken) return;
     let cancelled = false;
     const interval = window.setInterval(() => {
       if (cancelled) return;
@@ -118,7 +120,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
       window.clearInterval(interval);
       window.clearTimeout(maxWait);
     };
-  }, [siteKey, turnstileKey, turnstileToken]);
+  }, [siteKey, turnstileKey, turnstileToken, turnstileDisabled]);
 
   const onSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -128,7 +130,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
       /** Capture before any `await` — async handlers must not rely on `e.currentTarget` later. */
       const form = e.currentTarget;
 
-      if (!siteKey) {
+      if (!turnstileDisabled && !siteKey) {
         setStatus("error");
         setMessage(
           "Suggestions are temporarily unavailable. Please try again later.",
@@ -137,8 +139,10 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
       }
 
       const tokenFromWidget = turnstileRef.current?.getResponse?.()?.trim() ?? "";
-      const token = tokenFromWidget || (turnstileToken ?? "").trim();
-      if (!token) {
+      const token = turnstileDisabled
+        ? ""
+        : (tokenFromWidget || (turnstileToken ?? "").trim());
+      if (!turnstileDisabled && !token) {
         setStatus("error");
         setMessage("Please complete the verification below.");
         return;
@@ -226,7 +230,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
         setMessage(msg);
       }
     },
-    [turnstileToken, siteKey],
+    [turnstileToken, siteKey, turnstileDisabled],
   );
 
   if (status === "success") {
@@ -415,7 +419,18 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
 
       <div className="flex flex-col gap-2">
         <span className={labelClass}>Verification</span>
-        {siteKey ? (
+        {turnstileDisabled ? (
+          <div
+            className="rounded-md border border-amber-700/40 bg-amber-950/15 px-3 py-2 dark:border-amber-500/35 dark:bg-amber-950/25"
+            role="status"
+          >
+            <p className="text-sm text-[var(--foreground)]">
+              The security check is off for this deployment (
+              <code className="rounded bg-[var(--muted)] px-1 text-xs">DISABLE_SUGGEST_TURNSTILE</code>
+              ). Use only for debugging; turn it back on afterward.
+            </p>
+          </div>
+        ) : siteKey ? (
           <Turnstile
             ref={turnstileRef}
             key={turnstileKey}
@@ -464,7 +479,9 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
             {turnstileHint}
           </p>
         ) : null}
-        {process.env.NODE_ENV === "development" && siteKey === TURNSTILE_TEST_SITE_KEY ? (
+        {process.env.NODE_ENV === "development" &&
+        siteKey === TURNSTILE_TEST_SITE_KEY &&
+        !turnstileDisabled ? (
           <p className="text-xs text-[var(--foreground-subtle)]">
             Using Cloudflare test keys locally. For production, set{" "}
             <code className="rounded bg-[var(--muted)] px-1">
@@ -490,7 +507,10 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
       <Button
         type="submit"
         variant="primary"
-        disabled={status === "submitting" || !siteKey || !turnstileToken}
+        disabled={
+          status === "submitting" ||
+          (!turnstileDisabled && (!siteKey || !turnstileToken))
+        }
       >
         {status === "submitting" ? "Submitting…" : "Submit suggestion"}
       </Button>
