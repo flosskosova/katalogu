@@ -335,7 +335,7 @@ export async function POST(req: Request) {
 
   if (isSuggestTurnstileDisabled()) {
     console.warn(
-      "[suggest-tool] Turnstile verification DISABLED (DISABLE_SUGGEST_TURNSTILE). Remove before production.",
+      "[suggest-tool] Turnstile verification DISABLED (SUGGEST_TURNSTILE_DISABLED in turnstile-disabled.ts). Re-enable before production.",
     );
   } else {
     let turnstileSecret: string;
