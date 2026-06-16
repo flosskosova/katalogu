@@ -15,6 +15,42 @@ const inputClass =
 
 const labelClass = "block text-sm font-medium text-[var(--foreground)]";
 
+/** Cloudflare Turnstile `error-callback` may pass a numeric code or string (e.g. `"110200"`). */
+function parseTurnstileErrorCode(code: unknown): number | undefined {
+  if (typeof code === "number" && Number.isFinite(code)) return code;
+  if (typeof code === "string") {
+    const t = code.trim();
+    const n = Number(t);
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
+}
+
+function turnstileErrorUserMessage(code: unknown): string {
+  const n = parseTurnstileErrorCode(code);
+  const host =
+    typeof window !== "undefined" ? window.location.hostname : "this site";
+
+  if (n === 110200) {
+    return `Verification does not allow this address (${host}). In Cloudflare Turnstile → your widget → Hostname Management, add this exact hostname. Note: www and non-www are separate entries.`;
+  }
+  if (n === 110100 || n === 110110) {
+    return "Verification configuration looks wrong (site key). Please contact the site admin.";
+  }
+  if (n != null && n >= 110000 && n < 120000) {
+    return `Verification failed (code ${String(n)}). If this keeps happening, try another browser or contact the site admin.`;
+  }
+  if (
+    n != null &&
+    ((n >= 300000 && n < 400000) || (n >= 600000 && n < 700000))
+  ) {
+    return "Verification had a problem. Try refreshing the page, or disable extensions that block security challenges.";
+  }
+  return n != null
+    ? `Verification failed (code ${String(n)}). Please refresh and try again.`
+    : "Verification failed to load. Please refresh the page.";
+}
+
 function describeSubmitFailure(err: unknown): string {
   if (err instanceof TypeError) {
     return "Could not reach the server. Check your connection and try again.";
@@ -42,6 +78,8 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
     "idle",
   );
   const [message, setMessage] = useState<string | null>(null);
+  /** Shown under the widget when Turnstile errors (e.g. hostname not in Cloudflare allowlist). */
+  const [turnstileHint, setTurnstileHint] = useState<string | null>(null);
 
   /**
    * Turnstile sometimes fills the widget token before `onSuccess` runs (e.g. slow iframe,
@@ -57,6 +95,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
       if (r) {
         setTurnstileToken(r);
         setMessage(null);
+        setTurnstileHint(null);
         setStatus((s) => (s === "error" ? "idle" : s));
         window.clearInterval(interval);
       }
@@ -156,6 +195,7 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
             data.error?.includes("Verification")
           ) {
             setTurnstileToken(null);
+            setTurnstileHint(null);
             setTurnstileKey((k) => k + 1);
           }
           return;
@@ -373,10 +413,19 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
             onSuccess={(token) => {
               setTurnstileToken(token);
               setMessage(null);
+              setTurnstileHint(null);
               setStatus((s) => (s === "error" ? "idle" : s));
             }}
-            onExpire={() => setTurnstileToken(null)}
-            onError={() => setTurnstileToken(null)}
+            onExpire={() => {
+              setTurnstileToken(null);
+              setTurnstileHint(
+                "Verification expired. Complete the check again to enable Submit.",
+              );
+            }}
+            onError={(code) => {
+              setTurnstileToken(null);
+              setTurnstileHint(turnstileErrorUserMessage(code));
+            }}
             options={{ theme: "auto" }}
           />
         ) : (
@@ -400,6 +449,11 @@ export function SuggestToolForm({ siteKey }: SuggestToolFormProps) {
             ) : null}
           </div>
         )}
+        {turnstileHint ? (
+          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+            {turnstileHint}
+          </p>
+        ) : null}
         {process.env.NODE_ENV === "development" && siteKey === TURNSTILE_TEST_SITE_KEY ? (
           <p className="text-xs text-[var(--foreground-subtle)]">
             Using Cloudflare test keys locally. For production, set{" "}
