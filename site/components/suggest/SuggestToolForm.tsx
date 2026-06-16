@@ -39,7 +39,7 @@ function turnstileErrorUserMessage(code: unknown): string {
   }
   /** Cloudflare: 400020 = widget/site key config (often wrong env key or hostname not allowlisted). */
   if (n === 400020) {
-    return `Verification could not start (400020). Admins: ensure the Turnstile site key in deployment env matches this widget in Cloudflare (same keys for Build and Runtime), and add "${host}" under Turnstile → Hostname Management if visitors use this host. Others: try a refresh or another browser.`;
+    return `Verification could not start (400020). Admins: copy the site key and secret from the same Turnstile widget in Cloudflare into Vercel (Build and Runtime), redeploy, and confirm Hostname Management lists this exact host: ${host} (add www separately if you use it). Others: refresh or try another browser.`;
   }
   if (n === 400070) {
     return "This verification widget is disabled in Cloudflare. Please contact the site admin.";
