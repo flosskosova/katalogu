@@ -15,6 +15,8 @@ export type AcceptToolSuggestionResult = {
   created: boolean;
   published: boolean;
   categoryId: string | number;
+  /** Suggestion was already accepted with a linked catalog tool — no DB writes. */
+  alreadyAccepted?: boolean;
 };
 
 function relationshipId(val: unknown): string | number | null {
@@ -26,6 +28,15 @@ function relationshipId(val: unknown): string | number | null {
     if (id != null && id !== "") return id as string | number;
   }
   return null;
+}
+
+function catalogToolSlugFromSuggestion(suggestion: Record<string, unknown>): string {
+  const linked = suggestion.catalogTool;
+  if (linked && typeof linked === "object" && linked !== null && "slug" in linked) {
+    const slug = (linked as { slug?: unknown }).slug;
+    if (typeof slug === "string" && slug.trim()) return slug;
+  }
+  return "";
 }
 
 /**
@@ -53,13 +64,50 @@ export async function acceptToolSuggestion(
   const suggestion = await payload.findByID({
     collection: "tool-suggestions",
     id: args.suggestionId,
-    depth: 0,
+    depth: 1,
     overrideAccess: true,
     req,
   });
 
   if (!suggestion) {
     throw new Error("Suggestion not found.");
+  }
+
+  const suggestionRecord = suggestion as Record<string, unknown>;
+  const existingToolId = relationshipId(suggestionRecord.catalogTool);
+  const status = suggestionRecord.status as string | undefined;
+
+  if (status === "accepted" && existingToolId != null) {
+    let toolSlug = catalogToolSlugFromSuggestion(suggestionRecord);
+    let published = true;
+    if (!toolSlug) {
+      const linked = await payload.findByID({
+        collection: "catalog-tools",
+        id: existingToolId,
+        depth: 0,
+        overrideAccess: true,
+        req,
+      });
+      toolSlug = String(linked?.slug ?? "");
+      published = linked?.status === "published";
+    } else if (
+      suggestionRecord.catalogTool &&
+      typeof suggestionRecord.catalogTool === "object" &&
+      suggestionRecord.catalogTool !== null &&
+      "status" in suggestionRecord.catalogTool
+    ) {
+      published =
+        (suggestionRecord.catalogTool as { status?: string }).status === "published";
+    }
+    return {
+      suggestionId: args.suggestionId,
+      toolId: existingToolId,
+      toolSlug,
+      created: false,
+      published,
+      categoryId,
+      alreadyAccepted: true,
+    };
   }
 
   const merged: ToolSuggestionLike = {

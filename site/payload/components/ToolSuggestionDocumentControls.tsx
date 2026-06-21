@@ -36,6 +36,10 @@ export function ToolSuggestionDocumentControls() {
   const slug = info.collectionSlug ?? info.docConfig?.slug;
   const data = info.data;
   const hasDelete = info.hasDeletePermission === true;
+  const status = typeof data?.status === "string" ? data.status : "";
+  const linkedToolId = relationshipId(data?.catalogTool);
+  const alreadyAccepted = status === "accepted" && linkedToolId != null;
+  const acceptedNeedsRepair = status === "accepted" && linkedToolId == null;
 
   /** Same headers Payload’s list/bulk delete uses for REST (see DeleteMany in @payloadcms/ui). */
   const restHeaders = useMemo(
@@ -146,12 +150,16 @@ export function ToolSuggestionDocumentControls() {
       toast.success(
         typeof parsed.message === "string"
           ? parsed.message
-          : slug
-            ? `Created catalog tool “${slug}” in the selected category.`
-            : "Accepted — catalog tool created.",
+          : parsed.alreadyAccepted
+            ? "Already accepted — catalog tool is linked."
+            : slug
+              ? `Created catalog tool “${slug}” in the selected category.`
+              : "Accepted — catalog tool created.",
       );
-      clearRouteCache();
-      window.location.assign(`/admin/collections/${COLLECTION}`);
+      if (!parsed.alreadyAccepted) {
+        clearRouteCache();
+        window.location.assign(`/admin/collections/${COLLECTION}`);
+      }
     } catch (e) {
       if (ac.signal.aborted) {
         toast.error(
@@ -280,15 +288,33 @@ export function ToolSuggestionDocumentControls() {
         />
       </label>
       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", alignItems: "center" }}>
-        <Button
-          type="button"
-          buttonStyle="primary"
-          size="small"
-          disabled={Boolean(busy)}
-          onClick={onAccept}
-        >
-          {busy === "accept" ? "Accepting…" : "Accept"}
-        </Button>
+        {alreadyAccepted ? (
+          <span
+            style={{
+              fontSize: "0.8125rem",
+              color: "var(--theme-elevation-700)",
+              padding: "0.35rem 0.5rem",
+              borderRadius: "var(--style-radius-s)",
+              background: "var(--theme-elevation-100)",
+            }}
+          >
+            Already accepted — see <strong>Created catalog tool</strong> in the sidebar, or Catalog → Tools.
+          </span>
+        ) : (
+          <Button
+            type="button"
+            buttonStyle="primary"
+            size="small"
+            disabled={Boolean(busy)}
+            onClick={onAccept}
+          >
+            {busy === "accept"
+              ? "Accepting…"
+              : acceptedNeedsRepair
+                ? "Repair catalog link"
+                : "Accept"}
+          </Button>
+        )}
         <Button
           type="button"
           buttonStyle="secondary"
