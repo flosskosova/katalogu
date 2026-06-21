@@ -1,5 +1,7 @@
 import type { CollectionConfig } from "payload";
 import { editorAndAdminAccess } from "../access";
+import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/acceptToolSuggestion";
+import { createCatalogToolFromSuggestion } from "../tool-suggestions/createCatalogToolFromSuggestion";
 
 function relationshipHasId(val: unknown): boolean {
   if (val == null) return false;
@@ -32,7 +34,7 @@ export const ToolSuggestions: CollectionConfig = {
       "createdAt",
     ],
     description:
-      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Staff (editors and admins) may delete rows. **Accept / Decline / Delete** need Postgres pool **max ≥ 2** on Vercel (default when `VERCEL=1`); if actions spin forever, check you did not set `PAYLOAD_POSTGRES_POOL_MAX=1` in Vercel env.",
+      "Suggestions from the public “Suggest FOSS App/Tool” form. **Accept** creates a catalog tool in the chosen category (admins publish immediately; editors get **In review**). Staff may delete rows. **Accept / Decline / Delete** need Postgres pool **max ≥ 2** on Vercel (default when `VERCEL=1`); if actions spin forever, check you did not set `PAYLOAD_POSTGRES_POOL_MAX=1` in Vercel env.",
     components: {
       beforeList: ["@/payload/components/ToolSuggestionsListHint#ToolSuggestionsListHint"],
       edit: {
@@ -52,16 +54,51 @@ export const ToolSuggestions: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ data, originalDoc }) => {
+      async ({ data, originalDoc, req }) => {
         const next = data?.status as string | undefined;
         const prev = originalDoc?.status as string | undefined;
-        if (next === "accepted" && prev !== "accepted") {
-          if (!relationshipHasId(data?.reviewedCategory)) {
+        const becomingAccepted = next === "accepted" && prev !== "accepted";
+        const acceptedMissingTool =
+          next === "accepted" &&
+          !relationshipHasId(data?.catalogTool) &&
+          !relationshipHasId(originalDoc?.catalogTool);
+
+        if (becomingAccepted) {
+          if (
+            !relationshipHasId(data?.reviewedCategory) &&
+            !relationshipHasId(originalDoc?.reviewedCategory)
+          ) {
             throw new Error(
               "Select a suggested catalog category before accepting this suggestion (or use Decline).",
             );
           }
         }
+
+        if (
+          (becomingAccepted || acceptedMissingTool) &&
+          !relationshipHasId(data?.catalogTool) &&
+          !relationshipHasId(originalDoc?.catalogTool)
+        ) {
+          const merged = {
+            ...(originalDoc ?? {}),
+            ...data,
+            reviewedCategory: data?.reviewedCategory ?? originalDoc?.reviewedCategory,
+            reviewNote: data?.reviewNote ?? originalDoc?.reviewNote,
+          };
+          const ctx = (req.context ?? {}) as Record<string, unknown>;
+          ctx[ACCEPT_SUGGESTION_CONTEXT] = true;
+          req.context = ctx;
+          try {
+            const result = await createCatalogToolFromSuggestion(req, merged, {
+              fromSuggestionAccept: true,
+            });
+            data.catalogTool = result.toolId;
+          } catch (e) {
+            const detail = e instanceof Error ? e.message : String(e);
+            throw new Error(`Accept failed — could not create catalog tool: ${detail}`);
+          }
+        }
+
         return data;
       },
     ],
@@ -151,6 +188,18 @@ export const ToolSuggestions: CollectionConfig = {
         description: "Internal note for your team (why accepted / declined).",
         position: "sidebar",
         rows: 4,
+      },
+    },
+    {
+      name: "catalogTool",
+      type: "relationship",
+      relationTo: "catalog-tools",
+      label: "Created catalog tool",
+      admin: {
+        readOnly: true,
+        position: "sidebar",
+        description:
+          "Set automatically when you Accept — opens the catalog entry created from this suggestion.",
       },
     },
     {

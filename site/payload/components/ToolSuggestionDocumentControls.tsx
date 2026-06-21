@@ -76,14 +76,17 @@ export function ToolSuggestionDocumentControls() {
       });
       const raw = await res.text();
       let errMsg = res.ok ? "" : `HTTP ${res.status}`;
+      let parsed: Record<string, unknown> = {};
       try {
-        const j = raw ? JSON.parse(raw) : {};
+        parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
         if (!res.ok) {
           const first =
-            Array.isArray(j?.errors) && j.errors[0] && typeof j.errors[0].message === "string"
-              ? j.errors[0].message
+            Array.isArray(parsed?.errors) &&
+            parsed.errors[0] &&
+            typeof (parsed.errors[0] as { message?: string }).message === "string"
+              ? (parsed.errors[0] as { message: string }).message
               : undefined;
-          errMsg = first ?? (typeof j?.message === "string" ? j.message : errMsg);
+          errMsg = first ?? (typeof parsed?.message === "string" ? parsed.message : errMsg);
         }
       } catch {
         /* ignore */
@@ -91,6 +94,7 @@ export function ToolSuggestionDocumentControls() {
       if (!res.ok) {
         throw new Error(errMsg || "Update failed");
       }
+      return parsed;
     },
     [documentUrl, restHeaders],
   );
@@ -110,15 +114,42 @@ export function ToolSuggestionDocumentControls() {
     const ac = new AbortController();
     const t = window.setTimeout(() => ac.abort(), 120_000);
     try {
-      await patch(
-        {
-          status: "accepted",
+      const res = await fetch("/api/accept-tool-suggestion", {
+        method: "POST",
+        headers: restHeaders,
+        credentials: "include",
+        body: JSON.stringify({
+          suggestionId: id,
           reviewedCategory: Number(cat),
           reviewNote: noteMerged || undefined,
-        },
-        ac.signal,
+        }),
+        signal: ac.signal,
+      });
+      const raw = await res.text();
+      let parsed: Record<string, unknown> = {};
+      try {
+        parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+      } catch {
+        /* ignore */
+      }
+      if (!res.ok) {
+        const errMsg =
+          typeof parsed?.error === "string"
+            ? parsed.error
+            : `HTTP ${res.status}`;
+        throw new Error(errMsg);
+      }
+      const slug =
+        typeof parsed.toolSlug === "string" && parsed.toolSlug
+          ? parsed.toolSlug
+          : null;
+      toast.success(
+        typeof parsed.message === "string"
+          ? parsed.message
+          : slug
+            ? `Created catalog tool “${slug}” in the selected category.`
+            : "Accepted — catalog tool created.",
       );
-      toast.success("Marked as accepted.");
       router.refresh();
     } catch (e) {
       if (ac.signal.aborted) {
