@@ -13,6 +13,8 @@ import {
 import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 import { buildHomeFaqJsonLd } from "@/lib/seo/structured-data";
+import { flosskTextLink } from "@/lib/ui/flossk-highlight";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: { absolute: `${SITE.name} — ${SITE.tagline}` },
@@ -80,12 +82,15 @@ export default async function HomePage() {
         <p className="mt-5 text-base">
           <Link
             href="/browse"
-            className="inline-flex flex-wrap items-baseline gap-x-1.5 rounded-md text-[var(--foreground)] outline-none ring-[var(--ring)] transition-colors hover:text-[var(--accent)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]"
+            className={cn(
+              flosskTextLink,
+              "group inline-flex flex-wrap items-baseline gap-x-1.5",
+            )}
           >
             <span className="font-[family-name:var(--font-brand)] text-2xl font-semibold tabular-nums tracking-tight">
               {toolCount.toLocaleString("en-US")}
             </span>
-            <span className="text-[var(--foreground-muted)]">
+            <span className="text-[var(--foreground-muted)] transition-colors group-hover:text-[var(--foreground)] dark:group-hover:text-[var(--foreground-muted)]">
               open source apps and tools
             </span>
           </Link>
