@@ -1,9 +1,12 @@
 /**
- * Idempotent Postgres patch: `tool_suggestions.catalog_tool_id` for Payload `catalogTool`.
- * Production keeps `PAYLOAD_POSTGRES_PUSH=false`, so this must run outside drizzle push.
+ * Manual / preflight-only Postgres patch for `tool_suggestions.catalog_tool_id`.
+ *
+ * Do NOT call from Payload init, collection hooks, or getPayload — a separate pg Client
+ * steals Supabase session-pooler slots and causes EMAXCONNSESSION on Vercel.
+ * Production schema is applied via `prodMigrations` in payload.config.ts.
  */
-let ensured = false;
-let inflight: Promise<void> | null = null;
+import { readFileSync } from "node:fs";
+import path from "node:path";
 
 function isPostgresUrl(url: string | undefined): boolean {
   return Boolean(url && /^postgres(ql)?:\/\//i.test(url));
@@ -22,62 +25,29 @@ function sslForPostgres(connectionString: string) {
   return undefined;
 }
 
+function postgresPatchSql(): string {
+  return readFileSync(
+    path.join(process.cwd(), "scripts/sql/add-tool-suggestions-catalog-tool-id.sql"),
+    "utf8",
+  );
+}
+
+/** One-off repair via Supabase SQL editor or `npm run postgres:sql:catalog-tool-link`. */
 export async function ensureToolSuggestionsCatalogToolColumn(
   connectionString = process.env.DATABASE_URL?.trim(),
 ): Promise<void> {
-  if (ensured) return;
-  if (inflight) return inflight;
-  if (!isPostgresUrl(connectionString)) {
-    ensured = true;
-    return;
+  if (!isPostgresUrl(connectionString)) return;
+
+  const { Client } = await import("pg");
+  const client = new Client({
+    connectionString,
+    ssl: sslForPostgres(connectionString!),
+    connectionTimeoutMillis: 25_000,
+  });
+  await client.connect();
+  try {
+    await client.query(postgresPatchSql());
+  } finally {
+    await client.end();
   }
-
-  inflight = (async () => {
-    const { Client } = await import("pg");
-    const client = new Client({
-      connectionString,
-      ssl: sslForPostgres(connectionString!),
-      connectionTimeoutMillis: 25_000,
-    });
-    await client.connect();
-    try {
-      await client.query(`
-        ALTER TABLE tool_suggestions
-          ADD COLUMN IF NOT EXISTS catalog_tool_id integer;
-      `);
-      await client.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1 FROM pg_constraint WHERE conname = 'tool_suggestions_catalog_tool_id_fkey'
-          ) THEN
-            ALTER TABLE tool_suggestions
-              ADD CONSTRAINT tool_suggestions_catalog_tool_id_fkey
-              FOREIGN KEY (catalog_tool_id) REFERENCES catalog_tools(id)
-              ON DELETE SET NULL;
-          END IF;
-        END $$;
-      `);
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS tool_suggestions_catalog_tool_idx
-          ON tool_suggestions (catalog_tool_id);
-      `);
-      ensured = true;
-    } finally {
-      await client.end();
-    }
-  })()
-    .catch((err) => {
-      ensured = false;
-      console.error(
-        "[payload] ensureToolSuggestionsCatalogToolColumn failed:",
-        err instanceof Error ? err.message : err,
-      );
-      throw err;
-    })
-    .finally(() => {
-      inflight = null;
-    });
-
-  return inflight;
 }

@@ -2,7 +2,6 @@ import type { Payload } from "payload";
 import { getPayload } from "payload";
 
 import config from "@payload-config";
-import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
 
 /**
  * One shared Payload instance per process. Home and other routes call
@@ -37,20 +36,18 @@ export async function getPayloadClient(): Promise<Payload> {
   if (initFailed) throw initFailed;
   if (inflight) return inflight;
 
-  inflight = (async () => {
-    try {
-      await ensureToolSuggestionsCatalogToolColumn();
-      const p = await getPayload({ config });
+  inflight = getPayload({ config })
+    .then((p) => {
       cached = p;
+      inflight = null;
       initFailed = null;
       return p;
-    } catch (err) {
+    })
+    .catch((err) => {
+      inflight = null;
       initFailed = normalizeInitError(err);
       throw initFailed;
-    } finally {
-      inflight = null;
-    }
-  })();
+    });
 
   return inflight;
 }
