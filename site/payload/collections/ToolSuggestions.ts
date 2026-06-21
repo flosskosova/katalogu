@@ -32,7 +32,7 @@ export const ToolSuggestions: CollectionConfig = {
       "createdAt",
     ],
     description:
-      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Staff (editors and admins) may delete rows. If list **Delete** spins forever on Vercel Postgres, remove **`PAYLOAD_POSTGRES_POOL_MAX=1`** from env (Payload needs pool **max ≥ 2** for transaction + queries); redeploy — see **site README**.",
+      "Suggestions from the public “Suggest FOSS App/Tool” form. Review the repo, then add a catalog entry if appropriate. Staff (editors and admins) may delete rows. **Accept / Decline / Delete** need Postgres pool **max ≥ 2** on Vercel (default when `VERCEL=1`); if actions spin forever, check you did not set `PAYLOAD_POSTGRES_POOL_MAX=1` in Vercel env.",
     components: {
       beforeList: ["@/payload/components/ToolSuggestionsListHint#ToolSuggestionsListHint"],
       edit: {

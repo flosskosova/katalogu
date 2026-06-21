@@ -66,12 +66,13 @@ export function ToolSuggestionDocumentControls() {
   }, [data?.reviewedCategory, data?.reviewNote]);
 
   const patch = useCallback(
-    async (body: Record<string, unknown>) => {
+    async (body: Record<string, unknown>, signal?: AbortSignal) => {
       const res = await fetch(documentUrl, {
         method: "PATCH",
         headers: restHeaders,
         credentials: "include",
         body: JSON.stringify(body),
+        signal,
       });
       const raw = await res.text();
       let errMsg = res.ok ? "" : `HTTP ${res.status}`;
@@ -106,17 +107,29 @@ export function ToolSuggestionDocumentControls() {
     }
     const noteMerged = reviewNote.trim();
     setBusy("accept");
+    const ac = new AbortController();
+    const t = window.setTimeout(() => ac.abort(), 120_000);
     try {
-      await patch({
-        status: "accepted",
-        reviewedCategory: Number(cat),
-        reviewNote: noteMerged || undefined,
-      });
+      await patch(
+        {
+          status: "accepted",
+          reviewedCategory: Number(cat),
+          reviewNote: noteMerged || undefined,
+        },
+        ac.signal,
+      );
       toast.success("Marked as accepted.");
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not accept.");
+      if (ac.signal.aborted) {
+        toast.error(
+          "Accept timed out (120s). Redeploy after fixing Postgres pool — Vercel needs pool max ≥ 2 for admin saves.",
+        );
+      } else {
+        toast.error(e instanceof Error ? e.message : "Could not accept.");
+      }
     } finally {
+      window.clearTimeout(t);
       setBusy(null);
     }
   }, [categoryId, data?.reviewedCategory, id, patch, reviewNote, router]);
@@ -125,16 +138,26 @@ export function ToolSuggestionDocumentControls() {
     if (id == null) return;
     const noteMerged = reviewNote.trim();
     setBusy("decline");
+    const ac = new AbortController();
+    const t = window.setTimeout(() => ac.abort(), 120_000);
     try {
-      await patch({
-        status: "rejected",
-        reviewNote: noteMerged || undefined,
-      });
+      await patch(
+        {
+          status: "rejected",
+          reviewNote: noteMerged || undefined,
+        },
+        ac.signal,
+      );
       toast.success("Marked as declined.");
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not decline.");
+      if (ac.signal.aborted) {
+        toast.error("Decline timed out (120s). Check Vercel logs and Postgres pool settings.");
+      } else {
+        toast.error(e instanceof Error ? e.message : "Could not decline.");
+      }
     } finally {
+      window.clearTimeout(t);
       setBusy(null);
     }
   }, [id, patch, reviewNote, router]);
