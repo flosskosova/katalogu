@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useListRowColumns } from "@/components/catalog/ListRowColumnMeasure";
 import { useCompare } from "@/components/catalog/CompareProvider";
 import { Badge } from "@/components/ui/Badge";
 import type { ToolWithCategory } from "@/lib/types";
@@ -14,6 +15,7 @@ const rankLabel: Record<string, string> = {
 
 export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
   const { toggle, has } = useCompare();
+  const cols = useListRowColumns();
   const selected = has(tool.slug);
   const entry = { slug: tool.slug, name: tool.name };
 
@@ -40,8 +42,22 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-x-2.5 overflow-hidden">
-            <h3 className="min-w-0 shrink overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]">
+          <div className="flex min-w-0 flex-nowrap items-center gap-x-2">
+            <h3
+              className={cn(
+                "overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]",
+                cols?.titleColPx ? "shrink-0" : "min-w-0 flex-1",
+              )}
+              style={
+                cols?.titleColPx
+                  ? {
+                      width: cols.titleColPx,
+                      minWidth: cols.titleColPx,
+                      maxWidth: cols.titleColPx,
+                    }
+                  : undefined
+              }
+            >
               <Link
                 href={`/tools/${tool.slug}`}
                 className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline outline-none transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)]"
@@ -50,13 +66,25 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
                 {tool.name}
               </Link>
             </h3>
-            <Badge
-              tone="accent"
-              className="shrink-0"
-              href={`/categories/${tool.category.slug}`}
+            <div
+              className="flex shrink-0 justify-end"
+              style={
+                cols?.badgeColPx
+                  ? {
+                      width: cols.badgeColPx,
+                      minWidth: cols.badgeColPx,
+                    }
+                  : undefined
+              }
             >
-              {tool.category.name}
-            </Badge>
+              <Badge
+                tone="accent"
+                className="shrink-0"
+                href={`/categories/${tool.category.slug}`}
+              >
+                {tool.category.name}
+              </Badge>
+            </div>
           </div>
           <p className="mt-0.5 line-clamp-1 text-sm text-[var(--foreground-muted)]">
             {tool.summary}
