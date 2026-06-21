@@ -5,6 +5,7 @@ import {
   editorAndAdminAccess,
   isStaffAdmin,
 } from "../access";
+import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/acceptToolSuggestion";
 import { applyToolSeoDefaults } from "../seo-defaults";
 
 function assertValidUrl(label: string, value: unknown) {
@@ -125,9 +126,13 @@ export const CatalogTools: CollectionConfig = {
 
         const nextStatus = data.status as string | undefined;
         const prevStatus = originalDoc?.status as string | undefined;
+        const fromSuggestionAccept =
+          (req.context as Record<string, unknown> | undefined)?.[
+            ACCEPT_SUGGESTION_CONTEXT
+          ] === true;
 
         if (nextStatus === "published" && prevStatus !== "published") {
-          if (!(await isStaffAdmin(req))) {
+          if (!(await isStaffAdmin(req)) && !fromSuggestionAccept) {
             throw new Error(
               "Only administrators can publish. Editors can save drafts or mark In review.",
             );
