@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { flosskTextLink } from "@/lib/ui/flossk-highlight";
 import {
   SITE,
   SITE_ATTRIBUTION_LINE,
@@ -17,28 +18,16 @@ export function SiteFooter() {
               <p className="shrink-0 font-medium text-[var(--foreground)]">
                 Explore
               </p>
-              <Link
-                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                href="/browse"
-              >
+              <Link className={flosskTextLink} href="/browse">
                 Browse &amp; filter
               </Link>
-              <Link
-                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                href="/categories"
-              >
+              <Link className={flosskTextLink} href="/categories">
                 Categories
               </Link>
-              <Link
-                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                href="/compare"
-              >
+              <Link className={flosskTextLink} href="/compare">
                 Compare tools
               </Link>
-              <Link
-                className="text-[var(--foreground-muted)] hover:text-[var(--accent)] focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
-                href="/suggest"
-              >
+              <Link className={flosskTextLink} href="/suggest">
                 Suggest a FOSS app
               </Link>
             </div>

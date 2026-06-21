@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { flosskHighlight } from "@/lib/ui/flossk-highlight";
 import type { Category } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function CategoryListRow({
   category,
@@ -32,13 +34,21 @@ export function CategoryListRow({
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-nowrap items-baseline gap-x-2">
-          <h2 className="min-w-0 flex-1 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]">
-            <span className="inline-block max-w-full truncate rounded px-0.5 py-px align-baseline transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]" title={category.name}>
+        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-x-2.5 overflow-hidden">
+          <h2 className="min-w-0 shrink overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]">
+            <span
+              className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)] dark:group-hover:bg-[#fff200]/35 dark:group-hover:text-[var(--foreground-muted)]"
+              title={category.name}
+            >
               {category.name}
             </span>
           </h2>
-          <span className="inline-flex shrink-0 items-center rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-medium text-[#14120f]">
+          <span
+            className={cn(
+              flosskHighlight,
+              "inline-flex shrink-0 items-center px-2 py-0.5 text-xs",
+            )}
+          >
             {count} tool{count === 1 ? "" : "s"}
           </span>
         </div>

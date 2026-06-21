@@ -1,17 +1,19 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { flosskHighlight, flosskHighlightInteractive } from "@/lib/ui/flossk-highlight";
 
 const tones: Record<string, string> = {
   default: "bg-[var(--muted)] text-[var(--foreground)] border border-[var(--border)]",
-  accent:
-    "border border-[#fff200]/55 bg-[#fff200]/50 text-[#14120f]",
+  accent: cn(flosskHighlight, "text-[0.625rem] sm:text-[0.6875rem] px-0.5 py-px"),
   success:
     "bg-[#fff200]/14 text-[#5c5600] border border-[#fff200]/32",
   warn: "bg-[#fffce8] text-[#665e00] border border-[#efe24d]",
 };
 
-const linkRing =
-  "transition-[opacity,box-shadow] hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]";
+const linkRing = cn(
+  flosskHighlightInteractive,
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]",
+);
 
 export function Badge({
   children,

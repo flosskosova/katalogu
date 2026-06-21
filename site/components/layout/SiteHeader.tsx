@@ -80,8 +80,8 @@ export function SiteHeader() {
           </Button>
           <Button
             href="/browse"
-            variant="primary"
-            className="!px-3 !py-2 text-xs sm:!px-4 sm:text-sm !bg-[#fff200]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#e0cd00]/95 hover:!text-[var(--foreground)] dark:!bg-[#fff200]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fff200]/55 dark:hover:!text-[var(--foreground)]"
+            variant="highlight"
+            className="!px-3 !py-2 text-xs sm:!px-4 sm:text-sm"
             onClick={closeMenu}
           >
             Explore

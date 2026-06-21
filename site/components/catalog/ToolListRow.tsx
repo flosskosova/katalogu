@@ -40,11 +40,11 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
           </svg>
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-nowrap items-center gap-x-2">
-            <h3 className="min-w-0 flex-1 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]">
+          <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-x-2.5 overflow-hidden">
+            <h3 className="min-w-0 shrink overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]">
               <Link
                 href={`/tools/${tool.slug}`}
-                className="inline-block max-w-full truncate rounded px-0.5 py-px align-baseline outline-none transition-colors hover:bg-[#fff200]/50 hover:text-[#14120f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline outline-none transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)]"
                 title={tool.name}
               >
                 {tool.name}
