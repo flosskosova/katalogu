@@ -65,7 +65,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={buildHomeFaqJsonLd()} />
       <section className="border-b border-[var(--border)] pb-14">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--accent)] [paint-order:stroke_fill] [-webkit-text-stroke:0.75px_#14120f]">
+        <p className="inline-block w-fit rounded-sm bg-[#fff200]/95 px-0.5 py-px font-[family-name:var(--font-brand)] text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] [box-decoration-break:clone] dark:bg-[#fff200]/35 dark:text-[var(--foreground-muted)] sm:text-[0.6875rem]">
           Editorial catalog
         </p>
         <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-brand)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
@@ -91,11 +91,7 @@ export default async function HomePage() {
           </Link>
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Button
-            href="/browse"
-            variant="primary"
-            className="!px-6 !py-3 !bg-[#fff200]/95 !text-[var(--foreground)] !shadow-sm hover:!bg-[#e0cd00]/95 hover:!text-[var(--foreground)] dark:!bg-[#fff200]/35 dark:!text-[var(--foreground-muted)] dark:hover:!bg-[#fff200]/55 dark:hover:!text-[var(--foreground)]"
-          >
+          <Button href="/browse" variant="highlight" className="!px-6 !py-3">
             Browse all tools
           </Button>
           <Button href="/categories" variant="secondary" className="!px-6 !py-3">

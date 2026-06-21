@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { flosskHighlight, flosskHighlightInteractive } from "@/lib/ui/flossk-highlight";
 import type { ComponentPropsWithoutRef } from "react";
 
 const base =
@@ -10,6 +11,7 @@ const variants = {
     "bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] shadow-sm",
   secondary:
     "border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:bg-[var(--muted)]",
+  highlight: cn(flosskHighlight, flosskHighlightInteractive, "shadow-none"),
   ghost: "text-[var(--foreground-muted)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]",
   link: "text-[var(--accent)] underline-offset-4 hover:underline focus-visible:underline",
 };
