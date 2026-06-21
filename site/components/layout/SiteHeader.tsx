@@ -17,7 +17,7 @@ const nav = [
 ];
 
 const linkClass =
-  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
+  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
 
 export function SiteHeader() {
   const [menuOpenPath, setMenuOpenPath] = useState<string | null>(null);
