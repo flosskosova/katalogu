@@ -8,7 +8,6 @@ import sharp from "sharp";
 import { buildConfig } from "payload";
 
 import { SITE } from "@/lib/seo/site";
-import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
 import { migrations } from "./migrations";
 import { postgresProdMigrations } from "./migrations/postgres-prod";
 import {
@@ -628,7 +627,4 @@ export default buildConfig({
    * https://payloadcms.com/docs/upload/storage-adapters
    */
   plugins: payloadPlugins(),
-  onInit: async () => {
-    await ensureToolSuggestionsCatalogToolColumn();
-  },
 });

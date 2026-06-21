@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { createPayloadRequest } from "payload";
 
 import config from "@payload-config";
-import { getPayloadClient } from "@/lib/payload";
-import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
 import { acceptToolSuggestion } from "@/payload/tool-suggestions/acceptToolSuggestion";
 
 export const runtime = "nodejs";
@@ -21,7 +19,7 @@ function jsonError(message: string, status: number) {
 
 /**
  * Accept a tool suggestion: creates a published catalog-tools entry in the chosen category.
- * Replaces a bare PATCH on status=accepted (which could succeed without creating the tool).
+ * Uses a single Payload instance from createPayloadRequest (no extra DB clients).
  */
 export async function POST(req: Request) {
   let body: Body;
@@ -41,15 +39,13 @@ export async function POST(req: Request) {
   }
 
   try {
-    await ensureToolSuggestionsCatalogToolColumn();
-    const payload = await getPayloadClient();
     const payloadReq = await createPayloadRequest({
       request: req,
       config,
       payloadInstanceCacheKey: "default",
     });
 
-    const result = await acceptToolSuggestion(payload, payloadReq, {
+    const result = await acceptToolSuggestion(payloadReq.payload, payloadReq, {
       suggestionId,
       reviewedCategory,
       reviewNote:

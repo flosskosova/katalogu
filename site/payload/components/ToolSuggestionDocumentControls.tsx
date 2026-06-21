@@ -150,7 +150,8 @@ export function ToolSuggestionDocumentControls() {
             ? `Created catalog tool “${slug}” in the selected category.`
             : "Accepted — catalog tool created.",
       );
-      router.refresh();
+      clearRouteCache();
+      window.location.assign(`/admin/collections/${COLLECTION}`);
     } catch (e) {
       if (ac.signal.aborted) {
         toast.error(
@@ -163,7 +164,7 @@ export function ToolSuggestionDocumentControls() {
       window.clearTimeout(t);
       setBusy(null);
     }
-  }, [categoryId, data?.reviewedCategory, id, patch, reviewNote, router]);
+  }, [categoryId, clearRouteCache, data?.reviewedCategory, id, restHeaders, reviewNote]);
 
   const onDecline = useCallback(async () => {
     if (id == null) return;
