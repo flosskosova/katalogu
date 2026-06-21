@@ -419,34 +419,34 @@ function resolvePayloadExtraCsrfOrigins(): string[] {
  * Each Vercel lambda is its own process; `pool.max` × concurrent lambdas must stay under that cap
  * or Postgres returns `EMAXCONNSESSION` / “max clients reached in session mode”.
  *
- * Default **2** on Vercel (`VERCEL=1`): Payload’s Drizzle `beginTransaction` holds one pool client
- * for the lifetime of a request transaction while other queries may still acquire from the pool.
- * With **`max: 1`**, admin **bulk delete** (and similar paths) can hang forever (“Deleting…”).
- * We still patch `@payloadcms/db-postgres` so the adapter’s error-listener `pool.connect()` is
- * released (see `patches/`); that removed the *old* need for `max ≥ 2` only for the listener, but
- * transactions still need headroom. Keep **`PAYLOAD_POSTGRES_POOL_MAX` unset or ≤2** on Supabase
- * session mode unless your pooler tier allows more.
+ * Default **1** on Vercel (`VERCEL=1`) and when local dev uses the same Supabase session pooler
+ * as production: many lambdas × `pool.max` must stay under the pooler cap (~15) or Postgres returns
+ * `EMAXCONNSESSION` and `/admin` fails even with a correct `DATABASE_URL`.
+ *
+ * Set `PAYLOAD_POSTGRES_POOL_MAX=2` only if your Supabase session limit allows it; bulk delete may
+ * need 2 checkouts. We patch `@payloadcms/db-postgres` so the adapter’s init `pool.connect()` listener
+ * is released (see `patches/`).
  */
-function postgresPoolMax(): number {
+function postgresPoolMax(pgUrl?: string): number {
+  const shareSupabaseSessionCap =
+    isVercelPostgresPoolCap() ||
+    (process.env.NODE_ENV !== "production" &&
+      Boolean(pgUrl && isSupabasePostgresHost(pgUrl)));
+
   const raw = sanitizeEnvValue(process.env.PAYLOAD_POSTGRES_POOL_MAX);
   if (raw && /^\d+$/.test(raw)) {
     const n = Number.parseInt(raw, 10);
     if (n >= 1 && n <= 50) {
-      if (isVercelPostgresPoolCap() && n === 1) {
+      if (shareSupabaseSessionCap && n > 2) {
         console.warn(
-          "[payload] PAYLOAD_POSTGRES_POOL_MAX=1 can hang Payload admin deletes and other work that opens a transaction plus extra pool checkouts. Unset for default 2 on Vercel, or set 2.",
-        );
-      }
-      if (isVercelPostgresPoolCap() && n > 2) {
-        console.warn(
-          `[payload] PAYLOAD_POSTGRES_POOL_MAX=${n} on Vercel risks exhausting Supabase session pooler; clamping to 2. Unset or set ≤2.`,
+          `[payload] PAYLOAD_POSTGRES_POOL_MAX=${n} risks exhausting Supabase session pooler; clamping to 2. Unset or set ≤2.`,
         );
         return 2;
       }
       return n;
     }
   }
-  return isVercelPostgresPoolCap() ? 2 : 15;
+  return shareSupabaseSessionCap ? 1 : 15;
 }
 
 /** Shorter idle timeout on Vercel so pooler sessions are released sooner between requests. */
@@ -513,7 +513,7 @@ function dbAdapter() {
     return postgresAdapter({
       pool: {
         connectionString: pgUrl,
-        max: postgresPoolMax(),
+        max: postgresPoolMax(pgUrl),
         connectionTimeoutMillis: 60_000,
         idleTimeoutMillis: postgresPoolIdleTimeoutMillis(),
         ...(ssl ? { ssl } : {}),

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Set Vercel `DATABASE_URL` via the REST API (works when the dashboard
- * clears long / special-character connection strings).
+ * clears long / special-character connection strings). Uses upsert so existing
+ * env metadata (build/runtime scoping) is not wiped by delete+recreate.
  *
  * Prerequisites:
  *   1. Link the project **either** by:
@@ -93,40 +94,10 @@ function authHeaders(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
-async function listEnvVars(token, projectId, orgId) {
+async function upsertEnvVar(token, projectId, orgId, value, targets) {
   const q = new URLSearchParams();
   if (orgId) q.set("teamId", orgId);
-  const url = `${API}/v9/projects/${encodeURIComponent(projectId)}/env?${q}`;
-  const res = await fetch(url, { headers: authHeaders(token) });
-  const text = await res.text();
-  if (!res.ok) {
-    console.error(`List env failed HTTP ${res.status}: ${text}`);
-    process.exit(1);
-  }
-  const data = JSON.parse(text);
-  if (Array.isArray(data)) return data;
-  if (data?.envs && Array.isArray(data.envs)) return data.envs;
-  return [];
-}
-
-async function deleteEnvVar(token, projectId, orgId, id) {
-  const q = new URLSearchParams();
-  if (orgId) q.set("teamId", orgId);
-  const url = `${API}/v9/projects/${encodeURIComponent(projectId)}/env/${encodeURIComponent(id)}?${q}`;
-  const res = await fetch(url, {
-    method: "DELETE",
-    headers: authHeaders(token),
-  });
-  if (!res.ok && res.status !== 404) {
-    const text = await res.text();
-    console.error(`Delete env ${id} failed HTTP ${res.status}: ${text}`);
-    process.exit(1);
-  }
-}
-
-async function createEnvVar(token, projectId, orgId, value, targets) {
-  const q = new URLSearchParams();
-  if (orgId) q.set("teamId", orgId);
+  q.set("upsert", "true");
   const url = `${API}/v10/projects/${encodeURIComponent(projectId)}/env?${q}`;
   const body = {
     key: "DATABASE_URL",
@@ -144,7 +115,7 @@ async function createEnvVar(token, projectId, orgId, value, targets) {
   });
   const text = await res.text();
   if (!res.ok) {
-    console.error(`Create DATABASE_URL failed HTTP ${res.status}: ${text}`);
+    console.error(`Upsert DATABASE_URL failed HTTP ${res.status}: ${text}`);
     process.exit(1);
   }
   return JSON.parse(text);
@@ -179,15 +150,8 @@ Options:
   const { projectId, orgId } = loadProjectMeta();
   console.error(`Project ${projectId}${orgId ? ` (team ${orgId})` : ""}`);
 
-  const rows = await listEnvVars(token, projectId, orgId);
-  const toRemove = rows.filter((e) => e && e.key === "DATABASE_URL");
-  for (const e of toRemove) {
-    console.error(`Removing existing DATABASE_URL (${e.id})…`);
-    await deleteEnvVar(token, projectId, orgId, e.id);
-  }
-
-  console.error(`Creating DATABASE_URL for targets: ${args.targets.join(", ")}…`);
-  await createEnvVar(token, projectId, orgId, url, args.targets);
+  console.error(`Upserting DATABASE_URL for targets: ${args.targets.join(", ")}…`);
+  await upsertEnvVar(token, projectId, orgId, url, args.targets);
   console.error("Done. In Vercel: open Deployments → Redeploy Production (or push to main).");
 }
 
