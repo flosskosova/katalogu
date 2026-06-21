@@ -461,7 +461,13 @@ function postgresPoolMax(pgUrl?: string): number {
 
 /** Shorter idle timeout on Vercel so pooler sessions are released sooner between requests. */
 function postgresPoolIdleTimeoutMillis(): number {
-  return isVercelPostgresPoolCap() ? 10_000 : 30_000;
+  return isVercelPostgresPoolCap() ? 5_000 : 30_000;
+}
+
+function postgresPoolExtraOptions(): Record<string, unknown> {
+  if (!isVercelPostgresPoolCap()) return {};
+  /** Release pool slots quickly when a serverless invocation finishes. */
+  return { allowExitOnIdle: true };
 }
 
 /** Next sets this while `next build` is collecting static / route data in production mode. */
@@ -526,6 +532,7 @@ function dbAdapter() {
         max: postgresPoolMax(pgUrl),
         connectionTimeoutMillis: 60_000,
         idleTimeoutMillis: postgresPoolIdleTimeoutMillis(),
+        ...postgresPoolExtraOptions(),
         ...(ssl ? { ssl } : {}),
       },
       /**

@@ -54,15 +54,28 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true,
-      message: result.created
-        ? `Created catalog tool “${result.toolSlug}” in the selected category.`
-        : `Linked existing catalog tool “${result.toolSlug}” and updated its category.`,
+      message: result.alreadyAccepted
+        ? `Already accepted — catalog tool “${result.toolSlug}” is linked. Open it under Catalog → Tools.`
+        : result.created
+          ? `Created catalog tool “${result.toolSlug}” in the selected category.`
+          : `Linked existing catalog tool “${result.toolSlug}” and updated its category.`,
       ...result,
     });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Could not accept suggestion.";
-    const status = /sign in|editor|admin|forbidden/i.test(message) ? 403 : 400;
+    const poolExhausted =
+      /EMAXCONNSESSION|max clients reached|cannot connect to Postgres/i.test(message);
+    const status = /sign in|editor|admin|forbidden/i.test(message)
+      ? 403
+      : poolExhausted
+        ? 503
+        : 400;
     console.error("[accept-tool-suggestion]", message, e);
-    return jsonError(message, status);
+    return jsonError(
+      poolExhausted
+        ? "Database connection pool is full (Supabase session limit ~15). Wait a minute, stop local dev if it uses the same DATABASE_URL, then retry — or use Repair link only if the catalog tool is missing."
+        : message,
+      status,
+    );
   }
 }
