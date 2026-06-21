@@ -26,7 +26,8 @@
     "check:pg-rls:fix": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/check-pg-rls.ts --fix",
     "check:pg-rls:sql": "type .\\scripts\\sql\\payload-postgres-hardening.sql",
     "vercel:push-database-url": "node ./scripts/push-vercel-database-url.mjs",
-    "test:pg": "node ./scripts/test-postgres-connection.mjs"
+    "test:pg": "node ./scripts/test-postgres-connection.mjs",
+    "postgres:sql:catalog-tool-link": "node ./scripts/apply-postgres-sql-file.mjs scripts/sql/add-tool-suggestions-catalog-tool-id.sql"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

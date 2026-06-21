@@ -4,8 +4,9 @@ import {
   createCatalogToolFromSuggestion,
   type ToolSuggestionLike,
 } from "./createCatalogToolFromSuggestion";
+import { ACCEPT_SUGGESTION_CONTEXT } from "./constants";
 
-export const ACCEPT_SUGGESTION_CONTEXT = "fromSuggestionAccept";
+export { ACCEPT_SUGGESTION_CONTEXT } from "./constants";
 
 export type AcceptToolSuggestionResult = {
   suggestionId: string | number;

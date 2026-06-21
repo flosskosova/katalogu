@@ -1,7 +1,7 @@
 import type { PayloadRequest } from "payload";
 import { normalizeToCatalogToolSlug } from "../../lib/catalog-tool-slug";
 import { slugify } from "../../lib/utils";
-import { ACCEPT_SUGGESTION_CONTEXT } from "./acceptToolSuggestion";
+import { ACCEPT_SUGGESTION_CONTEXT } from "./constants";
 import { toolSeoPatchFromStatic } from "../seo-defaults";
 
 export type ToolSuggestionLike = {

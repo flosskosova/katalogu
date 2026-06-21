@@ -5,7 +5,7 @@ import {
   editorAndAdminAccess,
   isStaffAdmin,
 } from "../access";
-import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/acceptToolSuggestion";
+import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/constants";
 import { applyToolSeoDefaults } from "../seo-defaults";
 
 function assertValidUrl(label: string, value: unknown) {

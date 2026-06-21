@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { editorAndAdminAccess } from "../access";
-import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/acceptToolSuggestion";
+import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/constants";
 import { createCatalogToolFromSuggestion } from "../tool-suggestions/createCatalogToolFromSuggestion";
 
 function relationshipHasId(val: unknown): boolean {
