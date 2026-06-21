@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { editorAndAdminAccess } from "../access";
+import { ensureToolSuggestionsCatalogToolColumn } from "../db/ensureToolSuggestionsCatalogToolColumn";
 import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/constants";
 import { createCatalogToolFromSuggestion } from "../tool-suggestions/createCatalogToolFromSuggestion";
 
@@ -53,6 +54,13 @@ export const ToolSuggestions: CollectionConfig = {
     delete: editorAndAdminAccess,
   },
   hooks: {
+    beforeOperation: [
+      async ({ operation }) => {
+        if (operation === "read" || operation === "update" || operation === "create") {
+          await ensureToolSuggestionsCatalogToolColumn();
+        }
+      },
+    ],
     beforeChange: [
       async ({ data, originalDoc, req }) => {
         const next = data?.status as string | undefined;

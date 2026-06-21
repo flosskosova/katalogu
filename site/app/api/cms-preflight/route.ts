@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
+import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
+
 export const dynamic = "force-dynamic";
 
 function trimmed(s: string | null | undefined): string {
@@ -205,6 +207,28 @@ export async function GET(req: NextRequest) {
   const secretLen = trimmed(process.env.PAYLOAD_SECRET).length;
 
   const wantProbe = /^(1|true|yes)$/i.test(trimmed(req.nextUrl.searchParams.get("probe")));
+  const wantFixSuggestionSchema = /^(1|true|yes)$/i.test(
+    trimmed(req.nextUrl.searchParams.get("fixSuggestionSchema")),
+  );
+
+  let suggestionSchemaFix: { ok: true } | { ok: false; error: string } | { skipped: string } = {
+    skipped: "pass fixSuggestionSchema=1 on Postgres to add tool_suggestions.catalog_tool_id",
+  };
+  if (wantFixSuggestionSchema) {
+    if (postgresLike) {
+      try {
+        await ensureToolSuggestionsCatalogToolColumn(databaseUrl);
+        suggestionSchemaFix = { ok: true };
+      } catch (e) {
+        suggestionSchemaFix = {
+          ok: false,
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
+    } else {
+      suggestionSchemaFix = { skipped: "Postgres DATABASE_URL required." };
+    }
+  }
 
   const serverUrl = diagPayloadServerOrigin();
   const blobNote = blobTokenWarning();
@@ -247,6 +271,7 @@ export async function GET(req: NextRequest) {
     VERCEL_ENV: process.env.VERCEL_ENV ?? null,
     NODE_ENV: process.env.NODE_ENV ?? null,
     postgresProbe,
+    suggestionSchemaFix,
     nextSteps:
       !postgresLike && !tursoSet && !libsqlOnDatabaseUrl
         ? "This deployment has no postgres:// DATABASE_URL and no TURSO_DATABASE_URL — /admin cannot connect. Set DATABASE_URL for Production + Runtime (not Build-only), redeploy, then run test:pg locally with the same URI."

@@ -3,6 +3,7 @@ import { createPayloadRequest } from "payload";
 
 import config from "@payload-config";
 import { getPayloadClient } from "@/lib/payload";
+import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
 import { acceptToolSuggestion } from "@/payload/tool-suggestions/acceptToolSuggestion";
 
 export const runtime = "nodejs";
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    await ensureToolSuggestionsCatalogToolColumn();
     const payload = await getPayloadClient();
     const payloadReq = await createPayloadRequest({
       request: req,
