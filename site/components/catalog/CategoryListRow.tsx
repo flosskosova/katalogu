@@ -36,10 +36,10 @@ export function CategoryListRow({
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-nowrap items-baseline gap-x-2">
+        <div className="flex min-w-0 flex-nowrap items-end gap-x-2">
           <h2
             className={cn(
-              "overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]",
+              "inline-flex items-end overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold leading-none text-[var(--foreground)]",
               cols?.titleColPx ? "shrink-0" : "min-w-0 flex-1",
             )}
             style={
@@ -73,7 +73,7 @@ export function CategoryListRow({
             <span
               className={cn(
                 flosskHighlight,
-                "inline-flex shrink-0 items-center px-2 py-0.5 text-xs",
+                "inline-flex shrink-0 items-center px-2 py-px text-xs leading-none",
               )}
             >
               {count} tool{count === 1 ? "" : "s"}
