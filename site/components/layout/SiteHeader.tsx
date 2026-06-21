@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { Button } from "@/components/ui/Button";
 import { SITE } from "@/lib/seo/site";
+import { cn } from "@/lib/utils";
 
 const nav = [
   { href: "/browse", label: "Browse" },
@@ -73,7 +74,11 @@ export function SiteHeader() {
           <Button
             href="/suggest"
             variant="secondary"
-            className="!hidden !px-3 !py-2 text-xs sm:!inline-flex sm:!px-4 sm:text-sm"
+            className={cn(
+              "!hidden !px-3 !py-2 text-xs sm:!inline-flex sm:!px-4 sm:text-sm",
+              "hover:!border-transparent hover:!bg-[#fff200]/95 hover:!text-[var(--foreground)] dark:hover:!bg-[#fff200]/35 dark:hover:!text-[var(--foreground-muted)]",
+              "transition-[background-color,opacity,border-color]",
+            )}
             onClick={closeMenu}
           >
             Suggest FOSS
