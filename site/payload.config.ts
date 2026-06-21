@@ -8,7 +8,9 @@ import sharp from "sharp";
 import { buildConfig } from "payload";
 
 import { SITE } from "@/lib/seo/site";
+import { ensureToolSuggestionsCatalogToolColumn } from "@/payload/db/ensureToolSuggestionsCatalogToolColumn";
 import { migrations } from "./migrations";
+import { postgresProdMigrations } from "./migrations/postgres-prod";
 import {
   formatSmtpFromAddress,
   resolveSmtpSettings,
@@ -528,6 +530,11 @@ function dbAdapter() {
         ...(ssl ? { ssl } : {}),
       },
       /**
+       * Production: run idempotent SQL patches (e.g. tool_suggestions.catalog_tool_id) on cold start.
+       * Full SQLite-style initial migrations are not included — live DBs already exist via prior push.
+       */
+      prodMigrations: postgresProdMigrations as unknown as never,
+      /**
        * For a fresh Postgres DB in local/dev, schema push is convenient.
        *
        * In production, disable it by default so normal requests (like the public suggest form)
@@ -621,4 +628,7 @@ export default buildConfig({
    * https://payloadcms.com/docs/upload/storage-adapters
    */
   plugins: payloadPlugins(),
+  onInit: async () => {
+    await ensureToolSuggestionsCatalogToolColumn();
+  },
 });
