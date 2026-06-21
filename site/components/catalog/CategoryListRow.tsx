@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useListRowColumns } from "@/components/catalog/ListRowColumnMeasure";
 import { flosskHighlight } from "@/lib/ui/flossk-highlight";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ export function CategoryListRow({
   category: Category;
   count: number;
 }) {
+  const cols = useListRowColumns();
   return (
     <Link
       href={`/categories/${category.slug}`}
@@ -34,8 +36,22 @@ export function CategoryListRow({
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-x-2.5 overflow-hidden">
-          <h2 className="min-w-0 shrink overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]">
+        <div className="flex min-w-0 flex-nowrap items-baseline gap-x-2">
+          <h2
+            className={cn(
+              "overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold text-[var(--foreground)]",
+              cols?.titleColPx ? "shrink-0" : "min-w-0 flex-1",
+            )}
+            style={
+              cols?.titleColPx
+                ? {
+                    width: cols.titleColPx,
+                    minWidth: cols.titleColPx,
+                    maxWidth: cols.titleColPx,
+                  }
+                : undefined
+            }
+          >
             <span
               className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)] dark:group-hover:bg-[#fff200]/35 dark:group-hover:text-[var(--foreground-muted)]"
               title={category.name}
@@ -43,14 +59,26 @@ export function CategoryListRow({
               {category.name}
             </span>
           </h2>
-          <span
-            className={cn(
-              flosskHighlight,
-              "inline-flex shrink-0 items-center px-2 py-0.5 text-xs",
-            )}
+          <div
+            className="flex shrink-0 justify-end"
+            style={
+              cols?.badgeColPx
+                ? {
+                    width: cols.badgeColPx,
+                    minWidth: cols.badgeColPx,
+                  }
+                : undefined
+            }
           >
-            {count} tool{count === 1 ? "" : "s"}
-          </span>
+            <span
+              className={cn(
+                flosskHighlight,
+                "inline-flex shrink-0 items-center px-2 py-0.5 text-xs",
+              )}
+            >
+              {count} tool{count === 1 ? "" : "s"}
+            </span>
+          </div>
         </div>
         <p className="mt-0.5 line-clamp-1 text-sm text-[var(--foreground-muted)]">
           {category.summary}
