@@ -148,6 +148,10 @@ async function main() {
     Object.entries(manifest).sort(([a], [b]) => a.localeCompare(b)),
   );
   await writeFile(MANIFEST_PATH, `${JSON.stringify(sorted, null, 2)}\n`);
+  await writeFile(
+    path.join(OUT_DIR, "manifest.json"),
+    `${JSON.stringify(sorted, null, 2)}\n`,
+  );
   console.log(`Wrote ${ok} logos to public/tool-logos/`);
   console.log(`Manifest: ${MANIFEST_PATH}`);
   if (miss > 0) {
