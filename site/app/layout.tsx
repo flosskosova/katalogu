@@ -40,6 +40,14 @@ const metadataBaseResolved = safeMetadataBase();
 export const metadata: Metadata = {
   ...(metadataBaseResolved ? { metadataBase: metadataBaseResolved } : {}),
   applicationName: SITE.name,
+  icons: {
+    icon: [
+      { url: "/black.svg", type: "image/svg+xml" },
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: "/black.svg",
+    apple: "/apple-icon.png",
+  },
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
     template: `%s · ${SITE.name}`,
@@ -93,7 +101,7 @@ export const metadata: Metadata = {
   },
   ...(verification ? { verification } : {}),
   /**
-   * Favicon + Apple touch: `app/icon.png` and `app/apple-icon.png`. Header/footer
+   * Favicon + Apple touch: `app/icon.svg` and `app/apple-icon.png`. Header/footer
    * use `public/black.svg` via `SITE_LOGO_PATH`. Next injects icon links automatically.
    */
 };

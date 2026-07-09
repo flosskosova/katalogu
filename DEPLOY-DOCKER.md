@@ -89,6 +89,28 @@ docker compose --profile https up -d
 
 7. **Cut over DNS** from Vercel to the VPS when ready. Keep Vercel/Supabase running until you verify `/admin`, browse, and suggest-tool.
 
+8. **Weekly backups** — install the backup cron after the site is live:
+
+```bash
+chmod +x scripts/vps-backup.sh
+mkdir -p /var/backups/katalogu
+crontab -e
+```
+
+Add:
+
+```cron
+0 3 * * 0 cd /path/to/katalogizimi && BACKUP_DIR=/var/backups/katalogu BACKUP_RETENTION_DAYS=31 ./scripts/vps-backup.sh >> /var/log/katalogu-backup.log 2>&1
+```
+
+This creates:
+
+- Postgres dumps in `/var/backups/katalogu/db`
+- media archives in `/var/backups/katalogu/media`
+- `.env` snapshots in `/var/backups/katalogu/env`
+
+and automatically deletes files older than 31 days.
+
 ### Media (logos / screenshots)
 
 Production on Vercel uses **Vercel Blob**; the Supabase dump has **0 local media rows** today — tool logos mostly come from static URLs and official sites. New uploads on the VPS land in the `media_data` volume at `/app/media`.
@@ -180,7 +202,28 @@ docker compose up -d --build
 
 Media uploads and Postgres data live in Docker volumes (`media_data`, `postgres_data`) and survive rebuilds.
 
-## 6. Useful commands
+## 6. Automatic backups
+
+Run the backup script manually:
+
+```bash
+chmod +x scripts/vps-backup.sh
+BACKUP_DIR=/var/backups/katalogu BACKUP_RETENTION_DAYS=31 ./scripts/vps-backup.sh
+```
+
+Suggested weekly cron (Sundays at 03:00 UTC):
+
+```cron
+0 3 * * 0 cd /path/to/katalogizimi && BACKUP_DIR=/var/backups/katalogu BACKUP_RETENTION_DAYS=31 ./scripts/vps-backup.sh >> /var/log/katalogu-backup.log 2>&1
+```
+
+Restore flow:
+
+1. Use the newest `postgres-*.dump` with `./scripts/vps-import-database.sh`.
+2. Extract the matching `media-*.tgz` into the `media_data` volume or `/app/media`.
+3. Restore the matching `.env` snapshot if needed.
+
+## 7. Useful commands
 
 ```bash
 docker compose logs -f app          # app logs

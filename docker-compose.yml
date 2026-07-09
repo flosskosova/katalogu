@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-opencatalog}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
@@ -22,6 +22,7 @@ services:
     build:
       context: ./site
       dockerfile: Dockerfile
+      target: runner
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-opencatalog}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opencatalog}
@@ -31,6 +32,7 @@ services:
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-${NEXT_PUBLIC_SITE_URL}}
       PAYLOAD_SERVER_URL: ${PAYLOAD_SERVER_URL:-${NEXT_PUBLIC_SITE_URL}}
       PAYLOAD_POSTGRES_PUSH: ${PAYLOAD_POSTGRES_PUSH:-false}
+      PAYLOAD_SKIP_MIGRATION_PROMPT: ${PAYLOAD_SKIP_MIGRATION_PROMPT:-true}
       PAYLOAD_POSTGRES_POOL_MAX: ${PAYLOAD_POSTGRES_POOL_MAX:-10}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
@@ -101,7 +103,7 @@ services:
 
   import-db:
     profiles: ["tools"]
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       PGHOST: db
       PGPORT: 5432
