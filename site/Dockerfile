@@ -28,6 +28,7 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 ENV PAYLOAD_SERVER_URL=${PAYLOAD_SERVER_URL}
 ENV NEXT_PUBLIC_CF_BEACON_TOKEN=${NEXT_PUBLIC_CF_BEACON_TOKEN}
+ENV NODE_OPTIONS=--max-old-space-size=2048
 RUN test -f public/tool-logos/debian.png \
   && test "$(find public/tool-logos -type f | wc -l)" -gt 500
 RUN npm run build \
