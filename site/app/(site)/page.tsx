@@ -13,7 +13,7 @@ import {
 import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 import { buildHomeFaqJsonLd, HOME_FAQ_ITEMS } from "@/lib/seo/structured-data";
-import { flosskHighlightLabel, flosskTextLink } from "@/lib/ui/flossk-highlight";
+import { flosskHighlightLabel, flosskHighlightSoft, flosskTextLink } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -95,7 +95,7 @@ export default async function HomePage() {
             <span className="font-[family-name:var(--font-brand)] text-2xl font-semibold tabular-nums tracking-tight">
               {toolCount.toLocaleString("en-US")}
             </span>
-            <span className="text-[var(--foreground-muted)] transition-colors group-hover:text-[var(--foreground)] dark:group-hover:text-[var(--foreground-muted)]">
+            <span className="text-[var(--foreground-muted)] transition-colors group-hover:text-[var(--foreground)]">
               open source apps and tools
             </span>
           </Link>
@@ -121,10 +121,7 @@ export default async function HomePage() {
               and usefulness.
             </p>
           </div>
-          <Link
-            href="/browse"
-            className="text-sm font-medium text-black underline-offset-2 visited:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:text-white dark:visited:text-white"
-          >
+          <Link href="/browse" className={cn(flosskTextLink, "text-sm underline-offset-2 hover:underline")}>
             Full browse →
           </Link>
         </div>
@@ -151,13 +148,11 @@ export default async function HomePage() {
                   href={`/collections/${list.slug}`}
                   className="group block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
                 >
-                  <p className="inline-flex rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-[#14120f]">
-                    Collection
-                  </p>
+                  <p className={flosskHighlightSoft}>Collection</p>
                   <p
                     className={cn(
                       flosskTextLink,
-                      "mt-2 inline font-[family-name:var(--font-brand)] text-lg transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]",
+                      "mt-2 inline font-[family-name:var(--font-brand)] text-lg",
                     )}
                   >
                     {list.name}
@@ -167,7 +162,7 @@ export default async function HomePage() {
                       {list.description}
                     </p>
                   ) : null}
-                  <p className="mt-4 text-sm font-medium text-black transition-colors group-hover:text-[#14120f] dark:text-white dark:group-hover:text-neutral-950">
+                  <p className="mt-4 text-sm font-medium text-[var(--foreground)] transition-colors group-hover:text-[var(--accent-fg)]">
                     View list →
                   </p>
                 </Link>

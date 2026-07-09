@@ -28,7 +28,7 @@ export function CategoryCard({
         <span
           className={cn(
             flosskTextLink,
-            "inline-block max-w-full truncate align-baseline transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)]",
+            "inline-block max-w-full truncate align-baseline",
           )}
           title={category.name}
         >

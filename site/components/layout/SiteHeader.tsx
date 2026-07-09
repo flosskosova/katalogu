@@ -7,7 +7,7 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { Button } from "@/components/ui/Button";
 import { SITE } from "@/lib/seo/site";
-import { flosskHighlightLabel } from "@/lib/ui/flossk-highlight";
+import { flosskHoverSurface, flosskHighlightLabel } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -18,8 +18,11 @@ const nav = [
   { href: "/suggest", label: "Suggest FOSS" },
 ];
 
-const linkClass =
-  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
+const linkClass = cn(
+  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] md:py-2",
+  flosskHoverSurface,
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]",
+);
 
 export function SiteHeader() {
   const [menuOpenPath, setMenuOpenPath] = useState<string | null>(null);
@@ -83,7 +86,8 @@ export function SiteHeader() {
             variant="secondary"
             className={cn(
               "!hidden !px-3 !py-2 text-xs sm:!inline-flex sm:!px-4 sm:text-sm",
-              "hover:!border-transparent hover:!bg-[#fff200]/95 hover:!text-[var(--foreground)]",
+              flosskHoverSurface,
+              "hover:!border-transparent",
               "transition-[background-color,opacity,border-color]",
             )}
             onClick={closeMenu}
