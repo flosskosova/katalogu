@@ -58,13 +58,25 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
                 {tool.name}
               </Link>
             </h3>
-            <Badge
-              tone="accent"
-              className="shrink-0"
-              href={`/categories/${tool.category.slug}`}
+            <div
+              className="flex shrink-0 justify-end"
+              style={
+                cols?.badgeColPx
+                  ? {
+                      width: cols.badgeColPx,
+                      minWidth: cols.badgeColPx,
+                    }
+                  : undefined
+              }
             >
-              {tool.category.name}
-            </Badge>
+              <Badge
+                tone="accent"
+                className="shrink-0"
+                href={`/categories/${tool.category.slug}`}
+              >
+                {tool.category.name}
+              </Badge>
+            </div>
           </div>
           <p className="mt-0.5 line-clamp-1 text-sm text-[var(--foreground-muted)]">
             {tool.summary}
