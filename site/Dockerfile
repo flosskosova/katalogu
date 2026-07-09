@@ -20,15 +20,18 @@ ARG PAYLOAD_SERVER_URL
 ARG NEXT_PUBLIC_CF_BEACON_TOKEN
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Explicit copy so logo assets always invalidate the build layer when they change.
+COPY public/tool-logos ./public/tool-logos
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 ENV PAYLOAD_SERVER_URL=${PAYLOAD_SERVER_URL}
 ENV NEXT_PUBLIC_CF_BEACON_TOKEN=${NEXT_PUBLIC_CF_BEACON_TOKEN}
-# Logos are committed under public/tool-logos/ (included via COPY above).
-RUN test "$(find public/tool-logos -type f | wc -l)" -gt 500
-RUN npm run build
+RUN test -f public/tool-logos/debian.png \
+  && test "$(find public/tool-logos -type f | wc -l)" -gt 500
+RUN npm run build \
+  && cp -r public .next/standalone/public
 
 FROM base AS runner
 WORKDIR /app
@@ -44,8 +47,9 @@ RUN groupadd --system --gid 1001 nodejs \
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public/tool-logos ./public/tool-logos
 RUN test -f ./public/tool-logos/debian.png \
+  && test "$(find public/tool-logos -type f | wc -l)" -gt 500 \
   || (echo "ERROR: tool logos missing from production image" >&2 && exit 1)
 COPY --from=builder /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY --from=builder /app/scripts/docker-wait-postgres.mjs /app/scripts/docker-wait-postgres.mjs
