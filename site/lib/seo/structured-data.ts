@@ -11,6 +11,23 @@ import {
 
 type JsonObject = Record<string, unknown>;
 
+export const HOME_FAQ_ITEMS = [
+  {
+    question: `What is ${SITE.name}?`,
+    answer:
+      `${SITE.name} is an editorial catalog of free and open source software (FOSS), co-authored by FLOSSK, @samikciku, and AI. It highlights actively maintained tools with clear documentation and practical adoption—not a complete directory of every OSS project.`,
+  },
+  {
+    question: "How are tools selected for the catalog?",
+    answer:
+      "Entries are curated using editorial criteria: open license, evidence of maintenance, documentation quality, and real-world usefulness. Each listing explains why the tool is included, with strengths and limitations.",
+  },
+  {
+    question: "Can I compare open source tools on the site?",
+    answer: `Yes. Use Compare from browse or tool pages to see license, maturity, platforms, and editorial fields side by side on ${absoluteUrl("/compare")}.`,
+  },
+] as const;
+
 export function buildOrganizationJsonLd(): JsonObject {
   const sameAs = parseSameAsUrls();
   return {
@@ -231,31 +248,13 @@ export function buildHomeFaqJsonLd(): JsonObject {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: `What is ${SITE.name}?`,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `${SITE.name} is an editorial catalog of free and open source software (FOSS), co-authored by FLOSSK, @samikciku, and AI. It highlights actively maintained tools with clear documentation and practical adoption—not a complete directory of every OSS project.`,
-        },
+    mainEntity: HOME_FAQ_ITEMS.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
       },
-      {
-        "@type": "Question",
-        name: "How are tools selected for the catalog?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Entries are curated using editorial criteria: open license, evidence of maintenance, documentation quality, and real-world usefulness. Each listing explains why the tool is included, with strengths and limitations.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I compare open source tools on the site?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: `Yes. Use Compare from browse or tool pages to see license, maturity, platforms, and editorial fields side by side on ${absoluteUrl("/compare")}.`,
-        },
-      },
-    ],
+    })),
   };
 }

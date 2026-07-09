@@ -20,6 +20,9 @@ export function SiteFooter() {
               <Link className={flosskTextLink} href="/browse">
                 Browse &amp; filter
               </Link>
+              <Link className={flosskTextLink} href="/about">
+                About
+              </Link>
               <Link className={flosskTextLink} href="/categories">
                 Categories
               </Link>

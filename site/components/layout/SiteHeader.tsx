@@ -10,6 +10,7 @@ import { SITE } from "@/lib/seo/site";
 import { cn } from "@/lib/utils";
 
 const nav = [
+  { href: "/about", label: "About" },
   { href: "/browse", label: "Browse" },
   { href: "/categories", label: "Categories" },
   { href: "/compare", label: "Compare" },

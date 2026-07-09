@@ -12,7 +12,7 @@ import {
 } from "@/lib/catalog";
 import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
-import { buildHomeFaqJsonLd } from "@/lib/seo/structured-data";
+import { buildHomeFaqJsonLd, HOME_FAQ_ITEMS } from "@/lib/seo/structured-data";
 import { flosskTextLink } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
@@ -182,6 +182,42 @@ export default async function HomePage() {
             All categories
           </Button>
         </p>
+      </section>
+
+      <section className="border-t border-[var(--border)] py-14">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-[family-name:var(--font-brand)] text-2xl font-semibold text-[var(--foreground)]">
+              Frequently asked questions
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-[var(--foreground-muted)]">
+              How the catalog works, how entries are selected, and how to use the
+              editorial comparisons responsibly.
+            </p>
+          </div>
+          <Button href="/about" variant="secondary">
+            About the catalog
+          </Button>
+        </div>
+        <div className="mt-8 space-y-4">
+          {HOME_FAQ_ITEMS.map((item) => (
+            <section
+              key={item.question}
+              className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm"
+              aria-labelledby={item.question}
+            >
+              <h3
+                id={item.question}
+                className="font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)]"
+              >
+                {item.question}
+              </h3>
+              <p className="mt-3 max-w-3xl leading-relaxed text-[var(--foreground-muted)]">
+                {item.answer}
+              </p>
+            </section>
+          ))}
+        </div>
       </section>
     </>
   );
