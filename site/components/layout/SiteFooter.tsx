@@ -3,7 +3,6 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { flosskTextLink } from "@/lib/ui/flossk-highlight";
 import {
   SITE,
-  SITE_ATTRIBUTION_LINE,
   SITE_SOURCE_LICENSE_LABEL,
   SITE_SOURCE_LICENSE_URL,
 } from "@/lib/seo/site";
@@ -40,7 +39,16 @@ export function SiteFooter() {
                 {SITE.name}
               </p>
               <p className="mt-1 font-[family-name:var(--font-sans)] text-xs font-normal leading-snug text-[var(--foreground-muted)]">
-                {SITE_ATTRIBUTION_LINE}
+                A work of co-authorship by{" "}
+                <a
+                  className="underline decoration-[var(--border)] underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:decoration-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                  href="https://www.linkedin.com/in/samikciku"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  @samikciku
+                </a>{" "}
+                &amp; AI, powered by FLOSSK
               </p>
               <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
                 A curated, editorial catalog of trustworthy Free and Open Source
