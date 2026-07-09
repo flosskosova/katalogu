@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { ToolLogo } from "@/components/catalog/ToolLogo";
 import { useListRowColumns } from "@/components/catalog/ListRowColumnMeasure";
 import { useCompare } from "@/components/catalog/CompareProvider";
 import { Badge } from "@/components/ui/Badge";
 import type { ToolWithCategory } from "@/lib/types";
+import { flosskTextLink } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 const rankLabel: Record<string, string> = {
@@ -22,37 +24,24 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
   return (
     <article className="group flex flex-col gap-3 px-4 py-3 transition-colors hover:bg-[var(--muted)]/40 sm:flex-row sm:items-center sm:gap-4 sm:py-3.5">
       <div className="flex min-w-0 flex-1 items-start gap-3 sm:items-center">
-        <span
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--muted)] text-[var(--foreground-muted)] sm:mt-0"
-          aria-hidden
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-            <polyline points="14 2 14 8 20 8" />
-          </svg>
-        </span>
+        <ToolLogo
+          name={tool.name}
+          slug={tool.slug}
+          logoUrl={tool.logoUrl}
+          size="list"
+          className="mt-0.5 sm:mt-0"
+        />
         <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-nowrap items-center gap-x-2">
+          <div className="flex min-w-0 items-center gap-x-2">
             <h3
               className={cn(
-                "overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]",
-                cols?.titleColPx ? "shrink-0" : "min-w-0 flex-1",
+                "min-w-0 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold tracking-tight text-[var(--foreground)]",
+                cols?.titleColPx ? "shrink" : "min-w-0 flex-1",
               )}
               style={
                 cols?.titleColPx
                   ? {
                       width: cols.titleColPx,
-                      minWidth: cols.titleColPx,
                       maxWidth: cols.titleColPx,
                     }
                   : undefined
@@ -60,31 +49,22 @@ export function ToolListRow({ tool }: { tool: ToolWithCategory }) {
             >
               <Link
                 href={`/tools/${tool.slug}`}
-                className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline outline-none transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)]"
+                className={cn(
+                  flosskTextLink,
+                  "block w-full max-w-full truncate outline-none",
+                )}
                 title={tool.name}
               >
                 {tool.name}
               </Link>
             </h3>
-            <div
-              className="flex shrink-0 justify-end"
-              style={
-                cols?.badgeColPx
-                  ? {
-                      width: cols.badgeColPx,
-                      minWidth: cols.badgeColPx,
-                    }
-                  : undefined
-              }
+            <Badge
+              tone="accent"
+              className="shrink-0"
+              href={`/categories/${tool.category.slug}`}
             >
-              <Badge
-                tone="accent"
-                className="shrink-0"
-                href={`/categories/${tool.category.slug}`}
-              >
-                {tool.category.name}
-              </Badge>
-            </div>
+              {tool.category.name}
+            </Badge>
           </div>
           <p className="mt-0.5 line-clamp-1 text-sm text-[var(--foreground-muted)]">
             {tool.summary}

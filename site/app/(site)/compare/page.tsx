@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { getToolBySlug, withCategory } from "@/lib/catalog";
 import { maintenanceLabel, maturityLabel } from "@/lib/format";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
+import { flosskTextLink } from "@/lib/ui/flossk-highlight";
+import { cn } from "@/lib/utils";
 
 const compareDesc =
   "Side-by-side comparison of curated open source tools: license, maturity, maintenance, platforms, strengths, limitations, and editorial notes. Verify licenses on official sites before compliance decisions.";
@@ -121,7 +123,10 @@ export default async function ComparePage({ searchParams }: Props) {
                 >
                   <Link
                     href={`/tools/${t.slug}`}
-                    className="font-[family-name:var(--font-brand)] text-[var(--accent)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
+                    className={cn(
+                      flosskTextLink,
+                      "inline-block font-[family-name:var(--font-brand)]",
+                    )}
                   >
                     {t.name}
                   </Link>

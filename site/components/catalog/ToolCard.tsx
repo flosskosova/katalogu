@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { ToolLogo } from "@/components/catalog/ToolLogo";
 import { useCompare } from "@/components/catalog/CompareProvider";
 import { Badge } from "@/components/ui/Badge";
 import type { ToolWithCategory } from "@/lib/types";
+import { flosskTextLink } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 const rankLabel: Record<string, string> = {
@@ -31,7 +33,15 @@ export function ToolCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 pr-2">
+        <div className="flex min-w-0 flex-1 gap-3 pr-2">
+          <ToolLogo
+            name={tool.name}
+            slug={tool.slug}
+            logoUrl={tool.logoUrl}
+            size="card"
+            className="mt-0.5"
+          />
+          <div className="min-w-0 flex-1">
           <Badge
             tone="accent"
             className="mb-2"
@@ -42,12 +52,16 @@ export function ToolCard({
           <h3 className="min-w-0 overflow-hidden font-[family-name:var(--font-brand)] text-xl font-semibold tracking-tight text-[var(--foreground)]">
             <Link
               href={`/tools/${tool.slug}`}
-              className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline outline-none transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)]"
+              className={cn(
+                flosskTextLink,
+                "inline-block max-w-full truncate align-baseline outline-none",
+              )}
               title={tool.name}
             >
               {tool.name}
             </Link>
           </h3>
+          </div>
         </div>
         <span className="shrink-0 text-xs font-medium uppercase tracking-wider text-[var(--foreground-subtle)]">
           {rankLabel[tool.rank] ?? tool.rank}

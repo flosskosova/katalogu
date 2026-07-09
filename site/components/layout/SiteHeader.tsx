@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 import { ViewModeToggle } from "@/components/catalog/ViewModeToggle";
 import { Button } from "@/components/ui/Button";
 import { SITE } from "@/lib/seo/site";
+import { flosskHighlightLabel } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -52,7 +53,12 @@ export function SiteHeader() {
             <span className="truncate font-[family-name:var(--font-brand)] text-lg font-semibold tracking-tight sm:text-xl">
               {SITE.name}
             </span>
-            <span className="mt-0.5 inline-block w-fit rounded-sm bg-[#fff200]/95 px-0.5 py-px font-[family-name:var(--font-brand)] text-[0.625rem] font-medium tracking-wide text-[var(--foreground)] [box-decoration-break:clone] dark:bg-[#fff200]/35 dark:text-[var(--foreground-muted)] sm:text-[0.6875rem]">
+            <span
+              className={cn(
+                flosskHighlightLabel,
+                "mt-0.5 text-[0.625rem] font-medium sm:text-[0.6875rem]",
+              )}
+            >
               curated by FLOSSK
             </span>
           </span>

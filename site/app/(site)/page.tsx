@@ -13,7 +13,7 @@ import {
 import { ensureRequestRender } from "@/lib/ensure-request-render";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
 import { buildHomeFaqJsonLd, HOME_FAQ_ITEMS } from "@/lib/seo/structured-data";
-import { flosskTextLink } from "@/lib/ui/flossk-highlight";
+import { flosskHighlightLabel, flosskTextLink } from "@/lib/ui/flossk-highlight";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -67,7 +67,12 @@ export default async function HomePage() {
     <>
       <JsonLd data={buildHomeFaqJsonLd()} />
       <section className="border-b border-[var(--border)] pb-14">
-        <p className="inline-block w-fit rounded-sm bg-[#fff200]/95 px-0.5 py-px font-[family-name:var(--font-brand)] text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] [box-decoration-break:clone] dark:bg-[#fff200]/35 dark:text-[var(--foreground-muted)] sm:text-[0.6875rem]">
+        <p
+          className={cn(
+            flosskHighlightLabel,
+            "text-xs uppercase tracking-[0.2em] sm:text-[0.6875rem]",
+          )}
+        >
           Editorial catalog
         </p>
         <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-brand)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
@@ -146,10 +151,15 @@ export default async function HomePage() {
                   href={`/collections/${list.slug}`}
                   className="group block rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm transition-shadow hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ring)]"
                 >
-                  <p className="inline-flex rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-[#14120f]">
+                  <p className="inline-flex rounded-md border border-[#fff200]/55 bg-[#fff200]/50 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-[#14120f]">
                     Collection
                   </p>
-                  <p className="mt-2 inline font-[family-name:var(--font-brand)] text-lg font-semibold text-[var(--foreground)] rounded px-0.5 py-px transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]">
+                  <p
+                    className={cn(
+                      flosskTextLink,
+                      "mt-2 inline font-[family-name:var(--font-brand)] text-lg transition-colors group-hover:bg-[#fff200]/50 group-hover:text-[#14120f]",
+                    )}
+                  >
                     {list.name}
                   </p>
                   {list.description ? (
