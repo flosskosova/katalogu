@@ -94,7 +94,10 @@ export function buildSoftwareApplicationJsonLd(
     breadcrumb: breadcrumbListValue([
       { name: "Home", path: "/" },
       { name: "Browse", path: "/browse" },
-      { name: category.name, path: `/categories/${category.slug}` },
+      {
+        name: category.name,
+        path: `/categories/${category.canonicalSlug?.trim() || category.slug}`,
+      },
       {
         name: tool.name,
         path: `/tools/${tool.canonicalSlug?.trim() || tool.slug}`,
@@ -128,7 +131,6 @@ export function buildSoftwareApplicationJsonLd(
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
         },
-        publisher: { "@id": orgId() },
         mainEntityOfPage: { "@id": `${pageUrl}#webpage` },
       },
       webPage,
@@ -138,7 +140,7 @@ export function buildSoftwareApplicationJsonLd(
 
 export function buildCollectionPageJsonLd(
   cat: Category,
-  tools: Pick<Tool, "slug" | "name">[],
+  tools: Pick<Tool, "slug" | "name" | "canonicalSlug">[],
 ): JsonObject {
   const pageUrl = absoluteUrl(
     `/categories/${cat.canonicalSlug?.trim() || cat.slug}`,
@@ -172,13 +174,13 @@ export function buildCollectionPageJsonLd(
             "@type": "ListItem",
             position: i + 1,
             name: t.name,
-            url: absoluteUrl(`/tools/${t.slug}`),
+            url: absoluteUrl(`/tools/${t.canonicalSlug?.trim() || t.slug}`),
           })),
         },
         breadcrumb: breadcrumbListValue([
           { name: "Home", path: "/" },
           { name: "Categories", path: "/categories" },
-          { name: cat.name, path: `/categories/${cat.slug}` },
+          { name: cat.name, path: `/categories/${cat.canonicalSlug?.trim() || cat.slug}` },
         ]),
       },
     ],
@@ -197,7 +199,7 @@ export function buildCuratedCollectionJsonLd(col: CuratedCollectionView): JsonOb
     "@type": "ListItem",
     position: i + 1,
     name: it.tool.name,
-    url: absoluteUrl(`/tools/${it.tool.slug}`),
+    url: absoluteUrl(`/tools/${it.tool.canonicalSlug?.trim() || it.tool.slug}`),
   }));
 
   return {

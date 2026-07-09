@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { SITE, SITE_LOGO_PATH, getSiteUrl } from "@/lib/seo/site";
+import { SITE, getSiteUrl } from "@/lib/seo/site";
 
 export default function manifest(): MetadataRoute.Manifest {
   const base = getSiteUrl();
@@ -14,9 +14,21 @@ export default function manifest(): MetadataRoute.Manifest {
     lang: SITE.language,
     icons: [
       {
-        src: `${base}${SITE_LOGO_PATH}`,
-        sizes: "186x153",
-        type: "image/svg+xml",
+        src: `${base}/icon.png`,
+        sizes: "32x32",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: `${base}/apple-icon.png`,
+        sizes: "180x180",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: `${base}/favicon.ico`,
+        sizes: "32x32",
+        type: "image/x-icon",
         purpose: "any",
       },
     ],

@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     description: compareDesc,
     images: ["/opengraph-image"],
   },
-  robots: { index: true, follow: true },
+  robots: { index: false, follow: true },
 };
 
 type Props = {

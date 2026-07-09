@@ -25,14 +25,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const cats = await getCategories();
   const categories = cats.map((c) => ({
-    url: `${base}/categories/${c.slug}`,
+    url: `${base}/categories/${c.canonicalSlug?.trim() || c.slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
 
   const allTools = await getAllTools();
   const tools = allTools.map((t) => ({
-    url: `${base}/tools/${t.slug}`,
+    url: `${base}/tools/${t.canonicalSlug?.trim() || t.slug}`,
     changeFrequency: "monthly" as const,
     priority: 0.6,
   }));
