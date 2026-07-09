@@ -11,7 +11,7 @@ import {
 
 const coAuthors = [
   { name: "FLOSSK" },
-  { name: "CyberFuzz" },
+  { name: "@samikciku" },
   { name: "AI" },
 ] as const;
 
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   description: SITE.description,
   keywords: [...SITE.keywords],
   authors: [...coAuthors],
-  creator: "FLOSSK, CyberFuzz & AI",
+  creator: "FLOSSK, @samikciku & AI",
   publisher: SITE.name,
   category: "technology",
   referrer: "strict-origin-when-cross-origin",
