@@ -34,13 +34,17 @@ function measureTextColumnPx(
 export function ListRowColumnProvider({
   titleLabels,
   badgeLabels,
+  titleFont = '600 16px var(--font-brand), ui-sans-serif, system-ui, sans-serif',
+  /** Inline title padding (flosskTextHighlightPadding) + truncate slack */
+  titlePaddingPx = 12,
   badgeFont = '600 11px var(--font-brand), ui-sans-serif, system-ui, sans-serif',
-  badgePaddingPx = 8,
+  badgePaddingPx = 22,
   children,
 }: {
   titleLabels: string[];
   badgeLabels: string[];
-  /** Canvas font for badge column (tool category pills are ~11px; counts use 12px). */
+  titleFont?: string;
+  titlePaddingPx?: number;
   badgeFont?: string;
   badgePaddingPx?: number;
   children: ReactNode;
@@ -52,13 +56,8 @@ export function ListRowColumnProvider({
   const [badgeColPx, setBadgeColPx] = useState<number | undefined>();
 
   useLayoutEffect(() => {
-    setTitleColPx(
-      measureTextColumnPx(
-        titleLabels,
-        '600 16px var(--font-brand), ui-sans-serif, system-ui, sans-serif',
-      ),
-    );
-  }, [titleKey, titleLabels]);
+    setTitleColPx(measureTextColumnPx(titleLabels, titleFont, titlePaddingPx));
+  }, [titleKey, titleLabels, titleFont, titlePaddingPx]);
 
   useLayoutEffect(() => {
     setBadgeColPx(measureTextColumnPx(badgeLabels, badgeFont, badgePaddingPx));

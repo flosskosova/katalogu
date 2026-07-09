@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Button } from "@/components/ui/Button";
 import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/site";
+import { flosskHighlightLabel } from "@/lib/ui/flossk-highlight";
+import { cn } from "@/lib/utils";
 
 const aboutTitle = `About the catalog · ${SITE.name}`;
 const aboutDescription =
@@ -44,7 +46,12 @@ export default function AboutPage() {
   return (
     <div className="space-y-14">
       <section className="border-b border-[var(--border)] pb-12">
-        <p className="inline-block w-fit rounded-sm bg-[#fff200]/95 px-0.5 py-px font-[family-name:var(--font-brand)] text-xs font-semibold uppercase tracking-[0.2em] text-[var(--foreground)] [box-decoration-break:clone] dark:bg-[#fff200]/35 dark:text-[var(--foreground-muted)] sm:text-[0.6875rem]">
+        <p
+          className={cn(
+            flosskHighlightLabel,
+            "text-xs uppercase tracking-[0.2em] sm:text-[0.6875rem]",
+          )}
+        >
           About
         </p>
         <h1 className="mt-4 max-w-3xl font-[family-name:var(--font-brand)] text-4xl font-semibold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">

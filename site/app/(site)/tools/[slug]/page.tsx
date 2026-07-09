@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { JsonLd } from "@/components/catalog/JsonLd";
 import { ToolCompareToggle } from "@/components/catalog/ToolCompareToggle";
+import { ToolLogo } from "@/components/catalog/ToolLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -105,20 +106,20 @@ export default async function ToolPage({ params }: Props) {
       </nav>
 
       <header className="mt-8 border-b border-[var(--border)] pb-10">
-        <Badge tone="accent" href={`/categories/${wc.category.slug}`}>
+        <Badge
+          tone="accent"
+          href={`/categories/${wc.category.slug}`}
+          className="mb-5"
+        >
           {wc.category.name}
         </Badge>
-        <div className="mt-4 flex flex-col gap-6 sm:flex-row sm:items-start">
-          {tool.logoUrl ? (
-            <Image
-              src={tool.logoUrl}
-              alt={`${tool.name} logo`}
-              width={80}
-              height={80}
-              unoptimized
-              className="h-20 w-20 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--muted)] object-contain p-2"
-            />
-          ) : null}
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+          <ToolLogo
+            name={tool.name}
+            slug={tool.slug}
+            logoUrl={tool.logoUrl}
+            size="detail"
+          />
           <div className="min-w-0 flex-1">
             <h1 className="font-[family-name:var(--font-brand)] text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl">
               {tool.name}

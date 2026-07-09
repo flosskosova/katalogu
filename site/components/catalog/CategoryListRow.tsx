@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useListRowColumns } from "@/components/catalog/ListRowColumnMeasure";
-import { flosskHighlight } from "@/lib/ui/flossk-highlight";
+import { flosskHighlight, flosskHighlightPill, flosskTextLink } from "@/lib/ui/flossk-highlight";
 import type { Category } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -36,49 +36,46 @@ export function CategoryListRow({
         </svg>
       </span>
       <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-nowrap items-end gap-x-2">
+        <div className="flex min-w-0 items-end gap-x-2">
           <h2
             className={cn(
-              "inline-flex items-end overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold leading-none text-[var(--foreground)]",
-              cols?.titleColPx ? "shrink-0" : "min-w-0 flex-1",
+              "min-w-0 overflow-hidden font-[family-name:var(--font-brand)] text-base font-semibold leading-none text-[var(--foreground)]",
+              cols?.titleColPx ? "shrink" : "min-w-0 flex-1",
             )}
             style={
               cols?.titleColPx
                 ? {
                     width: cols.titleColPx,
-                    minWidth: cols.titleColPx,
                     maxWidth: cols.titleColPx,
                   }
                 : undefined
             }
           >
             <span
-              className="inline-block max-w-full truncate rounded-sm px-0.5 py-px align-baseline transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)] dark:group-hover:bg-[#fff200]/35 dark:group-hover:text-[var(--foreground-muted)]"
+              className={cn(
+                flosskTextLink,
+                "block w-full max-w-full truncate transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)] dark:group-hover:bg-[#fff200]/35 dark:group-hover:text-[var(--foreground-muted)]",
+              )}
               title={category.name}
             >
               {category.name}
             </span>
           </h2>
-          <div
-            className="flex shrink-0 justify-end"
+          <span
+            className={cn(
+              flosskHighlight,
+              flosskHighlightPill,
+              "inline-flex shrink-0 items-center text-xs leading-none",
+              cols?.badgeColPx && "justify-center",
+            )}
             style={
               cols?.badgeColPx
-                ? {
-                    width: cols.badgeColPx,
-                    minWidth: cols.badgeColPx,
-                  }
+                ? { minWidth: cols.badgeColPx }
                 : undefined
             }
           >
-            <span
-              className={cn(
-                flosskHighlight,
-                "inline-flex shrink-0 items-center px-2 py-px text-xs leading-none",
-              )}
-            >
-              {count} tool{count === 1 ? "" : "s"}
-            </span>
-          </div>
+            {count} tool{count === 1 ? "" : "s"}
+          </span>
         </div>
         <p className="mt-0.5 line-clamp-1 text-sm text-[var(--foreground-muted)]">
           {category.summary}
