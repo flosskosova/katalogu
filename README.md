@@ -20,3 +20,5 @@ This catalog is a living document. Verify licenses, release cadence, and project
 ## Web catalog (Next.js)
 
 A production-oriented Next.js site lives in [`site/`](./site/): browse, filters, tool pages, comparison, SEO, and accessibility. From the `site` folder run `npm install` and `npm run dev`.
+
+**Self-hosted VPS:** see **[DEPLOY-DOCKER.md](./DEPLOY-DOCKER.md)** for Ubuntu + Docker + Postgres + optional Caddy HTTPS.

@@ -40,6 +40,8 @@ const securityHeadersAdmin = securityHeaders.filter(
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /** Self-hosted Docker images copy `.next/standalone` + static assets only. */
+  output: "standalone",
   /**
    * Default 60s is easy to hit when SSG pages await Payload + Postgres on a cold Supabase pooler
    * during `next build` on Vercel. Prefer fixing DATABASE_URL latency; this avoids flaky build failures.

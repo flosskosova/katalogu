@@ -1,0 +1,134 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-opencatalog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-opencatalog}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-opencatalog} -d ${POSTGRES_DB:-opencatalog}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ./site
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-opencatalog}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opencatalog}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?Set PAYLOAD_SECRET in .env}
+      PREVIEW_SECRET: ${PREVIEW_SECRET:-}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?Set NEXT_PUBLIC_SITE_URL in .env}
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-${NEXT_PUBLIC_SITE_URL}}
+      PAYLOAD_SERVER_URL: ${PAYLOAD_SERVER_URL:-${NEXT_PUBLIC_SITE_URL}}
+      PAYLOAD_POSTGRES_PUSH: ${PAYLOAD_POSTGRES_PUSH:-false}
+      PAYLOAD_POSTGRES_POOL_MAX: ${PAYLOAD_POSTGRES_POOL_MAX:-10}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION:-}
+      TURNSTILE_SECRET_KEY_PRODUCTION: ${TURNSTILE_SECRET_KEY_PRODUCTION:-}
+      # Do not set BLOB_READ_WRITE_TOKEN on VPS — media uses the media_data volume.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
+    volumes:
+      - media_data:/app/media
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  caddy:
+    profiles: ["https"]
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Set SITE_DOMAIN when using the https profile}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  seed:
+    profiles: ["tools"]
+    build:
+      context: ./site
+      dockerfile: Dockerfile
+      target: tools
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-opencatalog}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opencatalog}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@example.com}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-changeme}
+    command: ["seed:catalog"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  tools:
+    profiles: ["tools"]
+    build:
+      context: ./site
+      dockerfile: Dockerfile
+      target: tools
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-opencatalog}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-opencatalog}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  import-db:
+    profiles: ["tools"]
+    image: postgres:16-alpine
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER:-opencatalog}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      PGDATABASE: ${POSTGRES_DB:-opencatalog}
+      IMPORT_DUMP: ${IMPORT_DUMP:-/backups/prod-sync-latest.dump}
+    volumes:
+      - ./site/data/backups:/backups:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if [ ! -f "$$IMPORT_DUMP" ]; then
+          echo "Dump not found: $$IMPORT_DUMP" >&2
+          ls -la /backups >&2 || true
+          exit 1
+        fi
+        echo "Importing $$IMPORT_DUMP into $$PGDATABASE@$$PGHOST ..."
+        pg_restore --no-owner --no-acl -d "$$PGDATABASE" "$$IMPORT_DUMP" || true
+        echo "Supabase-only extensions (vault) are skipped on vanilla Postgres — Payload tables should still restore."
+        psql -d "$$PGDATABASE" -c "SELECT (SELECT count(*)::int FROM users) AS users, (SELECT count(*)::int FROM catalog_tools) AS tools;"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  media_data:
+  caddy_data:
+  caddy_config:

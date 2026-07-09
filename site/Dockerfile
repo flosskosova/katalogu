@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:1
+
+FROM node:22-bookworm-slim AS base
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+FROM base AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY patches ./patches
+RUN npm ci
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+RUN npm run build
+
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs --create-home nextjs \
+  && mkdir -p media data \
+  && chown -R nextjs:nodejs media data
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --from=builder /app/scripts/docker-wait-postgres.mjs /app/scripts/docker-wait-postgres.mjs
+
+RUN chmod +x /app/docker-entrypoint.sh
+
+USER nextjs
+EXPOSE 3000
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["node", "server.js"]
+
+# One-off admin tasks: seed catalog, reset password, etc.
+FROM deps AS tools
+WORKDIR /app
+COPY . .
+ENTRYPOINT ["npm", "run"]

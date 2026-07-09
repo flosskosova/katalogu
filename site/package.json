@@ -27,6 +27,7 @@
     "check:pg-rls:sql": "type .\\scripts\\sql\\payload-postgres-hardening.sql",
     "vercel:push-database-url": "node ./scripts/push-vercel-database-url.mjs",
     "test:pg": "node ./scripts/test-postgres-connection.mjs",
+    "export:production-db": "node ./scripts/export-production-db.mjs --env-file .env.production.backup",
     "postgres:sql:catalog-tool-link": "node ./scripts/apply-postgres-sql-file.mjs scripts/sql/add-tool-suggestions-catalog-tool-id.sql"
   },
   "dependencies": {
