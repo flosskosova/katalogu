@@ -26,7 +26,8 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 ENV PAYLOAD_SERVER_URL=${PAYLOAD_SERVER_URL}
 ENV NEXT_PUBLIC_CF_BEACON_TOKEN=${NEXT_PUBLIC_CF_BEACON_TOKEN}
-RUN npm run fetch-tool-logos
+RUN npm run fetch-tool-logos \
+  && test "$(find public/tool-logos -type f | wc -l)" -gt 500
 RUN npm run build
 
 FROM base AS runner
@@ -41,9 +42,11 @@ RUN groupadd --system --gid 1001 nodejs \
   && mkdir -p media data \
   && chown -R nextjs:nodejs media data
 
-COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+RUN test -f ./public/tool-logos/debian.png \
+  || (echo "ERROR: tool logos missing from production image" >&2 && exit 1)
 COPY --from=builder /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY --from=builder /app/scripts/docker-wait-postgres.mjs /app/scripts/docker-wait-postgres.mjs
 
