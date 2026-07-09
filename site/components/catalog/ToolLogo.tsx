@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { getToolLogoSrc } from "@/lib/catalog/tool-logo";
+import { useEffect, useState } from "react";
+import {
+  TOOL_LOGO_MANIFEST_URL,
+  resolveToolLogoSrc,
+} from "@/lib/catalog/tool-logo-shared";
 import { cn } from "@/lib/utils";
 
 function ToolLogoPlaceholder({ className }: { className?: string }) {
@@ -37,6 +41,26 @@ const pixelSizes = {
   detail: 80,
 } as const;
 
+let clientManifest: Record<string, string> | null = null;
+let clientManifestPromise: Promise<Record<string, string>> | null = null;
+
+function loadClientManifest(): Promise<Record<string, string>> {
+  if (clientManifest) return Promise.resolve(clientManifest);
+  if (!clientManifestPromise) {
+    clientManifestPromise = fetch(TOOL_LOGO_MANIFEST_URL)
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data: Record<string, string>) => {
+        clientManifest = data;
+        return data;
+      })
+      .catch(() => {
+        clientManifest = {};
+        return {};
+      });
+  }
+  return clientManifestPromise;
+}
+
 export function ToolLogo({
   name,
   slug,
@@ -50,7 +74,21 @@ export function ToolLogo({
   size?: keyof typeof sizeClasses;
   className?: string;
 }) {
-  const src = getToolLogoSrc({ slug, logoUrl });
+  const [manifest, setManifest] = useState<Record<string, string> | null>(
+    clientManifest,
+  );
+
+  useEffect(() => {
+    if (logoUrl?.trim()) return;
+    void loadClientManifest().then(setManifest);
+  }, [logoUrl]);
+
+  const src =
+    logoUrl?.trim() ||
+    resolveToolLogoSrc(
+      { slug, logoUrl },
+      manifest ?? clientManifest ?? {},
+    );
   const box = sizeClasses[size];
 
   return (

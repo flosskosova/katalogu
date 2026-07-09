@@ -23,6 +23,7 @@ import type { Where } from "payload";
 import { cache } from "react";
 
 import { getPayloadClient } from "@/lib/payload";
+import { loadToolLogoManifestSync, withResolvedToolLogos } from "@/lib/catalog/tool-logo";
 
 const envForcesStaticCatalog = () =>
   process.env.USE_STATIC_CATALOG === "true";
@@ -38,6 +39,22 @@ async function draftPreviewActive(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function attachToolLogos<T extends { slug: string; logoUrl?: string }>(
+  tools: T[],
+): T[] {
+  return withResolvedToolLogos(tools, loadToolLogoManifestSync());
+}
+
+function finalizeCatalog(
+  base: { categories: Category[]; tools: ToolWithCategory[] },
+  preview: boolean,
+): { categories: Category[]; tools: ToolWithCategory[] } {
+  const withLogos = { ...base, tools: attachToolLogos(base.tools) };
+  return preview
+    ? withLogos
+    : applyPublicWebsiteVisibility(withLogos.categories, withLogos.tools);
 }
 
 function applyPublicWebsiteVisibility(
@@ -139,19 +156,26 @@ export const getCatalogData = cache(async function getCatalogData(): Promise<{
   const staticTools = getStaticToolsWithCategories();
 
   if (envForcesStaticCatalog()) {
-    return { categories: staticCategories, tools: staticTools };
+    return finalizeCatalog(
+      { categories: staticCategories, tools: staticTools },
+      preview,
+    );
   }
 
   const cms = await loadFromCms(preview);
 
   if (!cms || cms.tools.length === 0) {
-    const base = { categories: staticCategories, tools: staticTools };
-    return preview ? base : applyPublicWebsiteVisibility(base.categories, base.tools);
+    return finalizeCatalog(
+      { categories: staticCategories, tools: staticTools },
+      preview,
+    );
   }
 
   if (!cmsMergeStaticCatalog()) {
-    const base = { categories: cms.categories, tools: cms.tools };
-    return preview ? base : applyPublicWebsiteVisibility(base.categories, base.tools);
+    return finalizeCatalog(
+      { categories: cms.categories, tools: cms.tools },
+      preview,
+    );
   }
 
   const categoriesMerged = mergeCatalogCategories(cms.categories);
@@ -160,8 +184,10 @@ export const getCatalogData = cache(async function getCatalogData(): Promise<{
     staticTools,
     categoriesMerged,
   );
-  const merged = { categories: categoriesMerged, tools: toolsMerged };
-  return preview ? merged : applyPublicWebsiteVisibility(merged.categories, merged.tools);
+  return finalizeCatalog(
+    { categories: categoriesMerged, tools: toolsMerged },
+    preview,
+  );
 });
 
 export async function getCategories(): Promise<Category[]> {
