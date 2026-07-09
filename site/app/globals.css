@@ -40,6 +40,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
   }
   body {
     @apply min-h-screen antialiased;
@@ -49,6 +50,53 @@
   }
   ::selection {
     background: var(--accent-subtle);
+    color: var(--foreground);
+  }
+}
+
+@layer components {
+  .flossk-highlight {
+    @apply rounded-sm border-0 font-[family-name:var(--font-brand)] font-semibold tracking-wide [box-decoration-break:clone];
+    background-color: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  .flossk-highlight-pill {
+    @apply px-2.5 py-1;
+  }
+
+  .flossk-highlight-soft {
+    @apply rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-wider;
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    color: var(--accent-fg);
+  }
+
+  .flossk-highlight-interactive {
+    @apply transition-[background-color,opacity];
+  }
+
+  .flossk-highlight-interactive:hover {
+    background-color: var(--accent-hover);
+    color: var(--foreground);
+  }
+
+  .flossk-hover-surface {
+    @apply transition-[background-color,opacity];
+  }
+
+  .flossk-hover-surface:hover {
+    background-color: var(--accent);
+    color: var(--foreground);
+  }
+
+  .flossk-text-link {
+    @apply flossk-hover-surface inline-block rounded-sm align-baseline text-base font-semibold text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)];
+    padding: 0.125rem 0.25rem;
+  }
+
+  .group:hover .flossk-text-link {
+    background-color: var(--accent);
     color: var(--foreground);
   }
 }

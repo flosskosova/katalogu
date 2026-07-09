@@ -75,10 +75,7 @@ export default async function ComparePage({ searchParams }: Props) {
           in the URL (comma-separated slugs).
         </p>
         <p className="mt-6">
-          <Link
-            href="/browse"
-            className="text-sm font-medium text-black underline-offset-2 visited:text-black hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] dark:text-white dark:visited:text-white"
-          >
+          <Link href="/browse" className={cn(flosskTextLink, "text-sm underline-offset-2 hover:underline")}>
             Go to browse →
           </Link>
         </p>
