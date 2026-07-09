@@ -6,6 +6,10 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { tools } from "../data/tools";
+import {
+  curatedLogoSources,
+  faviconDomainForTool,
+} from "../lib/catalog/tool-logo-overrides";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, "..");
@@ -35,12 +39,24 @@ function siteHostname(url: string): string | null {
 }
 
 function logoSources(tool: {
+  slug: string;
   officialSite: string;
   sourceRepo: string;
 }): string[] {
+  const curated = curatedLogoSources(tool.slug);
+  if (curated.length > 0) return [...new Set(curated)];
+
   const sources: string[] = [];
   const repo = tool.sourceRepo?.trim();
   const site = tool.officialSite?.trim();
+  const faviconDomain = faviconDomainForTool(tool);
+
+  if (faviconDomain && faviconDomain !== "github.com") {
+    sources.push(
+      `https://www.google.com/s2/favicons?domain=${encodeURIComponent(faviconDomain)}&sz=128`,
+    );
+    sources.push(`https://icons.duckduckgo.com/ip3/${faviconDomain}.ico`);
+  }
 
   if (repo) {
     const owner = githubOwner(repo);
@@ -50,11 +66,11 @@ function logoSources(tool: {
   }
 
   const host = site ? siteHostname(site) : repo ? siteHostname(repo) : null;
-  if (host && host !== "github.com") {
-    sources.unshift(
+  if (host && host !== "github.com" && host !== faviconDomain) {
+    sources.push(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`,
     );
-    sources.unshift(`https://icons.duckduckgo.com/ip3/${host}.ico`);
+    sources.push(`https://icons.duckduckgo.com/ip3/${host}.ico`);
   }
 
   if (host === "github.com" && repo) {
