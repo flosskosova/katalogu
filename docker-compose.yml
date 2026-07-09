@@ -54,6 +54,8 @@ services:
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-}
     volumes:
       - media_data:/app/media
+      # Logo PNGs from git — mount so deploy works without baking into image (VPS builds often OOM).
+      - ./site/public/tool-logos:/app/public/tool-logos:ro
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
