@@ -1,4 +1,4 @@
-import { Analytics } from "@vercel/analytics/next";
+import { CloudflareBeacon } from "@/components/analytics/CloudflareBeacon";
 import { DM_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
@@ -61,7 +61,7 @@ export default function SiteLayout({
           <CompareBar />
           </ViewModeProvider>
         </CompareProvider>
-        <Analytics />
+        <CloudflareBeacon />
       </body>
     </html>
   );
