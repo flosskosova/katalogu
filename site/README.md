@@ -22,6 +22,9 @@ Copy `.env.example` to `.env.local`.
 |----------|---------|
 | `NEXT_PUBLIC_SITE_URL` | Canonical origin for SEO, sitemap, Open Graph (no trailing slash). |
 | `NEXT_PUBLIC_SERVER_URL` | Same origin as the running app; used for Payload APIs and absolute media URLs. |
+| `NEXT_PUBLIC_ORGANIZATION_LEGAL_NAME` | Optional legal/display name for Organization JSON-LD. |
+| `NEXT_PUBLIC_ORGANIZATION_SAME_AS` | Optional JSON array or comma-separated profile URLs for Organization `sameAs` (LinkedIn, GitHub, etc.). |
+| `NEXT_PUBLIC_SITE_ATTRIBUTION` | Optional public attribution line used in footer and related metadata text. |
 | `PAYLOAD_SECRET` | **Required in production.** Long random string for sessions and crypto. |
 | `PREVIEW_SECRET` | Shared secret for draft preview (`/api/draft?secret=…`). |
 | `TURSO_DATABASE_URL` / `DATABASE_URL` | SQLite URL: local `file:…` (default) or remote **`libsql://…`** ([Turso](https://turso.tech)). **`TURSO_*` names match Turso’s Vercel docs**; `DATABASE_*` works too. **Required for Payload on Vercel.** |
@@ -60,6 +63,14 @@ These steps are done in the **Vercel dashboard** (not in git):
 5. Catalog documents use **Draft → In review → Published → Archived**. **Hard delete is disabled** on catalog collections; archive instead.
 6. **Duplicate document** is available in the Payload UI for tools (Payload default).
 7. **Quality warnings** (duplicate names, thin sections) appear in the tool **Audit** tab; publishing still enforces required URLs, summary, “why included”, platforms, etc.
+
+## SEO / GEO notes
+
+- Canonical URLs are generated from `canonicalSlug` where present and should stay consistent across metadata, sitemap, and JSON-LD.
+- Filtered browse states are intentionally `noindex,follow`; the base `/browse` page remains indexable.
+- `/compare` is intentionally `noindex,follow` to avoid low-value index bloat from combinatorial comparison URLs.
+- The site exposes `llms.txt` at `/llms.txt` as a machine-readable retrieval summary for AI systems and secondary crawlers.
+- Set `NEXT_PUBLIC_ORGANIZATION_SAME_AS` and `NEXT_PUBLIC_ORGANIZATION_LEGAL_NAME` in production if you want stronger organization/entity signals in JSON-LD.
 
 ## Content sources
 

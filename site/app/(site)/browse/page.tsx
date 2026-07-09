@@ -12,40 +12,67 @@ import { absoluteUrl, getTwitterCreator, getTwitterSite, SITE } from "@/lib/seo/
 const browseDesc =
   "Search and filter curated free and open source software by category, platform, license, tags, maturity, and editorial facets—names, summaries, and use cases included.";
 
-export const metadata: Metadata = {
-  title: "Browse & filter",
-  description: browseDesc,
-  keywords: [
-    ...SITE.keywords,
-    "filter open source",
-    "FOSS search",
-    "software by license",
-  ],
-  alternates: {
-    canonical: "/browse",
-    languages: { en: absoluteUrl("/browse") },
-  },
-  openGraph: {
-    title: `Browse & filter · ${SITE.name}`,
+function hasActiveBrowseFilters(
+  sp: Record<string, string | string[] | undefined>,
+): boolean {
+  const filters = parseSearchParams(sp);
+  return Boolean(
+    filters.query ||
+      filters.categorySlug ||
+      filters.platforms.length ||
+      filters.licenseContains ||
+      filters.privacyFocused !== null ||
+      filters.selfHosted !== null ||
+      filters.beginnerFriendly !== null ||
+      filters.maturity !== null ||
+      filters.maintenanceStatus !== null ||
+      filters.tags.length,
+  );
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const isFiltered = hasActiveBrowseFilters(sp);
+
+  return {
+    title: "Browse & filter",
     description: browseDesc,
-    type: "website",
-    url: absoluteUrl("/browse"),
-    siteName: SITE.name,
-    locale: SITE.locale,
-    images: [
-      { url: "/opengraph-image", width: 1200, height: 630, alt: SITE.name },
+    keywords: [
+      ...SITE.keywords,
+      "filter open source",
+      "FOSS search",
+      "software by license",
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: getTwitterSite(),
-    creator: getTwitterCreator(),
-    title: `Browse & filter · ${SITE.name}`,
-    description: browseDesc,
-    images: ["/opengraph-image"],
-  },
-  robots: { index: true, follow: true },
-};
+    alternates: {
+      canonical: "/browse",
+      languages: { en: absoluteUrl("/browse") },
+    },
+    openGraph: {
+      title: `Browse & filter · ${SITE.name}`,
+      description: browseDesc,
+      type: "website",
+      url: absoluteUrl("/browse"),
+      siteName: SITE.name,
+      locale: SITE.locale,
+      images: [
+        { url: "/opengraph-image", width: 1200, height: 630, alt: SITE.name },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      site: getTwitterSite(),
+      creator: getTwitterCreator(),
+      title: `Browse & filter · ${SITE.name}`,
+      description: browseDesc,
+      images: ["/opengraph-image"],
+    },
+    robots: { index: !isFiltered, follow: true },
+  };
+}
 
 export default async function BrowsePage({
   searchParams,
