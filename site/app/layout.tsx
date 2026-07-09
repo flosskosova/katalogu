@@ -41,8 +41,12 @@ export const metadata: Metadata = {
   ...(metadataBaseResolved ? { metadataBase: metadataBaseResolved } : {}),
   applicationName: SITE.name,
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-    shortcut: "/icon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
   },
   title: {
     default: `${SITE.name} — ${SITE.tagline}`,
@@ -97,7 +101,7 @@ export const metadata: Metadata = {
   },
   ...(verification ? { verification } : {}),
   /**
-   * Favicon + Apple touch: `app/icon.svg` and `app/apple-icon.tsx`. Header/footer
+   * Favicon + Apple touch: `app/favicon.ico`, `app/icon.png`, `app/apple-icon.png`.
    * use `public/black.svg` via `SITE_LOGO_PATH`. Next injects icon links automatically.
    */
 };

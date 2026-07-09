@@ -8,7 +8,7 @@
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
     "dev:turbo": "next dev --turbopack",
-    "build": "next build",
+    "build": "node ./scripts/generate-favicons.mjs && next build",
     "start": "next start",
     "lint": "eslint .",
     "validate:tool-slugs": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/validate-tool-slugs.ts",
