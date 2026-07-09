@@ -148,6 +148,27 @@ function normRepoUrl(u) {
 }
 
 /** Curated tools sometimes use org root (e.g. github.com/bitwarden); skip definitive child repos (…/server). */
+function normSiteHost(u) {
+  if (!u || typeof u !== "string") return "";
+  try {
+    const host = new URL(u.trim()).hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "firefox.com") return "mozilla.org";
+    if (host.endsWith(".videolan.org") || host === "videolan.org") return "videolan.org";
+    return host;
+  } catch {
+    return "";
+  }
+}
+
+function normProductName(name) {
+  return String(name ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^mozilla\s+/, "")
+    .replace(/\s+media player$/, "")
+    .replace(/\s+/g, " ");
+}
+
 function repoConflictsWithExisting(repoUrl, existingRepos) {
   const n = normRepoUrl(repoUrl);
   if (!n || !n.includes("github.com")) return false;
@@ -169,9 +190,13 @@ function repoSlugFromUrl(url) {
 function loadExistingKeys() {
   const slugs = new Set();
   const repos = new Set();
+  const hosts = new Set();
+  const productNames = new Set();
   const files = readdirSync(DATA_DIR).filter((f) => f.startsWith("tools") && f.endsWith(".ts"));
   const slugRe = /slug:\s*"([^"]+)"/g;
   const repoRe = /sourceRepo:\s*"([^"]+)"/g;
+  const siteRe = /officialSite:\s*"([^"]+)"/g;
+  const nameRe = /name:\s*"([^"]+)"/g;
   for (const f of files) {
     const text = readFileSync(path.join(DATA_DIR, f), "utf8");
     let m;
@@ -180,8 +205,16 @@ function loadExistingKeys() {
       const n = normRepoUrl(m[1]);
       if (n) repos.add(n);
     }
+    while ((m = siteRe.exec(text))) {
+      const h = normSiteHost(m[1]);
+      if (h && h !== "github.com") hosts.add(h);
+    }
+    while ((m = nameRe.exec(text))) {
+      const pn = normProductName(m[1]);
+      if (pn.length >= 3) productNames.add(pn);
+    }
   }
-  return { slugs, repos };
+  return { slugs, repos, hosts, productNames };
 }
 
 function mapPlatforms(platforms) {
@@ -295,7 +328,8 @@ function uniqueSlug(base, taken) {
 }
 
 const apps = await loadApplications();
-const { slugs: existingSlugs, repos: existingRepos } = loadExistingKeys();
+const { slugs: existingSlugs, repos: existingRepos, hosts: existingHosts, productNames: existingProductNames } =
+  loadExistingKeys();
 const newSlugTaken = new Set(existingSlugs);
 const rows = [];
 
@@ -304,21 +338,28 @@ for (const a of apps) {
   if (!repoUrl || !repoUrl.includes("github.com")) continue;
   if (repoConflictsWithExisting(repoUrl, existingRepos)) continue;
 
+  const name = String(a.name || "").trim();
+  const productName = normProductName(name);
+  if (productName.length >= 3 && existingProductNames.has(productName)) continue;
+
+  const officialSite =
+    a.homepage_url && String(a.homepage_url).trim().startsWith("http")
+      ? String(a.homepage_url).trim()
+      : a.repo_url;
+  const siteHost = normSiteHost(officialSite);
+  if (siteHost && siteHost !== "github.com" && existingHosts.has(siteHost)) continue;
+
   const repoDerived = repoSlugFromUrl(repoUrl).replace(/\./g, "-");
   let baseSlug = toPayloadToolSlug(repoDerived);
   if (!baseSlug || baseSlug === "unknown") continue;
   const slug = uniqueSlug(baseSlug, newSlugTaken);
 
   const categorySlug = CATEGORY_MAP[a.category] || "system-utilities";
-  const name = String(a.name || baseSlug).trim() || baseSlug;
+  const displayName = name || baseSlug;
   const summary = String(a.description || "")
     .trim()
     .slice(0, 280);
   const license = a.license && a.license !== "NOASSERTION" ? String(a.license) : "See upstream repository";
-  const officialSite =
-    a.homepage_url && String(a.homepage_url).trim().startsWith("http")
-      ? String(a.homepage_url).trim()
-      : a.repo_url;
 
   const tags = [
     "definitive-opensource",
@@ -343,9 +384,9 @@ for (const a of apps) {
 
   rows.push({
     slug,
-    name,
+    name: displayName,
     categorySlug,
-    summary: summary || `${name} — open-source project listed in definitive-opensource.`,
+    summary: summary || `${displayName} — open-source project listed in definitive-opensource.`,
     whyIncluded: `Listed in [definitive-opensource](https://github.com/mustbeperfect/definitive-opensource) as a curated consumer-facing open-source application.`,
     bestFor: `Users exploring vetted FOSS alternatives in this space (${a.category?.replace(/-/g, " ") || "general"}).`,
     platforms: mapPlatforms(a.platforms),
@@ -367,6 +408,8 @@ for (const a of apps) {
   });
 
   existingRepos.add(repoUrl);
+  if (siteHost && siteHost !== "github.com") existingHosts.add(siteHost);
+  if (productName.length >= 3) existingProductNames.add(productName);
 }
 
 const header = `import type { Tool } from "../lib/types";

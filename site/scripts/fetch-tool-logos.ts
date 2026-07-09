@@ -51,10 +51,10 @@ function logoSources(tool: {
 
   const host = site ? siteHostname(site) : repo ? siteHostname(repo) : null;
   if (host && host !== "github.com") {
-    sources.push(
+    sources.unshift(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`,
     );
-    sources.push(`https://icons.duckduckgo.com/ip3/${host}.ico`);
+    sources.unshift(`https://icons.duckduckgo.com/ip3/${host}.ico`);
   }
 
   if (host === "github.com" && repo) {

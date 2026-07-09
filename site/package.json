@@ -19,6 +19,8 @@
     "backfill:seo:categories": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-category-seo.ts",
     "backfill:why-included": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/backfill-why-included-official-sites.ts",
     "fetch-tool-logos": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/fetch-tool-logos.ts",
+    "report:tool-duplicates": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/report-tool-duplicates.ts",
+    "report:tool-semantic-duplicates": "node ./node_modules/jiti/lib/jiti-cli.mjs scripts/report-tool-semantic-duplicates.ts",
     "payload:migrate:create": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts create",
     "payload:migrate": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts run",
     "payload:migrate:status": "node --env-file=.env ./node_modules/jiti/lib/jiti-cli.mjs scripts/payload-migrate.ts status",
