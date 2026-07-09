@@ -9,6 +9,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY patches ./patches
+COPY scripts/ensure-libsql-web-driver.mjs ./scripts/ensure-libsql-web-driver.mjs
 RUN npm ci
 
 FROM base AS builder
