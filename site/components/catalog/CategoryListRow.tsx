@@ -54,7 +54,7 @@ export function CategoryListRow({
             <span
               className={cn(
                 flosskTextLink,
-                "block w-full max-w-full truncate transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)] dark:group-hover:bg-[#fff200]/35 dark:group-hover:text-[var(--foreground-muted)]",
+                "block w-full max-w-full truncate transition-[background-color,opacity] group-hover:bg-[#fff200]/95 group-hover:text-[var(--foreground)]",
               )}
               title={category.name}
             >

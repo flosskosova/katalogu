@@ -19,7 +19,7 @@ const nav = [
 ];
 
 const linkClass =
-  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] dark:hover:bg-[#fff200]/35 dark:hover:text-[var(--foreground-muted)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
+  "rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--foreground-muted)] transition-[background-color,opacity] hover:bg-[#fff200]/95 hover:text-[var(--foreground)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)] md:py-2";
 
 export function SiteHeader() {
   const [menuOpenPath, setMenuOpenPath] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export function SiteHeader() {
             variant="secondary"
             className={cn(
               "!hidden !px-3 !py-2 text-xs sm:!inline-flex sm:!px-4 sm:text-sm",
-              "hover:!border-transparent hover:!bg-[#fff200]/95 hover:!text-[var(--foreground)] dark:hover:!bg-[#fff200]/35 dark:hover:!text-[var(--foreground-muted)]",
+              "hover:!border-transparent hover:!bg-[#fff200]/95 hover:!text-[var(--foreground)]",
               "transition-[background-color,opacity,border-color]",
             )}
             onClick={closeMenu}
