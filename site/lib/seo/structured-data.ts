@@ -235,7 +235,7 @@ export function buildHomeFaqJsonLd(): JsonObject {
         name: `What is ${SITE.name}?`,
         acceptedAnswer: {
           "@type": "Answer",
-          text: `${SITE.name} is an editorial catalog of free and open source software (FOSS), co-authored by FLOSSK, CyberFuzz, and AI. It highlights actively maintained tools with clear documentation and practical adoption—not a complete directory of every OSS project.`,
+          text: `${SITE.name} is an editorial catalog of free and open source software (FOSS), co-authored by FLOSSK, @samikciku, and AI. It highlights actively maintained tools with clear documentation and practical adoption—not a complete directory of every OSS project.`,
         },
       },
       {

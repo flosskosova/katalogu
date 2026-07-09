@@ -37,7 +37,7 @@ export const SITE_LOGO_PATH = "/black.svg" as const;
 /** Public credit under the site name (header, footer). */
 export const SITE_ATTRIBUTION_LINE =
   process.env.NEXT_PUBLIC_SITE_ATTRIBUTION?.trim() ||
-  "A work of co-authorship by CyberFuzz & AI, powered by FLOSSK";
+  "A work of co-authorship by @samikciku & AI, powered by FLOSSK";
 
 /** SPDX id for this repository’s source (see root `LICENSE`). */
 export const SITE_SOURCE_LICENSE_SPDX = "GPL-2.0" as const;
@@ -57,7 +57,7 @@ export const SITE = {
   /** Primary meta description (~155–165 chars ideal; longer OK for OG). */
   description:
     process.env.NEXT_PUBLIC_SITE_DESCRIPTION ??
-    "Editorial catalog of trustworthy free and open source software—co-authored by CyberFuzz and AI, powered by FLOSSK. Browse by category, filter by platform and license, compare tools, and read evidence-based inclusion notes—not an exhaustive directory.",
+    "Editorial catalog of trustworthy free and open source software—co-authored by @samikciku and AI, powered by FLOSSK. Browse by category, filter by platform and license, compare tools, and read evidence-based inclusion notes—not an exhaustive directory.",
   /** Default keywords for homepage / brand discovery (search + AI retrieval). */
   keywords: [
     "open source software",
