@@ -58,7 +58,10 @@ function logoSources(tool: {
     sources.push(`https://icons.duckduckgo.com/ip3/${faviconDomain}.ico`);
   }
 
-  if (repo) {
+  const hasProductSite = !!site && siteHostname(site) !== "github.com";
+
+  // GitHub org/user avatars are often personal photos — skip when a product site exists.
+  if (!hasProductSite && repo) {
     const owner = githubOwner(repo);
     if (owner) {
       sources.push(`https://github.com/${owner}.png?size=128`);
