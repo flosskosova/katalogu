@@ -4,6 +4,11 @@ export const TOOL_LOGO_CURATED_SOURCES: Record<string, string[]> = {
     "https://www.mozilla.org/media/protocol/img/logos/firefox/browser/logo.svg",
     "https://www.google.com/s2/favicons?domain=firefox.com&sz=128",
   ],
+  "snipe-it": [
+    "https://raw.githubusercontent.com/homarr-labs/dashboard-icons/main/png/snipe-it.png",
+    "https://raw.githubusercontent.com/snipe/snipe-it/master/public/img/logo.png",
+    "https://www.google.com/s2/favicons?domain=snipeitapp.com&sz=128",
+  ],
 };
 
 /** Map catalog tool slug -> favicon/logo domain (when officialSite hostname is misleading). */
