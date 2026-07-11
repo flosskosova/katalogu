@@ -76,7 +76,6 @@ const lines = [
   `NEXT_PUBLIC_SERVER_URL=${siteUrl}`,
   `PAYLOAD_SERVER_URL=${siteUrl}`,
   "PAYLOAD_POSTGRES_PUSH=false",
-  "APP_PORT=3000",
   `SITE_DOMAIN=${domain}`,
 ];
 

@@ -56,8 +56,7 @@ services:
       - media_data:/app/media
       # Logo PNGs from git — mount so deploy works without baking into image (VPS builds often OOM).
       - ./site/public/tool-logos:/app/public/tool-logos:ro
-    ports:
-      - "${APP_PORT:-3000}:3000"
+    # No host ports — Caddy (https profile) reaches app:3000 on the internal Docker network.
     depends_on:
       db:
         condition: service_healthy
