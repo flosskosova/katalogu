@@ -9,6 +9,7 @@ import { tools } from "../data/tools";
 import {
   curatedLogoSources,
   faviconDomainForTool,
+  productSiteHostname,
 } from "../lib/catalog/tool-logo-overrides";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,11 +32,7 @@ function githubOwner(url: string): string | null {
 }
 
 function siteHostname(url: string): string | null {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return null;
-  }
+  return productSiteHostname(url);
 }
 
 function logoSources(tool: {
@@ -58,7 +55,7 @@ function logoSources(tool: {
     sources.push(`https://icons.duckduckgo.com/ip3/${faviconDomain}.ico`);
   }
 
-  const hasProductSite = !!site && siteHostname(site) !== "github.com";
+  const hasProductSite = !!site && !!siteHostname(site);
 
   // GitHub org/user avatars are often personal photos — skip when a product site exists.
   if (!hasProductSite && repo) {
@@ -68,7 +65,7 @@ function logoSources(tool: {
     }
   }
 
-  const host = site ? siteHostname(site) : repo ? siteHostname(repo) : null;
+  const host = site ? siteHostname(site) : repo ? productSiteHostname(repo) : null;
   if (host && host !== "github.com" && host !== faviconDomain) {
     sources.push(
       `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`,
