@@ -1,19 +1,20 @@
-import { getCloudflareBeaconToken } from "@/lib/seo/analytics";
-
 /**
- * Cloudflare Web Analytics — plain <script defer> so the tag is in the SSR HTML.
- * next/script (especially type="module") can break beacon token detection via
- * document.currentScript and leave the dashboard empty.
+ * Cloudflare Web Analytics beacon — must be a real SSR <script> in <body>.
+ * Token is also passed in the script URL so React HTML-escaping of
+ * data-cf-beacon cannot prevent the beacon from receiving the token.
  */
-export function CloudflareBeacon() {
-  const token = getCloudflareBeaconToken();
-  if (!token) return null;
+const CF_BEACON_TOKEN = "f058a3a134a743858a8812a20c890aaa";
 
+export function CloudflareBeacon() {
   return (
-    <script
-      defer
-      src="https://static.cloudflareinsights.com/beacon.min.js"
-      data-cf-beacon={JSON.stringify({ token, spa: true })}
-    />
+    <>
+      {/* Cloudflare Web Analytics */}
+      <script
+        defer
+        src={`https://static.cloudflareinsights.com/beacon.min.js?token=${CF_BEACON_TOKEN}`}
+        data-cf-beacon={JSON.stringify({ token: CF_BEACON_TOKEN })}
+      />
+      {/* End Cloudflare Web Analytics */}
+    </>
   );
 }

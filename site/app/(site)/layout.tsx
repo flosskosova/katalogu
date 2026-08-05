@@ -61,6 +61,7 @@ export default function SiteLayout({
           <CompareBar />
           </ViewModeProvider>
         </CompareProvider>
+        {/* Cloudflare Web Analytics — end of body */}
         <CloudflareBeacon />
       </body>
     </html>
