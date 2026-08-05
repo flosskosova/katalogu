@@ -77,6 +77,7 @@ const lines = [
   `PAYLOAD_SERVER_URL=${siteUrl}`,
   "PAYLOAD_POSTGRES_PUSH=false",
   `SITE_DOMAIN=${domain}`,
+  `NEXT_PUBLIC_CF_BEACON_TOKEN=${get("NEXT_PUBLIC_CF_BEACON_TOKEN") || "f058a3a134a743858a8812a20c890aaa"}`,
 ];
 
 const turnstileSite =
