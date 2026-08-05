@@ -51,7 +51,15 @@ export function SiteFooter() {
                 >
                   @samikciku
                 </a>{" "}
-                &amp; AI, powered by FLOSSK
+                &amp; AI, powered by{" "}
+                <a
+                  className="underline decoration-[var(--border)] underline-offset-2 transition-colors hover:text-[var(--foreground-muted)] hover:decoration-[var(--accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ring)]"
+                  href="https://flossk.org"
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  FLOSSK
+                </a>
               </p>
               <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--foreground-muted)]">
                 A curated, editorial catalog of trustworthy Free and Open Source
