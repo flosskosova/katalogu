@@ -93,6 +93,75 @@ need(
   migration.includes("20260924_users_reset_password_requested_at"),
 );
 
+need(
+  "Docker image builds must skip the secret check",
+  secret.includes('process.env.NEXT_PHASE === "phase-production-build"') &&
+    secret.includes('process.env["PAYLOAD_SECRET"]'),
+);
+need("the public GraphQL API must stay disabled", secret.includes("disable: true"));
+need(
+  "production must not push database schema on startup",
+  secret.includes('return process.env.NODE_ENV !== "production"') &&
+    compose.includes("PAYLOAD_POSTGRES_PUSH: ${PAYLOAD_POSTGRES_PUSH:-false}"),
+);
+
+const suggest = read("app/api/suggest-tool/route.ts");
+need(
+  "suggest submissions must be rejected when the production secret is weak",
+  suggest.includes("Refusing submission: PAYLOAD_SECRET missing or too short in production."),
+);
+need(
+  "suggest submissions must verify a Turnstile token",
+  suggest.includes("verifyTurnstileToken(") && suggest.includes("Verification required. Please complete the CAPTCHA."),
+);
+need(
+  "suggest submissions must reject a foreign Origin",
+  suggest.includes("function assertSuggestToolOrigin") && suggest.includes('jsonError("Forbidden", 403)'),
+);
+
+const limits = read("lib/suggest-tool/rate-limit.ts");
+need(
+  "suggest rate limits must stay at 5 per IP and 3 per email each day",
+  limits.includes("const MAX_PER_IP_24H = 5") && limits.includes("const MAX_PER_EMAIL_24H = 3"),
+);
+
+const turnstileKey = read("lib/suggest-tool/turnstile-public.ts");
+need(
+  "the Turnstile site key must be read at runtime",
+  turnstileKey.includes("process.env[name]") &&
+    turnstileKey.includes("TURNSTILE_TEST_SITE_KEY = \"1x00000000000000000000AA\"") &&
+    /if \(process\.env\.NODE_ENV === "production"\) \{\s*return production \|\| general \|\| ""/.test(turnstileKey),
+);
+
+need(
+  "an editor accept must not keep the publish flag",
+  accept.includes("delete ctx[ACCEPT_SUGGESTION_CONTEXT]"),
+);
+
+const gitignore = readRepo(".gitignore");
+const siteGitignore = read(".gitignore");
+need(
+  "secret env files must stay gitignored",
+  gitignore.includes(".env*") &&
+    gitignore.includes(".env.vps") &&
+    siteGitignore.includes(".env*") &&
+    !gitignore.includes("!.env\n") &&
+    !siteGitignore.includes("!.env\n"),
+);
+
+const dbBlock = compose.split("\n  db:\n")[1]?.split("\n  app:\n")[0] ?? "";
+const caddyBlock = compose.split("\n  caddy:\n")[1] ?? "";
+need("Postgres must not publish a host port", !/^\s+ports:/m.test(dbBlock));
+need(
+  "only Caddy may publish ports 80 and 443",
+  caddyBlock.includes('"80:80"') && caddyBlock.includes('"443:443"'),
+);
+
+const dockerfile = read("Dockerfile");
+const nextConfig = csp;
+need("the production image must be a Next standalone build", nextConfig.includes('output: "standalone"'));
+need("the image build must not receive PAYLOAD_SECRET", !dockerfile.includes("PAYLOAD_SECRET"));
+
 const lock = read("package-lock.json");
 const nextVersion = versionOf(lock, "node_modules/next");
 const nodemailerVersion = versionOf(lock, "node_modules/nodemailer");
@@ -132,13 +201,18 @@ if (process.argv.includes("--live")) {
 
   const login = await fetch(`${origin}/admin/login`);
   const loginHtml = await login.text();
-  need("live admin login must render", login.status === 200 && !loginHtml.includes("could not render"));
+  need(
+    "live admin login must render",
+    login.status === 200 &&
+      !loginHtml.includes("could not render") &&
+      !loginHtml.includes('E{"digest"'),
+  );
 
-  const suggest = await fetch(`${origin}/suggest`);
-  const suggestHtml = await suggest.text();
+  const suggestPage = await fetch(`${origin}/suggest`);
+  const suggestHtml = await suggestPage.text();
   need(
     "live suggest page must load Turnstile",
-    suggest.status === 200 && suggestHtml.includes("challenges.cloudflare.com"),
+    suggestPage.status === 200 && suggestHtml.includes("cf-turnstile"),
   );
 }
 
