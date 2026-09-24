@@ -207,17 +207,12 @@ function shouldPushPostgresSchema(): boolean {
 
 function resolvePayloadSecret(): string {
   const secret = sanitizeEnvValue(process.env.PAYLOAD_SECRET);
-  if (process.env.NODE_ENV === "production") {
-    if (!secret || secret === "CHANGE_ME_DEV_ONLY") {
-      console.error(
-        "[payload] PAYLOAD_SECRET is missing/weak in production. Set a strong random value (>= 32 chars) in Vercel env vars.",
-      );
-    }
-    if (secret && secret.length < 32) {
-      console.error(
-        "[payload] PAYLOAD_SECRET is short in production. Use a strong random value (>= 32 chars).",
-      );
-    }
+  const weak =
+    !secret || secret === "CHANGE_ME_DEV_ONLY" || secret.length < 32;
+  if (process.env.NODE_ENV === "production" && weak) {
+    throw new Error(
+      "PAYLOAD_SECRET must be a random string of at least 32 characters.",
+    );
   }
   return secret || "CHANGE_ME_DEV_ONLY";
 }
