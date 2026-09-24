@@ -8,6 +8,8 @@
     "build": "npm run build --prefix site",
     "start": "npm run start --prefix site",
     "lint": "npm run lint --prefix site",
+    "check:security": "npm run check:security --prefix site",
+    "check:security:live": "npm run check:security:live --prefix site",
     "seed:catalog": "npm run seed:catalog --prefix site",
     "export:production-db": "npm run export:production-db --prefix site",
     "generate:vps-env": "node scripts/generate-vps-env.mjs"
