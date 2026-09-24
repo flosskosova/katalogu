@@ -7,7 +7,7 @@ const contentSecurityPolicy = [
   "frame-src 'self' https://challenges.cloudflare.com",
   "worker-src 'self' blob: https://challenges.cloudflare.com",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https:",
+  "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https:",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https:",

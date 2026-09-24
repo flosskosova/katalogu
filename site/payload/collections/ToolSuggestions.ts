@@ -1,6 +1,5 @@
 import type { CollectionConfig } from "payload";
 import { editorAndAdminAccess } from "../access";
-import { ACCEPT_SUGGESTION_CONTEXT } from "../tool-suggestions/constants";
 import { createCatalogToolFromSuggestion } from "../tool-suggestions/createCatalogToolFromSuggestion";
 
 function relationshipHasId(val: unknown): boolean {
@@ -85,9 +84,6 @@ export const ToolSuggestions: CollectionConfig = {
             reviewedCategory: data?.reviewedCategory ?? originalDoc?.reviewedCategory,
             reviewNote: data?.reviewNote ?? originalDoc?.reviewNote,
           };
-          const ctx = (req.context ?? {}) as Record<string, unknown>;
-          ctx[ACCEPT_SUGGESTION_CONTEXT] = true;
-          req.context = ctx;
           try {
             const result = await createCatalogToolFromSuggestion(req, merged, {
               fromSuggestionAccept: true,

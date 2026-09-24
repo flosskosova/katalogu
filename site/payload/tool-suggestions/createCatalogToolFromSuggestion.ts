@@ -1,6 +1,7 @@
 import type { PayloadRequest } from "payload";
 import { normalizeToCatalogToolSlug } from "../../lib/catalog-tool-slug";
 import { slugify } from "../../lib/utils";
+import { isStaffAdmin } from "../access";
 import { ACCEPT_SUGGESTION_CONTEXT } from "./constants";
 import { toolSeoPatchFromStatic } from "../seo-defaults";
 
@@ -241,7 +242,8 @@ export async function createCatalogToolFromSuggestion(
 
   const baseSlug = suggestCatalogToolSlug(suggestion);
   const slug = await uniquifyCatalogToolSlug(req, baseSlug);
-  const publish = options.fromSuggestionAccept === true;
+  const publish =
+    options.fromSuggestionAccept === true && (await isStaffAdmin(req));
   const data = buildCatalogToolCreateData(
     suggestion,
     categoryId,
@@ -250,25 +252,25 @@ export async function createCatalogToolFromSuggestion(
   );
 
   const ctx = (req.context ?? {}) as Record<string, unknown>;
-  if (options.fromSuggestionAccept) {
+  if (publish) {
     ctx[ACCEPT_SUGGESTION_CONTEXT] = true;
-    req.context = ctx;
+  } else {
+    delete ctx[ACCEPT_SUGGESTION_CONTEXT];
   }
+  req.context = ctx;
 
   const created = await req.payload.create({
     collection: "catalog-tools",
     data,
     req,
     overrideAccess: true,
-    context: options.fromSuggestionAccept
-      ? { [ACCEPT_SUGGESTION_CONTEXT]: true }
-      : undefined,
+    context: publish ? { [ACCEPT_SUGGESTION_CONTEXT]: true } : undefined,
   });
 
   return {
     toolId: created.id as string | number,
     slug: String(created.slug ?? slug),
     created: true,
-    published: options.fromSuggestionAccept === true || created.status === "published",
+    published: publish || created.status === "published",
   };
 }

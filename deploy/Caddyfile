@@ -1,4 +1,8 @@
 {$SITE_DOMAIN} {
 	encode gzip
-	reverse_proxy app:3000
+	reverse_proxy app:3000 {
+		header_up -X-Forwarded-For
+		header_up -CF-Connecting-IP
+		header_up X-Real-IP {http.request.header.CF-Connecting-IP}
+	}
 }

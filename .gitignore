@@ -2,3 +2,11 @@
 .env*
 !.env.docker.example
 .env.vps
+
+# Local-only: do not commit or push
+.DS_Store
+/node_modules/
+graphify-out/
+listofsources.md
+site/public/tool-logos/firefox.png
+site/public/tool-logos/firefox-1.png

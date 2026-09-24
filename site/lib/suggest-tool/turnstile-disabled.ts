@@ -1,8 +1,9 @@
 /**
- * Turnstile is **off** for the suggest form and `POST /api/suggest-tool` while this is `true`.
- * Set to `false` once Cloudflare widget + Vercel keys are fixed, then redeploy.
+ * Turnstile protects the suggest form and `POST /api/suggest-tool` when this is `false`.
+ * Production needs `NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION` and
+ * `TURNSTILE_SECRET_KEY_PRODUCTION` from the same Cloudflare widget.
  */
-export const SUGGEST_TURNSTILE_DISABLED = true;
+export const SUGGEST_TURNSTILE_DISABLED = false;
 
 export function isSuggestTurnstileDisabled(): boolean {
   return SUGGEST_TURNSTILE_DISABLED;
