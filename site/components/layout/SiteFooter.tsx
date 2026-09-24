@@ -23,6 +23,9 @@ export function SiteFooter() {
               <Link className={flosskTextLink} href="/about">
                 About
               </Link>
+              <Link className={flosskTextLink} href="/sources">
+                Sources
+              </Link>
               <Link className={flosskTextLink} href="/categories">
                 Categories
               </Link>
