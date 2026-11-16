@@ -51,9 +51,9 @@ need("JSON-LD must escape < before it is placed in a script tag", jsonLd.include
 
 const csp = read("next.config.mjs");
 need(
-  "public script-src must stay limited to self, inline, and the Cloudflare hosts",
+  "public script-src must stay limited to self, inline, Cloudflare, and Google Analytics hosts",
   csp.includes(
-    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
+    "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
   ) && !csp.includes("unsafe-eval"),
 );
 

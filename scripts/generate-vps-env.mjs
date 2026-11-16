@@ -80,6 +80,9 @@ const lines = [
   `NEXT_PUBLIC_CF_BEACON_TOKEN=${get("NEXT_PUBLIC_CF_BEACON_TOKEN") || "f058a3a134a743858a8812a20c890aaa"}`,
 ];
 
+const gaId = get("NEXT_PUBLIC_GA_MEASUREMENT_ID");
+if (gaId) lines.push(`NEXT_PUBLIC_GA_MEASUREMENT_ID=${gaId}`);
+
 const turnstileSite =
   get("NEXT_PUBLIC_TURNSTILE_SITE_KEY_PRODUCTION") ||
   get("NEXT_PUBLIC_TURNSTILE_SITE_KEY");
