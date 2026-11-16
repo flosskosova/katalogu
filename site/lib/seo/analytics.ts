@@ -7,10 +7,12 @@ export function getCloudflareBeaconToken(): string | undefined {
   return token || DEFAULT_CF_BEACON_TOKEN;
 }
 
-/** GA4 Measurement ID (`G-…`). Empty when unset so the tag is omitted. */
-export function getGoogleAnalyticsMeasurementId(): string | undefined {
-  const raw = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
-  if (!raw) return undefined;
-  if (!/^G-[A-Z0-9]+$/i.test(raw)) return undefined;
-  return raw;
+/** Public GTM container for catalog.flossk.org (fires GA4 from the GTM UI). */
+const DEFAULT_GTM_ID = "GTM-M9X7KQVL";
+
+/** Google Tag Manager container ID (`GTM-…`). */
+export function getGoogleTagManagerId(): string | undefined {
+  const raw = process.env.NEXT_PUBLIC_GTM_ID?.trim() || DEFAULT_GTM_ID;
+  if (!/^GTM-[A-Z0-9]+$/i.test(raw)) return undefined;
+  return raw.toUpperCase();
 }

@@ -1,5 +1,5 @@
 import { CloudflareBeacon } from "@/components/analytics/CloudflareBeacon";
-import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { GoogleTagManager } from "@/components/analytics/GoogleTagManager";
 import { DM_Sans } from "next/font/google";
 import localFont from "next/font/local";
 import { CompareBar } from "@/components/catalog/CompareBar";
@@ -63,7 +63,7 @@ export default function SiteLayout({
           </ViewModeProvider>
         </CompareProvider>
         {/* Public analytics — end of body */}
-        <GoogleAnalytics />
+        <GoogleTagManager />
         <CloudflareBeacon />
       </body>
     </html>

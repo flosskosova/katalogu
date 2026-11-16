@@ -214,6 +214,13 @@ if (process.argv.includes("--live")) {
     "live suggest page must load Turnstile",
     suggestPage.status === 200 && suggestHtml.includes("cf-turnstile"),
   );
+
+  need(
+    "live public pages must load Google Tag Manager",
+    (await (await fetch(origin)).text()).includes(
+      "googletagmanager.com/gtm.js?id=GTM-",
+    ),
+  );
 }
 
 if (failures.length) {
